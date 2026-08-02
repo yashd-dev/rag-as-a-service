@@ -34,12 +34,13 @@ For Railway, set these as service variables. Build args also exist in the Docker
 - `SYNC_ON_STARTUP`: set `false` to skip startup sync. Default `true`.
 - `PARSE_ON_STARTUP`: set `false` to let the API start before all PDFs are parsed. Default `true`.
 - `STARTUP_BATCH_SIZE`: Unstructured PDFs per startup job. Clamped to `1..10`, default `10`.
+- `HTTP_TIMEOUT`: default socket timeout for Turso/R2 HTTP calls. Default `30` seconds.
 - `UNSTRUCTURED_API_URL`: Transform API URL. Default from Unstructured docs: `https://platform-api.transform.unstructured.io/api/v1`.
 - `UNSTRUCTURED_API_KEY`: Transform API key.
 - `UNSTRUCTURED_POLL_SECONDS`: job polling interval. Default `10`.
 - `UNSTRUCTURED_PARTITION_STRATEGY`: `fast` for PDFs with embedded text, `hi_res` for OCR, `vlm` for best-quality vision parsing. Default `fast`.
 
-Startup blocks until all pending PDFs are parsed. Progress prints to stdout: pending count, batch number, per-file download/save, Unstructured job status, and total completed.
+Startup sync and OCR run in the background so hosts like Railway can mark the API healthy. Progress prints to stdout: pending count, batch number, per-file download/save, Unstructured job status, and total completed.
 
 ## Bulk Parse
 

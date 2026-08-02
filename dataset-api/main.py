@@ -1,4 +1,6 @@
+import asyncio
 import os
+import socket
 import tempfile
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
@@ -20,6 +22,8 @@ from unstructured_transform import (
 )
 
 load_dotenv()
+
+socket.setdefaulttimeout(float(os.getenv("HTTP_TIMEOUT", "30")))
 
 DB_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
@@ -246,14 +250,26 @@ def parse_missing_pdfs() -> dict:
     return {"parsed": parsed}
 
 
+def startup_jobs() -> None:
+    try:
+        if os.getenv("SYNC_ON_STARTUP", "true").lower() != "false":
+            print("Startup sync: begin", flush=True)
+            sync_pdfs(force=True)
+            print("Startup sync: done", flush=True)
+        if PARSE_ON_STARTUP:
+            print("Startup OCR: begin", flush=True)
+            require_config()
+            parse_missing_pdfs()
+            print("Startup OCR: done", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Startup job failed: {exc}", flush=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    if os.getenv("SYNC_ON_STARTUP", "true").lower() != "false":
-        sync_pdfs(force=True)
-    if PARSE_ON_STARTUP:
-        require_config()
-        parse_missing_pdfs()
+    if os.getenv("SYNC_ON_STARTUP", "true").lower() != "false" or PARSE_ON_STARTUP:
+        asyncio.create_task(asyncio.to_thread(startup_jobs))
     yield
 
 
