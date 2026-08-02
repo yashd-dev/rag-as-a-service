@@ -1,0 +1,20 @@
+[project]
+name = "dataset-api"
+version = "0.1.0"
+description = "FastAPI service for PDF inventory and Unstructured extraction"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.40.1",
+    "fastapi[standard]>=0.116.1",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.1.1",
+    "turso-serverless>=0.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.5",
+]
+
+[tool.ruff]
+line-length = 88
