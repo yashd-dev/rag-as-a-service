@@ -1,5 +1,11 @@
 import re
+import json
+from urllib.request import urlopen
+
 import fitz
+
+
+DATASET_URL = "https://rag-as-a-service-production.up.railway.app/contents?limit=5&offset=0&include_pending=false"
 
 
 def extract_text(pdf_path):
@@ -56,5 +62,26 @@ def load_document(pdf_path):
     text = clean_text(text)
 
     chunks = chunk_text(text)
+
+    return chunks
+
+
+def load_dataset(url=DATASET_URL):
+    """Load first 5 OCR documents from the dataset API."""
+
+    with urlopen(url, timeout=60) as response:
+        data = json.load(response)
+
+    chunks = []
+
+    for item in data.get("items", []):
+        if item.get("ocr_status") != "done" or not item.get("ocr_text"):
+            continue
+
+        source = item.get("path") or item.get("url") or "unknown source"
+        text = clean_text(item["ocr_text"])
+
+        for chunk in chunk_text(text):
+            chunks.append(f"Source: {source}\n\n{chunk}")
 
     return chunks

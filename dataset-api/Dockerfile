@@ -20,6 +20,7 @@ ARG PARSE_ON_STARTUP=true
 ARG STARTUP_BATCH_SIZE=10
 ARG HTTP_TIMEOUT=30
 ARG PORT=8000
+ARG WORKER=false
 ARG UNSTRUCTURED_API_URL=https://platform-api.transform.unstructured.io/api/v1
 ARG UNSTRUCTURED_API_KEY
 ARG UNSTRUCTURED_POLL_SECONDS=10
@@ -38,6 +39,7 @@ ENV R2_BUCKET=$R2_BUCKET \
     STARTUP_BATCH_SIZE=$STARTUP_BATCH_SIZE \
     HTTP_TIMEOUT=$HTTP_TIMEOUT \
     PORT=$PORT \
+    WORKER=$WORKER \
     UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL \
     UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY \
     UNSTRUCTURED_POLL_SECONDS=$UNSTRUCTURED_POLL_SECONDS \
@@ -50,4 +52,4 @@ RUN uv sync --frozen --no-dev
 COPY . .
 
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "if [ \"$WORKER\" = \"true\" ]; then python -c 'import main; main.run_worker()'; else uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]

@@ -7,6 +7,7 @@ from config import embedding_model
 def create_vector_store(chunks):
     """Create FAISS vector index."""
 
+    print(f"Embedding {len(chunks)} chunks...")
     embeddings = embedding_model.encode(
         chunks,
         convert_to_numpy=True,
@@ -17,6 +18,7 @@ def create_vector_store(chunks):
 
     dimension = embeddings.shape[1]
 
+    print(f"Building FAISS index with {dimension}-dim vectors...")
     index = faiss.IndexFlatIP(dimension)
 
     index.add(embeddings)
@@ -24,9 +26,18 @@ def create_vector_store(chunks):
     return index
 
 
+def save_vector_store(index, path="outputs/faiss.index"):
+    faiss.write_index(index, path)
+
+
+def load_vector_store(path="outputs/faiss.index"):
+    return faiss.read_index(path)
+
+
 def retrieve_chunks(question, index, chunks, top_k=3):
     """Retrieve top matching chunks."""
 
+    print("Embedding question...")
     question_embedding = embedding_model.encode(
         [question],
         convert_to_numpy=True,

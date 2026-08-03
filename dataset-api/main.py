@@ -250,19 +250,28 @@ def parse_missing_pdfs() -> dict:
     return {"parsed": parsed}
 
 
+def run_startup_jobs() -> None:
+    if os.getenv("SYNC_ON_STARTUP", "true").lower() != "false":
+        print("Startup sync: begin", flush=True)
+        sync_pdfs(force=True)
+        print("Startup sync: done", flush=True)
+    if PARSE_ON_STARTUP:
+        print("Startup OCR: begin", flush=True)
+        require_config()
+        parse_missing_pdfs()
+        print("Startup OCR: done", flush=True)
+
+
 def startup_jobs() -> None:
     try:
-        if os.getenv("SYNC_ON_STARTUP", "true").lower() != "false":
-            print("Startup sync: begin", flush=True)
-            sync_pdfs(force=True)
-            print("Startup sync: done", flush=True)
-        if PARSE_ON_STARTUP:
-            print("Startup OCR: begin", flush=True)
-            require_config()
-            parse_missing_pdfs()
-            print("Startup OCR: done", flush=True)
+        run_startup_jobs()
     except Exception as exc:  # noqa: BLE001
         print(f"Startup job failed: {exc}", flush=True)
+
+
+def run_worker() -> None:
+    init_db()
+    run_startup_jobs()
 
 
 @asynccontextmanager

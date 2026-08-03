@@ -22,6 +22,8 @@ Startup sync and OCR run inside the container by default. Set `SYNC_ON_STARTUP=f
 
 For Railway, set these as service variables. Build args also exist in the Dockerfile, but do not put secrets in build args unless you accept them being baked into the image.
 
+For an overnight Railway worker/job that syncs and OCRs everything, set `WORKER=true`. It runs `init_db()`, S3 sync, all pending OCR batches, then exits. Keep `STARTUP_BATCH_SIZE=10` for max Unstructured batch size.
+
 ## Env
 
 - `R2_BUCKET`: bucket name. Required.
@@ -35,6 +37,7 @@ For Railway, set these as service variables. Build args also exist in the Docker
 - `PARSE_ON_STARTUP`: set `false` to let the API start before all PDFs are parsed. Default `true`.
 - `STARTUP_BATCH_SIZE`: Unstructured PDFs per startup job. Clamped to `1..10`, default `10`.
 - `HTTP_TIMEOUT`: default socket timeout for Turso/R2 HTTP calls. Default `30` seconds.
+- `WORKER`: set `true` to run sync/OCR as a one-shot worker instead of serving the API. Default `false`.
 - `UNSTRUCTURED_API_URL`: Transform API URL. Default from Unstructured docs: `https://platform-api.transform.unstructured.io/api/v1`.
 - `UNSTRUCTURED_API_KEY`: Transform API key.
 - `UNSTRUCTURED_POLL_SECONDS`: job polling interval. Default `10`.
