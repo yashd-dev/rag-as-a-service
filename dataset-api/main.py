@@ -430,8 +430,8 @@ def test_data(
     }
 
 
-@app.get("/test/anssers")
-def test_anssers(
+@app.get("/test/answers")
+def test_answers(
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
@@ -444,4 +444,4 @@ def test_answers(
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
-    return test_anssers(limit=limit, offset=offset)
+    return test_answers(limit=limit, offset=offset)
