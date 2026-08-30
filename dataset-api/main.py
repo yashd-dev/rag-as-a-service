@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import json
 import os
 import socket
 import tempfile
@@ -33,6 +35,9 @@ PDF_PREFIX = os.getenv("PDF_PREFIX", "sc-documents/data/pdf/")
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL")
 PARSE_ON_STARTUP = os.getenv("PARSE_ON_STARTUP", "true").lower() != "false"
 STARTUP_BATCH_SIZE = int(os.getenv("STARTUP_BATCH_SIZE", "10"))
+QNA_DIR = Path(__file__).parent / "qna"
+TEST_DATASET_PATH = QNA_DIR / "dataset.json"
+TEST_ANSWERS_PATH = QNA_DIR / "qna.csv"
 
 
 @contextmanager
@@ -101,6 +106,20 @@ def s3_client():
 def object_url(path: str) -> str:
     base = PUBLIC_BASE_URL or f"https://{BUCKET}.s3.amazonaws.com"
     return f"{base.rstrip('/')}/{path}"
+
+
+def load_json_file(path: Path) -> Any:
+    if not path.exists():
+        raise HTTPException(404, f"File not found: {path.name}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_csv_file(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise HTTPException(404, f"File not found: {path.name}")
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    return {"total": len(rows), "items": rows}
 
 
 def sync_pdfs(force: bool = False) -> dict:
@@ -380,3 +399,18 @@ def list_contents(
         "pages_left": max((total - offset - len(rows) + limit - 1) // limit, 0),
         "items": [dict(row) for row in rows],
     }
+
+
+@app.get("/test/data")
+def test_data():
+    return load_json_file(TEST_DATASET_PATH)
+
+
+@app.get("/test/answers")
+def test_answers():
+    return load_csv_file(TEST_ANSWERS_PATH)
+
+
+@app.get("/test/answers")
+def test_answers():
+    return test_answers()
