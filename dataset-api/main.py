@@ -1,5 +1,4 @@
 import asyncio
-import csv
 import json
 import os
 import socket
@@ -37,7 +36,7 @@ PARSE_ON_STARTUP = os.getenv("PARSE_ON_STARTUP", "true").lower() != "false"
 STARTUP_BATCH_SIZE = int(os.getenv("STARTUP_BATCH_SIZE", "10"))
 QNA_DIR = Path(__file__).parent / "qna"
 TEST_DATASET_PATH = QNA_DIR / "dataset.json"
-TEST_ANSWERS_PATH = QNA_DIR / "qna.csv"
+TEST_ANSWERS_PATH = QNA_DIR / "qna.json"
 
 
 @contextmanager
@@ -127,12 +126,18 @@ def paginate_items(items: list[Any], limit: int, offset: int) -> dict[str, Any]:
     }
 
 
-def load_csv_file(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        raise HTTPException(404, f"File not found: {path.name}")
-    with path.open(newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
-    return {"total": len(rows), "items": rows}
+def load_qna_items(path: Path) -> list[dict[str, Any]]:
+    payload = load_json_file(path)
+    if not isinstance(payload, dict):
+        raise HTTPException(500, "qna.json must be an object")
+
+    items = []
+    for key in sorted(payload, key=lambda value: int(value)):
+        row = payload[key]
+        if not isinstance(row, dict):
+            continue
+        items.append({"id": int(key), **row})
+    return items
 
 
 def sync_pdfs(force: bool = False) -> dict:
@@ -435,13 +440,4 @@ def test_answers(
     limit: Annotated[int, Query(ge=1, le=500)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
-    payload = load_csv_file(TEST_ANSWERS_PATH)
-    return paginate_items(payload["items"], limit, offset)
-
-
-@app.get("/test/answers")
-def test_answers(
-    limit: Annotated[int, Query(ge=1, le=500)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
-):
-    return test_answers(limit=limit, offset=offset)
+    return paginate_items(load_qna_items(TEST_ANSWERS_PATH), limit, offset)
