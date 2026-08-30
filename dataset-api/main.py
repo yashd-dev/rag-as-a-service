@@ -114,6 +114,19 @@ def load_json_file(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def paginate_items(items: list[Any], limit: int, offset: int) -> dict[str, Any]:
+    page = items[offset : offset + limit]
+    total = len(items)
+    return {
+        "total": total,
+        "count": len(page),
+        "limit": limit,
+        "offset": offset,
+        "pages_left": max((total - offset - len(page) + limit - 1) // limit, 0),
+        "items": page,
+    }
+
+
 def load_csv_file(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise HTTPException(404, f"File not found: {path.name}")
@@ -402,15 +415,33 @@ def list_contents(
 
 
 @app.get("/test/data")
-def test_data():
-    return load_json_file(TEST_DATASET_PATH)
+def test_data(
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    payload = load_json_file(TEST_DATASET_PATH)
+    items = payload.get("items")
+    if not isinstance(items, list):
+        raise HTTPException(500, "dataset.json missing items array")
+    return {
+        "generated_at": payload.get("generated_at"),
+        "source_dir": payload.get("source_dir"),
+        **paginate_items(items, limit, offset),
+    }
+
+
+@app.get("/test/anssers")
+def test_anssers(
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    payload = load_csv_file(TEST_ANSWERS_PATH)
+    return paginate_items(payload["items"], limit, offset)
 
 
 @app.get("/test/answers")
-def test_answers():
-    return load_csv_file(TEST_ANSWERS_PATH)
-
-
-@app.get("/test/answers")
-def test_answers():
-    return test_answers()
+def test_answers(
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    return test_anssers(limit=limit, offset=offset)
