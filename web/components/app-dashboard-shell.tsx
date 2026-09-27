@@ -6,7 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import "@/components/watermelon/agndex-dashboard/dashboard.css";
 
 type DashboardShellProps = {
-  active: "overview" | "settings" | "members" | "billing";
+  active: "overview" | "documents" | "playground" | "llm" | "api" | "settings" | "members" | "billing";
   children: ReactNode;
   organizationName: string;
   user: {
@@ -23,8 +23,8 @@ const groups = [
     label: "PROJECT",
     items: [
       ["⌂", "Overview", "/dashboard", "overview"],
-      ["▤", "Documents", "/documents", ""],
-      ["◉", "Playground", "/playground", ""],
+      ["▤", "Documents", "/dashboard/document", "documents"],
+      ["◉", "Playground", "/dashboard/playground", "playground"],
       ["◇", "Knowledge", "/knowledge", ""],
       ["⌁", "Analytics", "/analytics", ""],
     ],
@@ -33,13 +33,13 @@ const groups = [
     label: "DEPLOY",
     items: [
       ["⌘", "API Keys", "/api-keys", ""],
-      ["</>", "API", "/api", ""],
+      ["</>", "API", "/dashboard/api", "api"],
       ["▣", "Chat Widget", "/chat-widget", ""],
     ],
   },
   {
     label: "CONFIGURE",
-    items: [["⚙", "AI & Retrieval", "/dashboard/settings", "settings"]],
+    items: [["⚙", "AI & Retrieval", "/dashboard/llm", "llm"]],
   },
   {
     label: "ORGANIZATION",
