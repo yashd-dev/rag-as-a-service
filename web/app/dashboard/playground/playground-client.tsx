@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown, Code2, Copy, PanelRight, Plus, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import type { Project } from "@/lib/backend";
 import { MonacoCodeEditor } from "./monaco-code-editor";
 
 const snippets = {
@@ -92,7 +93,12 @@ function ParameterRow({ label, value, position }: { label: string; value: string
   );
 }
 
-export function PlaygroundClient() {
+type PlaygroundClientProps = {
+  projects: Project[];
+  queryProjectAction: (formData: FormData) => void;
+};
+
+export function PlaygroundClient({ projects, queryProjectAction }: PlaygroundClientProps) {
   const [showCode, setShowCode] = useState(true);
   const [showParameters, setShowParameters] = useState(true);
   const [language, setLanguage] = useState<Language>("python");
@@ -136,10 +142,17 @@ export function PlaygroundClient() {
             </p>
           </div>
 
-          <div className="rounded-xl bg-card p-5 transition-colors hover:bg-(--card-hover)">
+          <form action={queryProjectAction} className="rounded-xl bg-card p-5 transition-colors hover:bg-(--card-hover)">
+            <input type="hidden" name="project_id" value={projects[0]?.id || ""} />
+            <input type="hidden" name="mode" value="hybrid" />
             <p className="mb-5 text-xs font-medium uppercase tracking-wide text-muted-foreground">User</p>
-            <p className="text-sm text-muted-foreground">Enter user message...</p>
-          </div>
+            <textarea name="message" placeholder="Ask your corpus..." className="min-h-24 w-full resize-none rounded-lg border bg-background p-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring" />
+            <div className="mt-4 flex justify-end">
+              <Button disabled={!projects.length} className="h-11 rounded-full px-6 font-normal shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent)]">
+                Submit <span className="ml-2 text-primary-foreground/70">Ctrl + ↵</span>
+              </Button>
+            </div>
+          </form>
 
           <div className="mt-auto flex items-end justify-between gap-4 pt-8">
             <div className="flex gap-2">
@@ -151,9 +164,7 @@ export function PlaygroundClient() {
               <Zap className="size-5 fill-primary text-primary" />
               <span>Tokens/s: 239</span>
             </div>
-            <Button className="h-11 rounded-full px-6 font-normal shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent)]">
-              Submit <span className="ml-2 text-primary-foreground/70">Ctrl + ↵</span>
-            </Button>
+            <span className="text-sm text-muted-foreground">{projects[0] ? `Corpus: ${projects[0].name}` : "Create a corpus to query"}</span>
           </div>
         </div>
       </section>

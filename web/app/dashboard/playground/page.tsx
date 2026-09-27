@@ -1,34 +1,16 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
 import { AppDashboardShell } from "@/components/app-dashboard-shell";
-import { auth } from "@/lib/auth";
+import { listProjects } from "@/lib/backend";
+import { queryProjectAction } from "@/lib/backend-actions";
+import { getDashboardContext } from "@/lib/dashboard-context";
 import { PlaygroundClient } from "./playground-client";
 
 export default async function PlaygroundPage() {
-  const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
-
-  if (!session) {
-    redirect("/auth");
-  }
-
-  const organizations = await auth.api.listOrganizations({ headers: requestHeaders });
-
-  if (!organizations?.length) {
-    redirect("/onboarding");
-  }
-
-  const organization = organizations[0];
-  const { members } = await auth.api.listMembers({
-    query: { organizationId: organization.id },
-    headers: requestHeaders,
-  });
-  const role = members.find((member) => member.userId === session.user.id)?.role || "member";
+  const { session, organization, role } = await getDashboardContext();
+  const projects = await listProjects();
 
   return (
     <AppDashboardShell active="playground" organizationName={organization.name} user={session.user} role={role}>
-      <PlaygroundClient />
+      <PlaygroundClient projects={projects.items} queryProjectAction={queryProjectAction} />
     </AppDashboardShell>
   );
 }

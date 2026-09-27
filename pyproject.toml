@@ -1,0 +1,36 @@
+[project]
+name = "rag-as-a-service"
+version = "0.1.0"
+description = "RAG as a service backend and AI core"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.40.1",
+    "cryptography>=43.0.0",
+    "flask>=3.0.0",
+    "flask-cors>=5.0.0",
+    "httpx>=0.28.1",
+    "libsql>=0.1.11",
+    "networkx>=3.3",
+    "neo4j>=5.25.0",
+    "openai>=1.50.0",
+    "pypdf>=5.0.0",
+    "python-dotenv>=1.0.1",
+    "pyvis>=0.3.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.12.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 88
+
+[tool.setuptools.packages.find]
+include = ["backend*", "ai*"]
+exclude = ["web*", "LightRAG*", "dataset-api*", "Prasham*", "sc-dataset*"]

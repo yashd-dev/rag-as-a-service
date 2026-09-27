@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronDown, Copy, HelpCircle, Plus, RefreshCw, Search, X, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import type { Credential } from "@/lib/backend";
 
 const llms = [
   { id: "llm_3875912", name: "mockingbird-2024-06-18-experimental", description: "Recall's experimental summarization model for RAG answers." },
@@ -25,6 +26,10 @@ const llms = [
 ];
 
 type Llm = (typeof llms)[number];
+type LlmClientProps = {
+  credentials: Credential[];
+  createCredentialAction: (formData: FormData) => void;
+};
 
 function llmJson(llm: Llm) {
   return `{
@@ -54,7 +59,7 @@ function Badge({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{children}</span>;
 }
 
-export function LlmClient() {
+export function LlmClient({ credentials, createCredentialAction }: LlmClientProps) {
   const [view, setView] = useState<"list" | "add">("list");
   const [selected, setSelected] = useState<Llm | null>(null);
 
@@ -73,27 +78,46 @@ export function LlmClient() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <form action={createCredentialAction} className="flex flex-col gap-6">
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium tracking-tight">Name</span>
+            <input name="name" defaultValue="OpenAI" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium tracking-tight">Provider</span>
+              <select name="provider" defaultValue="openai" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"><option value="openai">OpenAI</option><option value="ollama">Ollama</option><option value="unstructured">Unstructured</option></select>
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium tracking-tight">Credential type</span>
+              <select name="credential_type" defaultValue="llm" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"><option value="llm">LLM</option><option value="embedding">Embedding</option><option value="ocr">OCR</option></select>
+            </label>
+          </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium tracking-tight">API key or credentials</span>
             <span className="text-sm text-muted-foreground">Paste an API key, or a full credential such as a Google service-account JSON. We detect the provider automatically.</span>
-            <textarea autoFocus placeholder="sk-..." className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <textarea name="api_key" autoFocus placeholder="sk-..." className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </label>
 
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium tracking-tight">Endpoint URL (required)</span>
             <span className="text-sm text-muted-foreground">The endpoint to probe. A URL alone works for unauthenticated or self-hosted OpenAI-compatible servers.</span>
-            <input placeholder="https://my-endpoint.example/v1/chat/completions" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <input name="base_url" placeholder="https://my-endpoint.example/v1/chat/completions" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </label>
-        </div>
 
-        <div className="flex items-center justify-between">
-          <button className="text-sm font-medium text-primary">Enter details manually</button>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium tracking-tight">Default model</span>
+            <input name="default_model" defaultValue="gpt-4o-mini" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </label>
+
+          <div className="flex items-center justify-between">
+            <button type="button" className="text-sm font-medium text-primary">Enter details manually</button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setView("list")} className="h-11 px-5 font-normal">Cancel</Button>
-            <Button className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />Find models</Button>
+              <Button className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />Save credential</Button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     );
   }
@@ -126,6 +150,19 @@ export function LlmClient() {
             <span>Enabled</span>
             <span />
           </div>
+          {credentials.map((credential) => (
+            <div key={credential.id} className="grid grid-cols-[28px_130px_360px_1fr_100px_44px] items-center gap-3 border-b px-3 py-2.5 text-sm hover:bg-card">
+              <input type="checkbox" className="size-4 rounded border" />
+              <button className="truncate text-left font-medium text-primary">{credential.id}</button>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate">{credential.name}</span>
+                <Badge>BYOK</Badge>
+              </div>
+              <p className="truncate text-muted-foreground">{credential.provider} {credential.default_model || credential.default_embedding_model || credential.credential_type}</p>
+              <span className="w-fit rounded-full bg-green-100 px-2.5 py-1 text-xs text-green-700">{credential.status}</span>
+              <Button variant="outline" size="icon-sm"><ChevronDown className="size-3.5" /></Button>
+            </div>
+          ))}
           {llms.map((llm) => (
             <div key={llm.id} className="grid grid-cols-[28px_130px_360px_1fr_100px_44px] items-center gap-3 border-b px-3 py-2.5 text-sm last:border-b-0 hover:bg-card">
               <input type="checkbox" className="size-4 rounded border" />

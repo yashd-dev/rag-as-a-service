@@ -1,34 +1,16 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
 import { AppDashboardShell } from "@/components/app-dashboard-shell";
-import { auth } from "@/lib/auth";
+import { listProjects } from "@/lib/backend";
+import { createProjectAction, deleteProjectAction } from "@/lib/backend-actions";
+import { getDashboardContext } from "@/lib/dashboard-context";
 import { DocumentClient } from "./document-client";
 
 export default async function DocumentPage() {
-  const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
-
-  if (!session) {
-    redirect("/auth");
-  }
-
-  const organizations = await auth.api.listOrganizations({ headers: requestHeaders });
-
-  if (!organizations?.length) {
-    redirect("/onboarding");
-  }
-
-  const organization = organizations[0];
-  const { members } = await auth.api.listMembers({
-    query: { organizationId: organization.id },
-    headers: requestHeaders,
-  });
-  const role = members.find((member) => member.userId === session.user.id)?.role || "member";
+  const { session, organization, role } = await getDashboardContext();
+  const projects = await listProjects();
 
   return (
     <AppDashboardShell active="documents" organizationName={organization.name} user={session.user} role={role}>
-      <DocumentClient />
+      <DocumentClient projects={projects.items} createProjectAction={createProjectAction} deleteProjectAction={deleteProjectAction} />
     </AppDashboardShell>
   );
 }
