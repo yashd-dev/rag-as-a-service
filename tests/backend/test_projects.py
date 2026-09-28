@@ -19,7 +19,7 @@ def test_create_and_list_project(client, auth_headers):
     assert created["owner_user_id"] == "user_1"
     assert created["slug"] == "supreme-court-corpus"
     assert created["embedding_provider"] == "huggingface"
-    assert created["embedding_model"] == "sentence-transformers/all-MiniLM-L6-v2"
+    assert created["embedding_model"] == "google/embeddinggemma-300m"
 
     list_response = client.get("/api/projects", headers=auth_headers)
     assert list_response.status_code == 200
@@ -43,14 +43,17 @@ def test_project_access_is_limited_to_organization(client, auth_headers):
 
 def test_duplicate_project_slug_conflicts(client, auth_headers):
     payload = {"name": "Same Name"}
-    assert client.post("/api/projects", headers=auth_headers, json=payload).status_code == 201
+    assert (
+        client.post("/api/projects", headers=auth_headers, json=payload).status_code
+        == 201
+    )
 
     response = client.post("/api/projects", headers=auth_headers, json=payload)
 
     assert response.status_code == 409
 
 
-def test_create_project_accepts_supported_embedding_model(client, auth_headers):
+def test_create_project_always_uses_embeddinggemma(client, auth_headers):
     response = client.post(
         "/api/projects",
         headers=auth_headers,
@@ -62,10 +65,10 @@ def test_create_project_accepts_supported_embedding_model(client, auth_headers):
     )
 
     assert response.status_code == 201
-    assert response.get_json()["embedding_model"] == "nomic-ai/nomic-embed-text-v1"
+    assert response.get_json()["embedding_model"] == "google/embeddinggemma-300m"
 
 
-def test_create_project_accepts_embeddinggemma_short_name(client, auth_headers):
+def test_create_project_normalizes_embeddinggemma_short_name(client, auth_headers):
     response = client.post(
         "/api/projects",
         headers=auth_headers,
@@ -73,17 +76,18 @@ def test_create_project_accepts_embeddinggemma_short_name(client, auth_headers):
     )
 
     assert response.status_code == 201
-    assert response.get_json()["embedding_model"] == "embeddinggemma-300m"
+    assert response.get_json()["embedding_model"] == "google/embeddinggemma-300m"
 
 
-def test_create_project_rejects_unsupported_embedding_model(client, auth_headers):
+def test_create_project_ignores_other_embedding_model_selection(client, auth_headers):
     response = client.post(
         "/api/projects",
         headers=auth_headers,
         json={"name": "Bad Corpus", "embedding_model": "unknown/model"},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 201
+    assert response.get_json()["embedding_model"] == "google/embeddinggemma-300m"
 
 
 def test_delete_project(client, auth_headers):
@@ -93,7 +97,9 @@ def test_delete_project(client, auth_headers):
         json={"name": "Delete Me"},
     ).get_json()
 
-    delete_response = client.delete(f"/api/projects/{created['id']}", headers=auth_headers)
+    delete_response = client.delete(
+        f"/api/projects/{created['id']}", headers=auth_headers
+    )
     get_response = client.get(f"/api/projects/{created['id']}", headers=auth_headers)
 
     assert delete_response.status_code == 204

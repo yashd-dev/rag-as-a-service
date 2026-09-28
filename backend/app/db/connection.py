@@ -21,18 +21,29 @@ def init_db(database_url: str, auth_token: str) -> None:
 
 
 def migrate_db(conn) -> None:
-    project_columns = {row[1] for row in conn.execute("PRAGMA table_info(projects)").fetchall()}
+    project_columns = {
+        row[1] for row in conn.execute("PRAGMA table_info(projects)").fetchall()
+    }
     if "embedding_provider" not in project_columns:
         conn.execute(
             "ALTER TABLE projects ADD COLUMN embedding_provider TEXT NOT NULL DEFAULT 'huggingface'"
         )
     if "embedding_model" not in project_columns:
         conn.execute(
-            "ALTER TABLE projects ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'sentence-transformers/all-MiniLM-L6-v2'"
+            "ALTER TABLE projects ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'google/embeddinggemma-300m'"
         )
-    document_columns = {row[1] for row in conn.execute("PRAGMA table_info(documents)").fetchall()}
+    # Existing rows may advertise a historical UI choice. All persisted vectors
+    # use EmbeddingGemma, so normalize the metadata before creating new vectors.
+    conn.execute(
+        "UPDATE projects SET embedding_provider = 'huggingface', embedding_model = 'google/embeddinggemma-300m'"
+    )
+    document_columns = {
+        row[1] for row in conn.execute("PRAGMA table_info(documents)").fetchall()
+    }
     if "status" not in document_columns:
-        conn.execute("ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'")
+        conn.execute(
+            "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"
+        )
 
 
 @contextmanager

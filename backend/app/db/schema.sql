@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS projects (
   description TEXT,
   default_query_mode TEXT NOT NULL DEFAULT 'hybrid',
   embedding_provider TEXT NOT NULL DEFAULT 'huggingface',
-  embedding_model TEXT NOT NULL DEFAULT 'sentence-transformers/all-MiniLM-L6-v2',
+  embedding_model TEXT NOT NULL DEFAULT 'google/embeddinggemma-300m',
   default_llm_credential_id TEXT,
   default_embedding_credential_id TEXT,
   created_at INTEGER NOT NULL,
@@ -65,6 +65,25 @@ CREATE TABLE IF NOT EXISTS documents (
   updated_at INTEGER NOT NULL,
   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS chunk_embeddings (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  organization_id TEXT NOT NULL,
+  document_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  embedding F32_BLOB(768) NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS chunk_embeddings_project_document_idx
+ON chunk_embeddings(project_id, document_id);
+
+CREATE INDEX IF NOT EXISTS chunk_embeddings_vector_idx
+ON chunk_embeddings(libsql_vector_idx(embedding));
 
 CREATE TABLE IF NOT EXISTS conversations (
   id TEXT PRIMARY KEY,

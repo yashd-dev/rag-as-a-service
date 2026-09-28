@@ -140,6 +140,15 @@ class Neo4jGraphStore:
             if relation_rows:
                 session.run(relation_query, **params, relations=relation_rows)
 
+    def project_chunks(self, project_id: str) -> list[dict]:
+        query = """
+        MATCH (d:Document {project_id: $project_id})-[:HAS_CHUNK]->(c:Chunk)
+        RETURN c.id AS id, d.id AS document_id, c.content AS content
+        ORDER BY c.id
+        """
+        with self.driver.session() as session:
+            return [dict(row) for row in session.run(query, project_id=project_id)]
+
     def project_status(self, project_id: str, organization_id: str) -> dict:
         node_query = """
         MATCH (e:Entity {project_id: $project_id, organization_id: $organization_id})

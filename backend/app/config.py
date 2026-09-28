@@ -26,6 +26,8 @@ class Config:
     GRAPH_EXTRACTION_MAX_CHUNKS = int(os.getenv("GRAPH_EXTRACTION_MAX_CHUNKS", "0"))
     GRAPH_CHUNK_SIZE = int(os.getenv("GRAPH_CHUNK_SIZE", "300"))
     GRAPH_CHUNK_OVERLAP = int(os.getenv("GRAPH_CHUNK_OVERLAP", "30"))
+    OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "embeddinggemma")
+    EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "16"))
     FALLBACK_LLM_MODEL = os.getenv("FALLBACK_LLM_MODEL", "smollm2:135m")
     UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "backend/storage/uploads"))
     TMP_DIR = Path(os.getenv("TMP_DIR", "backend/storage/tmp"))

@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import time
 import uuid
+from dataclasses import dataclass
 
 from backend.app.db.connection import db
 
@@ -32,7 +32,7 @@ class ProjectCreate:
     description: str | None = None
     default_query_mode: str = "hybrid"
     embedding_provider: str = "huggingface"
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_model: str = "google/embeddinggemma-300m"
     default_llm_credential_id: str | None = None
     default_embedding_credential_id: str | None = None
 
@@ -110,7 +110,11 @@ class SimpleRepository:
         self.prefix = prefix
 
     def create(self, values: dict) -> dict:
-        row = values | {"id": new_id(self.prefix), "created_at": now_ms(), "updated_at": now_ms()}
+        row = values | {
+            "id": new_id(self.prefix),
+            "created_at": now_ms(),
+            "updated_at": now_ms(),
+        }
         columns = list(row)
         placeholders = ", ".join("?" for _ in columns)
         with db(self.database_url, self.auth_token) as conn:

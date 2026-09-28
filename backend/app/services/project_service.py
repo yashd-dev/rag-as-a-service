@@ -8,14 +8,7 @@ class ValidationError(Exception):
     pass
 
 
-SUPPORTED_EMBEDDING_MODELS = {
-    "huggingface": {
-        "nomic-ai/nomic-embed-text-v1",
-        "embeddinggemma-300m",
-        "google/embeddinggemma-300m",
-        "sentence-transformers/all-MiniLM-L6-v2",
-    }
-}
+EMBEDDING_MODEL = "google/embeddinggemma-300m"
 
 
 def slugify(value: str) -> str:
@@ -32,13 +25,6 @@ class ProjectService:
         if not name:
             raise ValidationError("Project name is required")
 
-        embedding_provider = str(payload.get("embedding_provider") or "huggingface").strip()
-        embedding_model = str(
-            payload.get("embedding_model") or "sentence-transformers/all-MiniLM-L6-v2"
-        ).strip()
-        if embedding_model not in SUPPORTED_EMBEDDING_MODELS.get(embedding_provider, set()):
-            raise ValidationError("Unsupported embedding model")
-
         data = ProjectCreate(
             organization_id=auth.organization_id,
             owner_user_id=auth.user_id,
@@ -46,10 +32,15 @@ class ProjectService:
             slug=slugify(str(payload.get("slug") or name)),
             description=payload.get("description"),
             default_query_mode=payload.get("default_query_mode") or "hybrid",
-            embedding_provider=embedding_provider,
-            embedding_model=embedding_model,
+            # The UI may display alternatives, but Turso vectors always use one
+            # model so a project never mixes incompatible vector dimensions.
+            embedding_provider="huggingface",
+            embedding_model=EMBEDDING_MODEL,
             default_llm_credential_id=payload.get("default_llm_credential_id") or None,
-            default_embedding_credential_id=payload.get("default_embedding_credential_id") or None,
+            default_embedding_credential_id=payload.get(
+                "default_embedding_credential_id"
+            )
+            or None,
         )
         return self.repository.create(data)
 
