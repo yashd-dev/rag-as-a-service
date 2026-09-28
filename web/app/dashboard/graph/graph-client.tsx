@@ -5,8 +5,6 @@ import "@react-sigma/core/lib/style.css";
 import { SigmaContainer, useRegisterEvents, useSetSettings, useSigma } from "@react-sigma/core";
 import { NodeBorderProgram } from "@sigma/node-border";
 import { createEdgeCurveProgram } from "@sigma/edge-curve";
-import forceAtlas2 from "graphology-layout-forceatlas2";
-import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
 import Graph from "graphology";
 import MiniSearch from "minisearch";
 import { RefreshCw, Search, ZoomIn, ZoomOut } from "lucide-react";
@@ -42,12 +40,40 @@ function positionFromId(id: string) {
 function buildSigmaGraph(data: ProjectGraph) {
   const graph = new Graph({ multi: true, type: "directed" });
   const degree = new Map<string, number>();
+  const incoming = new Map<string, number>();
+  const outgoing = new Map<string, string[]>();
   data.edges.forEach((edge) => {
     degree.set(edge.source, (degree.get(edge.source) || 0) + 1);
     degree.set(edge.target, (degree.get(edge.target) || 0) + 1);
+    incoming.set(edge.target, (incoming.get(edge.target) || 0) + 1);
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) || []), edge.target]);
+  });
+  const roots = data.nodes.map((node) => node.id).filter((id) => !incoming.has(id));
+  const queue = roots.length ? [...roots] : data.nodes.slice(0, 1).map((node) => node.id);
+  const level = new Map<string, number>(queue.map((id) => [id, 0]));
+  for (let index = 0; index < queue.length; index += 1) {
+    const source = queue[index];
+    for (const target of outgoing.get(source) || []) {
+      const nextLevel = (level.get(source) || 0) + 1;
+      if (!level.has(target) || nextLevel > (level.get(target) || 0)) {
+        level.set(target, nextLevel);
+        queue.push(target);
+      }
+    }
+  }
+  const rowsByLevel = new Map<number, string[]>();
+  data.nodes.forEach((node) => {
+    const nodeLevel = level.get(node.id) ?? rowsByLevel.size;
+    rowsByLevel.set(nodeLevel, [...(rowsByLevel.get(nodeLevel) || []), node.id]);
+  });
+  const positions = new Map<string, { x: number; y: number }>();
+  rowsByLevel.forEach((ids, nodeLevel) => {
+    ids.forEach((id, row) => {
+      positions.set(id, { x: nodeLevel * 8, y: (row - (ids.length - 1) / 2) * 3 });
+    });
   });
   data.nodes.forEach((node, index) => {
-    const pos = positionFromId(node.id);
+    const pos = positions.get(node.id) || positionFromId(node.id);
     graph.addNode(node.id, {
       ...pos,
       label: node.label || node.id,
@@ -70,7 +96,7 @@ function buildSigmaGraph(data: ProjectGraph) {
 const sigmaSettings: Partial<SigmaSettings> = {
   allowInvalidContainer: true,
   defaultNodeType: "border",
-  defaultEdgeType: "curved",
+  defaultEdgeType: "rect",
   nodeProgramClasses: { border: NodeBorderProgram, circle: NodeCircleProgram },
   edgeProgramClasses: { rect: EdgeRectangleProgram, curved: createEdgeCurveProgram() },
   enableEdgeEvents: true,
@@ -78,10 +104,10 @@ const sigmaSettings: Partial<SigmaSettings> = {
   labelRenderedSizeThreshold: 8,
   labelSize: 12,
   edgeLabelSize: 9,
-  labelColor: { color: "#e5edff" },
-  edgeLabelColor: { color: "#cbd5e1" },
-  defaultEdgeColor: "rgba(148, 163, 184, 0.58)",
-  hideEdgesOnMove: true,
+  labelColor: { color: "#111827" },
+  edgeLabelColor: { color: "#374151" },
+  defaultEdgeColor: "#64748b",
+  hideEdgesOnMove: false,
 };
 
 function SigmaGraph({ graph, focusedNode, selectedNode, onSelect }: { graph: Graph; focusedNode: string | null; selectedNode: string | null; onSelect: (selection: Selection) => void }) {
@@ -92,19 +118,8 @@ function SigmaGraph({ graph, focusedNode, selectedNode, onSelect }: { graph: Gra
 
   useEffect(() => {
     sigma.setGraph(graph);
-    setSettings({ defaultEdgeType: graph.size > 1800 ? "rect" : "curved" });
-    if (graph.order) {
-      const layout = new FA2LayoutSupervisor(graph, { settings: forceAtlas2.inferSettings(graph.order) });
-      layout.start();
-      const timer = window.setTimeout(() => {
-        layout.stop();
-        sigma.getCamera().animatedReset({ duration: 500 });
-      }, graph.order > 1200 ? 2400 : 1500);
-      return () => {
-        window.clearTimeout(timer);
-        layout.kill();
-      };
-    }
+    setSettings({ defaultEdgeType: "rect" });
+    window.setTimeout(() => sigma.getCamera().animatedReset({ duration: 350 }), 0);
     return undefined;
   }, [graph, setSettings, sigma]);
 
@@ -150,7 +165,7 @@ function SigmaGraph({ graph, focusedNode, selectedNode, onSelect }: { graph: Gra
       edgeReducer: (edge, data) => {
         if (!selected) return data;
         const [source, target] = graph.extremities(edge);
-        return source === selected || target === selected ? { ...data, color: "#93c5fd", size: 2.5 } : { ...data, hidden: true };
+        return source === selected || target === selected ? { ...data, color: "#2563eb", size: 2.5 } : { ...data, hidden: true };
       },
     });
   }, [focusedNode, graph, selectedNode, setSettings]);
@@ -261,11 +276,11 @@ export function GraphClient({ project, initialStatus }: GraphClientProps) {
           </div>
         </aside>
 
-        <div className="relative min-h-[720px] overflow-hidden rounded-xl border bg-[#050816]">
+        <div className="relative min-h-[720px] overflow-hidden rounded-xl border bg-white">
           {error ? <div className="grid h-full place-items-center p-6 text-center text-sm text-destructive">{error}</div> : null}
           {!error && isLoading ? <div className="grid h-full place-items-center text-sm text-muted-foreground">Loading graph...</div> : null}
           {!error && !isLoading && graph && graph.order > 0 ? (
-            <SigmaContainer settings={sigmaSettings} className="h-full w-full bg-[#050816]">
+            <SigmaContainer settings={sigmaSettings} className="h-full w-full bg-white">
               <SigmaGraph graph={graph} focusedNode={focusedNode} selectedNode={selectedNode} onSelect={(value) => { setSelection(value); setSelectedNode(value?.type === "node" ? value.id : null); }} />
               <CameraControls cameraRef={cameraRef} />
             </SigmaContainer>
