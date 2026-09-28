@@ -5,6 +5,41 @@ from openai import OpenAI
 
 from backend.app.services.crypto import SecretBox
 
+GRAPH_EXTRACTION_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["entities", "relations"],
+    "properties": {
+        "entities": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["name", "type"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                },
+            },
+        },
+        "relations": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["source", "target", "relation"],
+                "properties": {
+                    "source": {"type": "string"},
+                    "target": {"type": "string"},
+                    "relation": {"type": "string"},
+                },
+            },
+        },
+    },
+}
+
 
 @dataclass(frozen=True)
 class LlmConfig:
@@ -29,23 +64,40 @@ class OpenAICompatibleLlm:
 
 
 class OllamaGenerateLlm:
-    def __init__(self, base_url: str, model: str, timeout: float | None = None, json_mode: bool = False):
+    def __init__(self, base_url: str, model: str, timeout: float | None = None, json_mode: bool = False, options: dict | None = None, json_schema: dict | None = None):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
         self.json_mode = json_mode
+        self.options = options or {}
+        self.json_schema = json_schema
 
     def generate(self, prompt: str) -> str:
         payload = {"model": self.model, "prompt": prompt, "stream": False}
         if self.json_mode:
-            payload["format"] = "json"
+            payload["format"] = self.json_schema or "json"
+        if self.options:
+            payload["options"] = self.options
+        print(
+            f"ollama_generate start model={self.model} json_mode={self.json_mode} "
+            f"prompt_chars={len(prompt)} timeout={self.timeout if self.timeout is not None else 'none'} options={self.options}",
+            flush=True,
+        )
         response = httpx.post(
             f"{self.base_url}/api/generate",
             json=payload,
             timeout=self.timeout,
         )
         response.raise_for_status()
-        return str(response.json().get("response") or "")
+        body = response.json()
+        text = str(body.get("response") or "")
+        print(
+            f"ollama_generate done model={self.model} response_chars={len(text)} "
+            f"eval_count={body.get('eval_count')} done_reason={body.get('done_reason')} "
+            f"total_duration={body.get('total_duration')}",
+            flush=True,
+        )
+        return text
 
 
 def platform_llm_config(app_config: dict) -> LlmConfig:
@@ -74,6 +126,12 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
         app_config["GRAPH_LLM_MODEL"],
         float(timeout) if timeout not in (None, "", 0, "0") else None,
         json_mode=True,
+        options={
+            "temperature": 0,
+            "num_predict": int(app_config.get("GRAPH_LLM_NUM_PREDICT", 300)),
+            "num_ctx": int(app_config.get("GRAPH_LLM_NUM_CTX", 4096)),
+        },
+        json_schema=GRAPH_EXTRACTION_SCHEMA,
     )
 
 

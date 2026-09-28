@@ -17,34 +17,50 @@ def entity_id(project_id: str, normalized_name: str) -> str:
 
 def parse_graph_json(payload: str) -> tuple[list[GraphEntity], list[GraphRelation]]:
     data = json.loads(extract_json_object(payload))
-    entities = [
-        GraphEntity(item["name"], normalize_entity_name(item["name"]), item.get("type") or item.get("entity_type"), item.get("description"))
-        for item in data.get("entities", [])
-        if item.get("name") and not is_placeholder(item.get("name"))
-    ]
-    relations = [
-        GraphRelation(
-            item.get("source") or item.get("source_entity"),
-            item.get("target") or item.get("target_entity"),
-            item.get("relation") or item.get("relationship") or item.get("type"),
-            item.get("description"),
-            float(item.get("weight", 1)),
-        )
-        for item in data.get("relations", [])
-        if (item.get("source") or item.get("source_entity"))
-        and (item.get("target") or item.get("target_entity"))
-        and (item.get("relation") or item.get("relationship") or item.get("type"))
-        and not is_placeholder(item.get("source") or item.get("source_entity"))
-        and not is_placeholder(item.get("target") or item.get("target_entity"))
-    ]
+    entities = []
+    for item in data.get("entities", []):
+        name = item.get("name") or item.get("entity")
+        if name and not is_placeholder(name):
+            entities.append(GraphEntity(name, normalize_entity_name(name), item.get("type") or item.get("entity_type") or "entity", item.get("description")))
+
+    relations = []
+    for item in data.get("relations", []):
+        source = item.get("source") or item.get("source_entity")
+        target = item.get("target") or item.get("target_entity")
+        relation = item.get("relation") or item.get("relationship") or item.get("type")
+        if source and target and relation and not is_placeholder(source) and not is_placeholder(target) and not is_placeholder(relation):
+            relations.append(GraphRelation(source, target, relation, item.get("description"), float(item.get("weight", 1))))
     return entities, relations
+
+
+def graph_json_stats(payload: str) -> dict:
+    try:
+        data = json.loads(extract_json_object(payload))
+    except json.JSONDecodeError:
+        return {"raw_entities": 0, "raw_relations": 0, "placeholder_entities": 0, "placeholder_relations": 0}
+    raw_entities = data.get("entities", []) if isinstance(data.get("entities"), list) else []
+    raw_relations = data.get("relations", []) if isinstance(data.get("relations"), list) else []
+    placeholder_entities = sum(1 for item in raw_entities if is_placeholder(item.get("name") or item.get("entity")))
+    placeholder_relations = sum(
+        1
+        for item in raw_relations
+        if is_placeholder(item.get("source") or item.get("source_entity"))
+        or is_placeholder(item.get("target") or item.get("target_entity"))
+        or is_placeholder(item.get("relation") or item.get("relationship") or item.get("type"))
+    )
+    return {
+        "raw_entities": len(raw_entities),
+        "raw_relations": len(raw_relations),
+        "placeholder_entities": placeholder_entities,
+        "placeholder_relations": placeholder_relations,
+    }
 
 
 def is_placeholder(value: str | None) -> bool:
     if not value:
         return True
     normalized = normalize_entity_name(value)
-    return normalized in {"...", "entity name", "source", "target"}
+    return normalized in {"...", "entity name", "person name", "source", "target", "relation", "entity"}
 
 
 def extract_json_object(payload: str) -> str:
@@ -81,16 +97,15 @@ def extract_json_object(payload: str) -> str:
 
 def graph_extraction_prompt(text: str) -> str:
     return f"""
-Extract a knowledge graph from the text.
-Return JSON only. Do not summarize. Do not explain.
-The JSON must have both keys: entities and relations.
-Do not use placeholder values like "..." or "entity name".
-Use this exact shape:
-{{
-  "entities": [{{"name": "...", "type": "...", "description": "..."}}],
-  "relations": [{{"source": "entity name", "target": "entity name", "relation": "...", "description": "...", "weight": 1}}]
-}}
-If no relations are found, return "relations": [].
+Extract a small knowledge graph from the legal text.
+Return only the JSON object required by the supplied schema.
+Use only real names that appear in the text.
+Do not output placeholders, markdown, commentary, descriptions, or weights.
+Return at most 4 entities and 4 relations.
+Entity fields: name, type.
+Relation fields: source, target, relation.
+Relation source and target must exactly match returned entity names.
+If none are found, return empty arrays.
 
 Text:
 {text}

@@ -6,9 +6,9 @@ from pathlib import Path
 import httpx
 from pypdf import PdfReader
 
-from ai.graph.extractor import extract_fallback_entities, fallback_relations, graph_extraction_prompt, parse_graph_json
+from ai.graph.extractor import extract_fallback_entities, fallback_relations, graph_extraction_prompt, graph_json_stats, parse_graph_json
 from ai.graph.store import Neo4jGraphStore
-from ai.ingestion.chunker import TextChunker
+from ai.ingestion.chunker import TextChunker, clean_ocr_for_graph
 from ai.ingestion.unstructured_client import UnstructuredClient
 from backend.app.db.connection import connect, db
 from backend.app.db.repository import SimpleRepository, now_ms
@@ -70,9 +70,19 @@ class IngestionService:
         if not chunks:
             raise IngestionError("Document text did not produce any chunks")
 
+        graph_text = clean_ocr_for_graph(text)
+        print(
+            f"ingest {document['id']} graph_text_cleaned original_chars={len(text)} cleaned_chars={len(graph_text)} "
+            f"removed_chars={len(text) - len(graph_text)}",
+            flush=True,
+        )
+        graph_chunks = TextChunker(
+            int(self.config.get("GRAPH_CHUNK_SIZE", 350)),
+            int(self.config.get("GRAPH_CHUNK_OVERLAP", 40)),
+        ).chunk(graph_text)
         self.update_document_status(document["id"], project["organization_id"], "extracting_graph")
         started = time.monotonic()
-        entities, relations = self.extract_graph(chunks)
+        entities, relations = self.extract_graph(graph_chunks)
         print(
             f"ingest {document['id']} extracted graph entities={len(entities)} relations={len(relations)} "
             f"duration={time.monotonic() - started:.1f}s",
@@ -181,34 +191,60 @@ class IngestionService:
         for attempt, chunk in enumerate(chunks[:max_chunks], start=1):
             attempted_text.append(chunk.content)
             started = time.monotonic()
+            prompt_started = time.monotonic()
+            prompt = graph_extraction_prompt(chunk.content)
+            prompt_duration = time.monotonic() - prompt_started
             print(
-                f"graph_extract chunk={attempt}/{min(len(chunks), max_chunks)} tokens={chunk.token_count} chars={len(chunk.content)} start",
+                f"graph_extract chunk={attempt}/{min(len(chunks), max_chunks)} tokens={chunk.token_count} "
+                f"chars={len(chunk.content)} prompt_chars={len(prompt)} prompt_build={prompt_duration:.3f}s start",
                 flush=True,
             )
             try:
-                raw = llm.generate(graph_extraction_prompt(chunk.content))
+                ollama_started = time.monotonic()
+                raw = llm.generate(prompt)
+                ollama_duration = time.monotonic() - ollama_started
                 print(
-                    f"graph_extract chunk={attempt} ollama_done chars={len(raw)} duration={time.monotonic() - started:.1f}s",
+                    f"graph_extract chunk={attempt} ollama_done chars={len(raw)} ollama_duration={ollama_duration:.1f}s duration={time.monotonic() - started:.1f}s",
                     flush=True,
                 )
             except httpx.TimeoutException as exc:
-                print(f"graph_extract chunk={attempt} timeout duration={time.monotonic() - started:.1f}s error={exc}", flush=True)
+                print(
+                    f"graph_extract chunk={attempt} timeout duration={time.monotonic() - started:.1f}s "
+                    f"action=skip_chunk_and_continue error={exc}",
+                    flush=True,
+                )
                 continue
             except httpx.HTTPError as exc:
                 print(f"graph_extract chunk={attempt} http_error duration={time.monotonic() - started:.1f}s error={exc}", flush=True)
                 continue
             try:
+                parse_started = time.monotonic()
                 chunk_entities, chunk_relations = parse_graph_json(raw)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
                 preview = raw.replace("\n", " ")[:500]
                 print(f"graph_extract chunk={attempt} parse_failed error={exc} raw_preview={preview}", flush=True)
                 continue
+            parse_duration = time.monotonic() - parse_started
+            stats = graph_json_stats(raw)
             print(
-                f"graph_extract chunk={attempt} parsed entities={len(chunk_entities)} relations={len(chunk_relations)}",
+                f"graph_extract chunk={attempt} parsed entities={len(chunk_entities)} relations={len(chunk_relations)} "
+                f"raw_entities={stats['raw_entities']} raw_relations={stats['raw_relations']} "
+                f"discarded_placeholder_entities={stats['placeholder_entities']} "
+                f"discarded_placeholder_relations={stats['placeholder_relations']} "
+                f"total_entities={len(entities) + len(chunk_entities)} total_relations={len(relations) + len(chunk_relations)} "
+                f"parse_duration={parse_duration:.3f}s",
                 flush=True,
             )
+            if not chunk_entities and not chunk_relations:
+                preview = raw.replace("\n", " ")[:500]
+                print(f"graph_extract chunk={attempt} parsed_empty raw_preview={preview}", flush=True)
             entities.extend(chunk_entities)
             relations.extend(chunk_relations)
+            print(
+                f"graph_extract progress chunks_done={attempt}/{min(len(chunks), max_chunks)} "
+                f"elapsed={time.monotonic() - started:.1f}s cumulative_entities={len(entities)} cumulative_relations={len(relations)}",
+                flush=True,
+            )
         if not entities:
             entities = extract_fallback_entities("\n".join(attempted_text))
             relations = fallback_relations(entities)
@@ -300,6 +336,13 @@ class TursoOcrIngestionService(IngestionService):
                 for row in rows:
                     source_id = row["source_id"]
                     processed += 1
+                    doc_started = time.monotonic()
+                    text = str(row["ocr_text"] or "")
+                    print(
+                        f"turso_ocr source={source['id']} document_start source_id={source_id} "
+                        f"batch_index={processed} text_chars={len(text)} graph={'skipped' if skip_graph else 'enabled'}",
+                        flush=True,
+                    )
                     document = self.documents.create(
                         {
                             "project_id": project["id"],
@@ -311,10 +354,15 @@ class TursoOcrIngestionService(IngestionService):
                     )
                     try:
                         if skip_graph:
-                            self.ingest_text_chunks_only(project, document, str(row["ocr_text"] or ""))
+                            self.ingest_text_chunks_only(project, document, text)
                         else:
-                            self.ingest_text(project, document, str(row["ocr_text"] or ""))
+                            self.ingest_text(project, document, text)
                         completed += 1
+                        print(
+                            f"turso_ocr source={source['id']} document_done source_id={source_id} "
+                            f"document_id={document['id']} duration={time.monotonic() - doc_started:.1f}s",
+                            flush=True,
+                        )
                     except Exception as exc:  # noqa: BLE001
                         failed += 1
                         self.update_document_status(document["id"], project["organization_id"], "failed")
