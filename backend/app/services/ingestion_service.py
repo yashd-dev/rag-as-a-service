@@ -10,7 +10,7 @@ from ai.graph.extractor import extract_fallback_entities, fallback_relations, gr
 from ai.graph.store import Neo4jGraphStore
 from ai.ingestion.chunker import TextChunker
 from ai.ingestion.unstructured_client import UnstructuredClient
-from backend.app.db.connection import db
+from backend.app.db.connection import connect, db
 from backend.app.db.repository import SimpleRepository, now_ms
 from backend.app.services.crypto import SecretBox
 from backend.app.services.llm_client import graph_extraction_llm
@@ -96,6 +96,35 @@ class IngestionService:
         print(f"ingest {document['id']} done status=ready", flush=True)
         return self.documents.get(document["id"], project["organization_id"])
 
+    def ingest_text_chunks_only(self, project: dict, document: dict, text: str) -> dict:
+        if not text.strip():
+            raise IngestionError("No OCR text was extracted for this document")
+        self.update_document_status(document["id"], project["organization_id"], "chunking")
+        started = time.monotonic()
+        chunks = TextChunker().chunk(text)
+        print(
+            f"ingest {document['id']} chunked chunks={len(chunks)} "
+            f"duration={time.monotonic() - started:.1f}s graph=skipped",
+            flush=True,
+        )
+        if not chunks:
+            raise IngestionError("Document text did not produce any chunks")
+
+        self.update_document_status(document["id"], project["organization_id"], "indexing_chunks")
+        store = Neo4jGraphStore(
+            self.config["NEO4J_URI"],
+            self.config["NEO4J_USERNAME"],
+            self.config["NEO4J_PASSWORD"],
+        )
+        try:
+            store.ensure_constraints()
+            store.ingest_document(project, document, chunks, [], [])
+        finally:
+            store.close()
+        self.update_document_status(document["id"], project["organization_id"], "ready")
+        print(f"ingest {document['id']} done status=ready graph=skipped", flush=True)
+        return self.documents.get(document["id"], project["organization_id"])
+
     def extract_text(self, file_path: Path) -> str:
         suffix = file_path.suffix.lower()
         print(f"extract_text file={file_path.name} suffix={suffix}", flush=True)
@@ -141,11 +170,12 @@ class IngestionService:
         llm = graph_extraction_llm(self.config)
         entities = []
         relations = []
-        max_chunks = int(self.config.get("GRAPH_EXTRACTION_MAX_CHUNKS", 3))
+        configured_max_chunks = int(self.config.get("GRAPH_EXTRACTION_MAX_CHUNKS", 0) or 0)
+        max_chunks = configured_max_chunks if configured_max_chunks > 0 else len(chunks)
         attempted_text = []
         print(
             f"graph_extract chunks_total={len(chunks)} chunks_attempted={min(len(chunks), max_chunks)} "
-            f"timeout_seconds={self.config.get('GRAPH_LLM_TIMEOUT_SECONDS', 50)} model={self.config.get('GRAPH_LLM_MODEL')}",
+            f"timeout_seconds={self.config.get('GRAPH_LLM_TIMEOUT_SECONDS') or 'none'} model={self.config.get('GRAPH_LLM_MODEL')}",
             flush=True,
         )
         for attempt, chunk in enumerate(chunks[:max_chunks], start=1):
@@ -191,34 +221,130 @@ class IngestionService:
 
 
 class TursoOcrIngestionService(IngestionService):
-    def ingest_source(self, project: dict, source: dict) -> list[dict]:
-        metadata = json.loads(source.get("prefix") or "{}")
+    def __init__(self, app_config: dict):
+        super().__init__(app_config)
+        self.sources = SimpleRepository(app_config["TURSO_DATABASE_URL"], app_config["TURSO_AUTH_TOKEN"], "data_sources", "src")
+
+    def update_source_metadata(self, source: dict, metadata: dict, **updates) -> dict:
+        metadata = metadata | updates
+        updated = self.sources.update(
+            source["id"],
+            source["organization_id"],
+            {"prefix": json.dumps(metadata)},
+        )
+        return json.loads((updated or source).get("prefix") or "{}")
+
+    def fetch_batch(self, source: dict, metadata: dict, limit: int) -> list[dict]:
         token = SecretBox(self.config["CREDENTIAL_ENCRYPTION_KEY"]).decrypt(source["encrypted_secret_access_key"])
         table = sql_identifier(metadata["table_name"])
         id_column = sql_identifier(metadata["id_column"])
         text_column = sql_identifier(metadata["text_column"])
         status_column = sql_identifier(metadata.get("status_column") or "ocr_status")
         status_value = metadata.get("status_value") or "done"
-        with db(source["endpoint_url"], token) as conn:
+        last_source_id = metadata.get("last_source_id")
+        where = f"WHERE {status_column} = ? AND {text_column} IS NOT NULL"
+        params: list = [status_value]
+        if last_source_id is not None:
+            where += f" AND {id_column} > ?"
+            params.append(last_source_id)
+        params.append(limit)
+        print(
+            f"turso_ocr source={source['id']} source_read SELECT table={table} id_column={id_column} "
+            f"text_column={text_column} limit={limit} last_source_id={last_source_id}",
+            flush=True,
+        )
+        conn = connect(source["endpoint_url"], token)
+        try:
             cursor = conn.execute(
-                f"SELECT {id_column} AS source_id, {text_column} AS ocr_text FROM {table} WHERE {status_column} = ? AND {text_column} IS NOT NULL",
-                (status_value,),
+                f"""
+                SELECT {id_column} AS source_id, {text_column} AS ocr_text
+                FROM {table}
+                {where}
+                ORDER BY {id_column}
+                LIMIT ?
+                """,
+                tuple(params),
             )
-            rows = [dict(zip([column[0] for column in cursor.description], row, strict=True)) for row in cursor.fetchall()]
+            return [dict(zip([column[0] for column in cursor.description], row, strict=True)) for row in cursor.fetchall()]
+        finally:
+            conn.close()
 
-        ingested = []
-        for row in rows:
-            document = self.documents.create(
-                {
-                    "project_id": project["id"],
-                    "organization_id": project["organization_id"],
-                    "uploaded_by_user_id": project["owner_user_id"],
-                    "file_name": str(row["source_id"]),
-                    "status": "pending_processing",
-                }
+    def run_background_ingestion(self, project: dict, source: dict) -> None:
+        metadata = json.loads(source.get("prefix") or "{}")
+        batch_size = min(max(int(metadata.get("batch_size") or 50), 1), 500)
+        max_documents = metadata.get("max_documents")
+        max_documents = int(max_documents) if max_documents is not None else None
+        skip_graph = bool(metadata.get("skip_graph_extraction", False))
+        processed = int(metadata.get("processed_count") or 0)
+        completed = int(metadata.get("completed_count") or 0)
+        failed = int(metadata.get("failed_count") or 0)
+        metadata = self.update_source_metadata(
+            source,
+            metadata,
+            ingestion_status="running",
+            ingestion_started_at=metadata.get("ingestion_started_at") or now_ms(),
+            ingestion_finished_at=None,
+            last_error=None,
+        )
+        print(
+            f"turso_ocr source={source['id']} ingestion start batch_size={batch_size} "
+            f"max_documents={max_documents} graph={'skipped' if skip_graph else 'enabled'}",
+            flush=True,
+        )
+        try:
+            while max_documents is None or processed < max_documents:
+                limit = batch_size if max_documents is None else min(batch_size, max_documents - processed)
+                rows = self.fetch_batch(source, metadata, limit)
+                if not rows:
+                    break
+                for row in rows:
+                    source_id = row["source_id"]
+                    processed += 1
+                    document = self.documents.create(
+                        {
+                            "project_id": project["id"],
+                            "organization_id": project["organization_id"],
+                            "uploaded_by_user_id": project["owner_user_id"],
+                            "file_name": str(source_id),
+                            "status": "pending_processing",
+                        }
+                    )
+                    try:
+                        if skip_graph:
+                            self.ingest_text_chunks_only(project, document, str(row["ocr_text"] or ""))
+                        else:
+                            self.ingest_text(project, document, str(row["ocr_text"] or ""))
+                        completed += 1
+                    except Exception as exc:  # noqa: BLE001
+                        failed += 1
+                        self.update_document_status(document["id"], project["organization_id"], "failed")
+                        metadata = self.update_source_metadata(source, metadata, last_error=f"{source_id}: {exc}")
+                        print(f"turso_ocr source={source['id']} document={source_id} failed error={exc}", flush=True)
+                    metadata = self.update_source_metadata(
+                        source,
+                        metadata,
+                        last_source_id=source_id,
+                        processed_count=processed,
+                        completed_count=completed,
+                        failed_count=failed,
+                    )
+                print(f"turso_ocr source={source['id']} progress processed={processed} completed={completed} failed={failed}", flush=True)
+            status = "completed" if failed == 0 else "completed_with_errors"
+            metadata = self.update_source_metadata(source, metadata, ingestion_status=status, ingestion_finished_at=now_ms())
+            print(f"turso_ocr source={source['id']} ingestion {status} processed={processed} completed={completed} failed={failed}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            self.update_source_metadata(
+                source,
+                metadata,
+                ingestion_status="failed",
+                ingestion_finished_at=now_ms(),
+                processed_count=processed,
+                completed_count=completed,
+                failed_count=failed,
+                last_error=str(exc),
             )
-            try:
-                ingested.append(self.ingest_text(project, document, str(row["ocr_text"] or "")))
-            except IngestionError:
-                ingested.append(self.documents.get(document["id"], project["organization_id"]))
-        return ingested
+            print(f"turso_ocr source={source['id']} ingestion failed error={exc}", flush=True)
+
+    def ingest_source(self, project: dict, source: dict) -> list[dict]:
+        self.run_background_ingestion(project, source)
+        return []

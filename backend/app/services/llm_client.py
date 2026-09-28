@@ -29,7 +29,7 @@ class OpenAICompatibleLlm:
 
 
 class OllamaGenerateLlm:
-    def __init__(self, base_url: str, model: str, timeout: float = 180, json_mode: bool = False):
+    def __init__(self, base_url: str, model: str, timeout: float | None = None, json_mode: bool = False):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
@@ -68,10 +68,11 @@ def credential_llm_config(credential: dict, encryption_key: str) -> LlmConfig:
 
 
 def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
+    timeout = app_config.get("GRAPH_LLM_TIMEOUT_SECONDS")
     return OllamaGenerateLlm(
         app_config["OLLAMA_BASE_URL"],
         app_config["GRAPH_LLM_MODEL"],
-        float(app_config.get("GRAPH_LLM_TIMEOUT_SECONDS", 50)),
+        float(timeout) if timeout not in (None, "", 0, "0") else None,
         json_mode=True,
     )
 

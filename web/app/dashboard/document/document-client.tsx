@@ -7,7 +7,7 @@ import { useFormStatus } from "react-dom";
 import { ArrowLeft, Check, ChevronDown, Code2, Database, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { Document, Project } from "@/lib/backend";
+import type { DataSource, Document, Project } from "@/lib/backend";
 
 const corpusJson = `{
   "corpusKey": "supreme_court",
@@ -77,6 +77,7 @@ function Field({ label, helper, children }: { label: string; helper?: string; ch
 
 type DocumentClientProps = {
   projects: Project[];
+  dataSources: DataSource[];
   documentsByProject: Record<string, Document[]>;
   createProjectAction: (_state: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
   deleteProjectAction: (formData: FormData) => void;
@@ -92,7 +93,7 @@ function CreateCorpusButton() {
   );
 }
 
-export function DocumentClient({ projects, documentsByProject, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
+export function DocumentClient({ projects, dataSources, documentsByProject, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
   const [mode, setMode] = useState<"empty" | "create">(projects.length ? "empty" : "empty");
   const [jsonOpen, setJsonOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -145,6 +146,7 @@ export function DocumentClient({ projects, documentsByProject, createProjectActi
 
   if (mode === "empty" && selectedProject) {
     const documents = documentsByProject[selectedProject.id] || [];
+    const projectSources = dataSources.filter((source) => source.source_type === "turso_ocr" && source.project_id === selectedProject.id);
     return (
       <div className="flex min-h-[calc(100svh-4rem)] flex-col">
         <div className="flex h-16 items-center justify-between border-b px-4 md:px-6">
@@ -178,6 +180,30 @@ export function DocumentClient({ projects, documentsByProject, createProjectActi
               {uploadError ? <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div> : null}
             </form>
           </section>
+
+          {projectSources.length ? (
+            <section className="overflow-hidden rounded-xl border bg-background">
+              <div className="grid grid-cols-[1fr_140px_120px_120px_120px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
+                <span>OCR source</span>
+                <span>Status</span>
+                <span>Processed</span>
+                <span>Completed</span>
+                <span>Failed</span>
+              </div>
+              {projectSources.map((source) => (
+                <div key={source.id} className="grid grid-cols-[1fr_140px_120px_120px_120px] items-center gap-3 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-card">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium tracking-tight">{source.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{source.last_error || source.last_source_id || source.id}</p>
+                  </div>
+                  <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{source.ingestion_status || "pending"}</span>
+                  <span className="text-muted-foreground">{source.processed_count ?? 0}</span>
+                  <span className="text-muted-foreground">{source.completed_count ?? 0}</span>
+                  <span className="text-muted-foreground">{source.failed_count ?? 0}</span>
+                </div>
+              ))}
+            </section>
+          ) : null}
 
           <section className="overflow-hidden rounded-xl border bg-background">
             <div className="grid grid-cols-[1fr_140px_160px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
@@ -350,6 +376,13 @@ export function DocumentClient({ projects, documentsByProject, createProjectActi
                   <input name="source_turso_url_column" defaultValue="url" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </Field>
               </div>
+              <label className="flex items-start gap-3 rounded-lg border bg-card p-3 text-sm">
+                <input name="source_skip_graph_extraction" type="checkbox" value="true" className="mt-1 size-4" />
+                <span>
+                  <span className="block font-medium tracking-tight">Emergency speed mode: skip knowledge graph extraction</span>
+                  <span className="mt-1 block text-muted-foreground">Leave this unchecked for GraphRAG. Check only if you need fast chunk-only ingestion.</span>
+                </span>
+              </label>
             </div>
           </Section>
 

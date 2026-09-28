@@ -143,3 +143,16 @@ class SimpleRepository:
                 (row_id, organization_id),
             )
         return cursor.rowcount > 0
+
+    def update(self, row_id: str, organization_id: str, values: dict) -> dict | None:
+        if not values:
+            return self.get(row_id, organization_id)
+        row = values | {"updated_at": now_ms()}
+        assignments = ", ".join(f"{column} = ?" for column in row)
+        params = tuple(row[column] for column in row) + (row_id, organization_id)
+        with db(self.database_url, self.auth_token) as conn:
+            conn.execute(
+                f"UPDATE {self.table} SET {assignments} WHERE id = ? AND organization_id = ?",
+                params,
+            )
+        return self.get(row_id, organization_id)
