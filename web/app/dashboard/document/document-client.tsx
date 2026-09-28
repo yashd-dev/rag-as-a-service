@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
+import type { FormEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { ArrowLeft, Check, ChevronDown, Code2, Database, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { Project } from "@/lib/backend";
+import type { Document, Project } from "@/lib/backend";
 
 const corpusJson = `{
   "corpusKey": "supreme_court",
@@ -75,8 +77,10 @@ function Field({ label, helper, children }: { label: string; helper?: string; ch
 
 type DocumentClientProps = {
   projects: Project[];
+  documentsByProject: Record<string, Document[]>;
   createProjectAction: (_state: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
   deleteProjectAction: (formData: FormData) => void;
+  deleteDocumentAction: (formData: FormData) => void;
 };
 
 function CreateCorpusButton() {
@@ -88,10 +92,122 @@ function CreateCorpusButton() {
   );
 }
 
-export function DocumentClient({ projects, createProjectAction, deleteProjectAction }: DocumentClientProps) {
+export function DocumentClient({ projects, documentsByProject, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
   const [mode, setMode] = useState<"empty" | "create">(projects.length ? "empty" : "empty");
   const [jsonOpen, setJsonOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<string[]>([]);
   const [createState, formAction] = useActionState(createProjectAction, undefined);
+  const router = useRouter();
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
+
+  async function handleDocumentUpload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProject) {
+      return;
+    }
+    const form = event.currentTarget;
+    const input = form.elements.namedItem("file") as HTMLInputElement | null;
+    const files = Array.from(input?.files || []);
+    if (!files.length) {
+      setUploadError("Choose at least one file to upload.");
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    setUploadFiles(files.map((file) => file.name));
+    const body = new FormData();
+    for (const file of files) {
+      body.append("file", file);
+    }
+    try {
+      const response = await fetch(`/api/projects/${selectedProject.id}/documents/upload`, {
+        method: "POST",
+        body,
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok && response.status !== 207) {
+        throw new Error(payload?.error || `Upload failed with status ${response.status}`);
+      }
+      if (payload?.errors?.length) {
+        throw new Error(payload.errors.map((item: { file_name: string; error: string }) => `${item.file_name}: ${item.error}`).join("; "));
+      }
+      form.reset();
+      router.refresh();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Could not upload document.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  if (mode === "empty" && selectedProject) {
+    const documents = documentsByProject[selectedProject.id] || [];
+    return (
+      <div className="flex min-h-[calc(100svh-4rem)] flex-col">
+        <div className="flex h-16 items-center justify-between border-b px-4 md:px-6">
+          <div className="min-w-0">
+            <button type="button" onClick={() => setSelectedProjectId(null)} className="text-sm text-muted-foreground hover:text-foreground">Documents / Corpus</button>
+            <h1 className="truncate text-2xl font-semibold tracking-tight">{selectedProject.name}</h1>
+          </div>
+          <Button type="button" onClick={() => setMode("create")} className="h-11 gap-2 px-4 font-normal">
+            <Plus className="size-4" />
+            Create corpus
+          </Button>
+        </div>
+
+        <div className="grid gap-5 p-4 md:p-6">
+          <section className="rounded-xl border bg-background p-4 md:p-5">
+            <h2 className="font-medium tracking-tight">Upload document</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Upload one or more files. The request waits for text extraction/OCR, chunking, Ollama knowledge-graph labeling, and graph indexing before it returns.</p>
+            <form onSubmit={handleDocumentUpload} className="mt-4 flex flex-col gap-3">
+              <input type="hidden" name="project_id" value={selectedProject.id} />
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input name="file" type="file" multiple disabled={uploading} className="h-11 flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm focus:ring-2 focus:ring-ring disabled:opacity-60" />
+                <button type="submit" disabled={uploading} className="h-11 rounded-lg bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:bg-primary/80 disabled:pointer-events-none disabled:opacity-70">
+                  {uploading ? "Processing..." : "Upload and process"}
+                </button>
+              </div>
+              {uploading ? (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                  Processing {uploadFiles.length} file{uploadFiles.length === 1 ? "" : "s"}: {uploadFiles.join(", ")}. This can take a few minutes for OCR and graph extraction.
+                </div>
+              ) : null}
+              {uploadError ? <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div> : null}
+            </form>
+          </section>
+
+          <section className="overflow-hidden rounded-xl border bg-background">
+            <div className="grid grid-cols-[1fr_140px_160px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
+              <span>Document</span>
+              <span>Status</span>
+              <span>Created</span>
+              <span />
+            </div>
+            {documents.length ? documents.map((document) => (
+              <div key={document.id} className="grid grid-cols-[1fr_140px_160px_96px] items-center gap-3 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-card">
+                <div className="min-w-0">
+                  <p className="truncate font-medium tracking-tight">{document.file_name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{document.id}</p>
+                </div>
+                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{document.status}</span>
+                <span className="text-muted-foreground">{new Date(document.created_at).toLocaleDateString()}</span>
+                <form action={deleteDocumentAction}>
+                  <input type="hidden" name="project_id" value={selectedProject.id} />
+                  <input type="hidden" name="document_id" value={document.id} />
+                  <button type="submit" className="h-9 rounded-lg border px-3 text-sm text-destructive hover:bg-destructive/10">Remove</button>
+                </form>
+              </div>
+            )) : (
+              <div className="p-8 text-center text-sm text-muted-foreground">No documents added to this corpus yet.</div>
+            )}
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === "empty" && !projects.length) {
     return (
@@ -154,10 +270,10 @@ export function DocumentClient({ projects, createProjectAction, deleteProjectAct
             </div>
             {projects.map((project) => (
               <div key={project.id} className="grid grid-cols-[1fr_240px_160px_120px_96px] items-center gap-3 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-card">
-                <div className="min-w-0">
-                  <p className="truncate font-medium tracking-tight">{project.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{project.slug}</p>
-                </div>
+                <button type="button" onClick={() => setSelectedProjectId(project.id)} className="min-w-0 text-left">
+                  <p className="truncate font-medium tracking-tight text-primary">{project.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{project.slug} · {(documentsByProject[project.id] || []).length} documents</p>
+                </button>
                 <span className="truncate text-muted-foreground">{project.embedding_model || "sentence-transformers/all-MiniLM-L6-v2"}</span>
                 <span className="text-muted-foreground">{project.default_query_mode}</span>
                 <span className="w-fit rounded-full bg-green-100 px-2.5 py-1 text-xs text-green-700">Ready</span>
@@ -212,15 +328,26 @@ export function DocumentClient({ projects, createProjectAction, deleteProjectAct
               <Field label="Turso auth token" helper="Stored encrypted by the backend. Leave blank if you are not attaching an OCR database yet.">
                 <input name="source_turso_token" type="password" autoComplete="off" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </Field>
-              <Field label="Content table" helper="Table that contains OCR rows.">
-                <input name="source_turso_table" defaultValue="documents" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <Field label="Content table" helper="The dataset-api schema stores PDF OCR rows in the pdfs table.">
+                <input name="source_turso_table" defaultValue="pdfs" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </Field>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="ID column">
-                  <input name="source_turso_id_column" defaultValue="id" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                  <input name="source_turso_id_column" defaultValue="path" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </Field>
                 <Field label="Text column">
-                  <input name="source_turso_text_column" defaultValue="content" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                  <input name="source_turso_text_column" defaultValue="ocr_text" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="Status column">
+                  <input name="source_turso_status_column" defaultValue="ocr_status" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </Field>
+                <Field label="Ready value">
+                  <input name="source_turso_status_value" defaultValue="done" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </Field>
+                <Field label="URL column">
+                  <input name="source_turso_url_column" defaultValue="url" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </Field>
               </div>
             </div>

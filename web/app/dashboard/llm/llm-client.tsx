@@ -7,22 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { Credential } from "@/lib/backend";
 
 const llms = [
-  { id: "llm_3875912", name: "mockingbird-2024-06-18-experimental", description: "Recall's experimental summarization model for RAG answers." },
-  { id: "llm_4875912", name: "mockingbird-1.0", description: "Mockingbird LLM v1.0 prompt for summarizing query results as an answer." },
-  { id: "llm_5875912", name: "mockingbird-2.0", description: "Mockingbird LLM v2.0 prompt for summarizing query results as an answer." },
-  { id: "llm_6875912", name: "qwen2.5-7b-instruct", description: "Qwen/Qwen2.5-7B-Instruct base model for answer generation." },
-  { id: "llm_7747127", name: "gpt-3.5-turbo", description: "OpenAI's GPT-3.5 Turbo model." },
-  { id: "llm_9236343", name: "gpt-4", description: "OpenAI's GPT-4 model." },
-  { id: "llm_53462110", name: "gpt-4o", description: "OpenAI's GPT-4o model." },
-  { id: "llm_53462112", name: "gpt-4o-mini", description: "OpenAI's GPT-4o-mini model." },
-  { id: "llm_520721868", name: "gpt-5", description: "OpenAI GPT-5 model." },
-  { id: "llm_520721869", name: "gpt-5-mini", description: "OpenAI GPT-5 Mini model." },
-  { id: "llm_520721870", name: "gpt-5-nano", description: "OpenAI GPT-5 Nano model." },
-  { id: "llm_520721923", name: "gpt-5.2", description: "OpenAI GPT-5.2 model." },
-  { id: "llm_520722003", name: "gpt-5.4", description: "OpenAI GPT-5.4 model." },
-  { id: "llm_520722203", name: "gpt-5.5", description: "OpenAI GPT-5.5 model." },
-  { id: "llm_520722277", name: "GPT 5.6 Terra", description: "OpenAI GPT-5.6 Terra, balanced tier." },
-  { id: "llm_520722278", name: "Luna", description: "OpenAI GPT-5.6 Luna, fast cost-efficient tier." },
+  { id: "platform_gemini", name: "gemini-2.5-flash", description: "Built-in Gemini model exposed through an OpenAI-compatible API wrapper." },
 ];
 
 type Llm = (typeof llms)[number];
@@ -46,7 +31,7 @@ function llmJson(llm: Llm) {
   "ownership": "platform",
   "type": "openai-compatible",
   "model": "${llm.name}",
-  "uri": "https://api.openai.com/v1/chat/completions",
+  "uri": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
   "headers": {},
   "auth": {
     "type": "bearer",
@@ -74,7 +59,7 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
         <div className="flex flex-col gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">Add LLM</h1>
           <p className="text-sm text-muted-foreground">
-            Paste a provider key. We&apos;ll list the models it can reach and check that one of them responds. <span className="text-primary">Learn more</span>
+            Add an OpenAI-compatible endpoint and token. Queries use the built-in Gemini wrapper by default unless a corpus selects one of these credentials.
           </p>
         </div>
 
@@ -86,7 +71,7 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
           <div className="grid gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium tracking-tight">Provider</span>
-              <select name="provider" defaultValue="openai" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"><option value="openai">OpenAI</option><option value="ollama">Ollama</option><option value="unstructured">Unstructured</option></select>
+              <select name="provider" defaultValue="openai-compatible" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"><option value="openai-compatible">OpenAI-compatible</option><option value="openai">OpenAI</option><option value="gemini">Gemini OpenAI-compatible</option><option value="ollama">Ollama</option></select>
             </label>
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium tracking-tight">Credential type</span>
@@ -101,8 +86,8 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
 
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium tracking-tight">Endpoint URL (required)</span>
-            <span className="text-sm text-muted-foreground">The endpoint to probe. A URL alone works for unauthenticated or self-hosted OpenAI-compatible servers.</span>
-            <input name="base_url" placeholder="https://my-endpoint.example/v1/chat/completions" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <span className="text-sm text-muted-foreground">Use the base URL, not the full chat completions path.</span>
+            <input name="base_url" placeholder="https://my-endpoint.example/v1" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </label>
 
           <label className="flex flex-col gap-2">

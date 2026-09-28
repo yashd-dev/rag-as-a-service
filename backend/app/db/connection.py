@@ -30,6 +30,9 @@ def migrate_db(conn) -> None:
         conn.execute(
             "ALTER TABLE projects ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'sentence-transformers/all-MiniLM-L6-v2'"
         )
+    document_columns = {row[1] for row in conn.execute("PRAGMA table_info(documents)").fetchall()}
+    if "status" not in document_columns:
+        conn.execute("ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'")
 
 
 @contextmanager

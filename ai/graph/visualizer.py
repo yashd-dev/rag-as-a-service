@@ -6,6 +6,7 @@ def render_graph_html(graph: dict) -> str:
     edges = graph.get("edges", [])
     node_items = "".join(f"<li>{escape(node['label'])}</li>" for node in nodes)
     edge_items = "".join(f"<li>{escape(edge['source'])} -> {escape(edge['target'])}: {escape(str(edge.get('label') or 'related'))}</li>" for edge in edges)
+    empty_hint = "Document chunks may be indexed, but no entities were extracted from the model output yet. Check backend graph_extract parse_failed/timeout logs."
     return f"""
 <!doctype html>
 <html>
@@ -14,7 +15,7 @@ def render_graph_html(graph: dict) -> str:
     <h1>Knowledge Graph</h1>
     <p>{len(nodes)} nodes · {len(edges)} edges</p>
     <h2>Entities</h2>
-    <ul>{node_items or '<li>No graph entities indexed yet.</li>'}</ul>
+    <ul>{node_items or f'<li>{escape(empty_hint)}</li>'}</ul>
     <h2>Relationships</h2>
     <ul>{edge_items or '<li>No relationships indexed yet.</li>'}</ul>
   </body>

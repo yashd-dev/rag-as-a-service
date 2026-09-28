@@ -24,6 +24,9 @@ class DataSourceService:
                 "table_name": payload["table_name"],
                 "id_column": payload["id_column"],
                 "text_column": payload["text_column"],
+                "status_column": payload.get("status_column") or "ocr_status",
+                "status_value": payload.get("status_value") or "done",
+                "url_column": payload.get("url_column") or "url",
             }
             row = self.repository.create(
                 {

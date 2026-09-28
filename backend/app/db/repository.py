@@ -33,6 +33,8 @@ class ProjectCreate:
     default_query_mode: str = "hybrid"
     embedding_provider: str = "huggingface"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    default_llm_credential_id: str | None = None
+    default_embedding_credential_id: str | None = None
 
 
 class ProjectRepository:
@@ -49,8 +51,9 @@ class ProjectRepository:
                 INSERT INTO projects(
                     id, organization_id, owner_user_id, name, slug, description,
                     default_query_mode, embedding_provider, embedding_model,
+                    default_llm_credential_id, default_embedding_credential_id,
                     created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     project_id,
@@ -62,6 +65,8 @@ class ProjectRepository:
                     data.default_query_mode,
                     data.embedding_provider,
                     data.embedding_model,
+                    data.default_llm_credential_id,
+                    data.default_embedding_credential_id,
                     timestamp,
                     timestamp,
                 ),
@@ -130,3 +135,11 @@ class SimpleRepository:
                 (row_id, organization_id),
             )
         return row_to_dict(cursor)
+
+    def delete(self, row_id: str, organization_id: str) -> bool:
+        with db(self.database_url, self.auth_token) as conn:
+            cursor = conn.execute(
+                f"DELETE FROM {self.table} WHERE id = ? AND organization_id = ?",
+                (row_id, organization_id),
+            )
+        return cursor.rowcount > 0

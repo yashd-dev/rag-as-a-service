@@ -30,12 +30,13 @@ def graph_status(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    _, error = project_or_error(project_id, auth.organization_id)
+    project, error = project_or_error(project_id, auth.organization_id)
     if error:
         return error
     store = graph_store()
     try:
         store.ensure_constraints()
+        store.ensure_project(project)
         return jsonify(store.project_status(project_id, auth.organization_id))
     finally:
         store.close()
@@ -46,13 +47,31 @@ def graph_html(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    _, error = project_or_error(project_id, auth.organization_id)
+    project, error = project_or_error(project_id, auth.organization_id)
     if error:
         return error
     store = graph_store()
     try:
         store.ensure_constraints()
+        store.ensure_project(project)
         html = render_graph_html(store.project_graph(project_id, auth.organization_id))
     finally:
         store.close()
     return Response(html, mimetype="text/html")
+
+
+@graph_bp.get("/<project_id>/graph/data")
+def graph_data(project_id: str):
+    auth, error = auth_or_error()
+    if error:
+        return error
+    project, error = project_or_error(project_id, auth.organization_id)
+    if error:
+        return error
+    store = graph_store()
+    try:
+        store.ensure_constraints()
+        store.ensure_project(project)
+        return jsonify(store.project_graph(project_id, auth.organization_id))
+    finally:
+        store.close()

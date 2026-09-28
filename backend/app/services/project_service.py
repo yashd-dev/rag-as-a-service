@@ -48,6 +48,8 @@ class ProjectService:
             default_query_mode=payload.get("default_query_mode") or "hybrid",
             embedding_provider=embedding_provider,
             embedding_model=embedding_model,
+            default_llm_credential_id=payload.get("default_llm_credential_id") or None,
+            default_embedding_credential_id=payload.get("default_embedding_credential_id") or None,
         )
         return self.repository.create(data)
 
