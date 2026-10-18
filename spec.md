@@ -215,6 +215,18 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 **Current result:** Not run. Live counts, vector compatibility and provenance coverage remain unknown; **migration gate CLOSED**. If access is unavailable or required dimensions/counts remain unverified, finish only independent Stage A tooling/tests, report the blocker and stop.
 
+#### Stage A execution record — 2026-10-18 (open)
+
+**A.1 selected bounded subset:** standalone read-only inventory transport, legacy SQL measurements, source mapping verification, graph schema discovery and transient model probe (Sections 2.7 / 11.3, tooling only). Scope and acceptance were announced before implementation: no app/startup or write paths, missing schema and unknown provenance explicit, regression tests and usage documentation. This is an incremental Stage A deliverable, not completion of Section 2.7 or permission to begin Stage B.
+
+- [x] Implement standalone `backend.scripts.inventory`, owned by `backend/inventory/`, without `backend.app`, `ai.*` or LightRAG imports. Native Turso `vector_extract` decoding, complete paged legacy vector scan, source-table mapping from the existing scoped data-source row, read-only graph discovery and optional non-persisted Ollama probe are implemented.
+- [x] Enforce SQLite file `mode=ro`, require confirmed SQL `query_only`, reject write/script/extension calls at the query boundary, use Neo4j read transactions and redact driver messages/connections. Require deployment read-only credentials as documented; READ_ACCESS alone is not authorization.
+- [x] A.1 verification: `.venv/bin/python -m pytest backend -q -o addopts='' -p no:cacheprovider` **29 passed**; targeted `.venv/bin/ruff check backend/inventory backend/scripts/inventory.py backend/tests/test_inventory.py` **PASS**; `git diff --check` **PASS**. Initial 25-test run passed; initial Ruff findings were fixed before the final checks. Startup isolation is tested with forbidden-import interception; actual local database hash/read-only rejection and read-transaction-only Neo4j mocks are tested. Live read-only permission enforcement is not claimed from mocks.
+- [ ] A.1 final diff review and Conventional Commit; commit hash belongs in handoff, not a self-referential documentation-only commit.
+- [ ] A.2 live measurements/review: discover authorized identities, run scoped measurements where available, record artifacts, discrepancies and blockers. Full graph semantic provenance/vector coverage remains a later bounded Stage A increment after discovery establishes the real schema. Unknown required measurements block the stage.
+
+**Implemented interface:** `.venv/bin/python -m backend.scripts.inventory --help`. Exact commands, configuration, read-only protections, classification rules and limitations: `backend/inventory/README.md`. New report paths are required; exit 2 intentionally keeps the migration/review gate closed. No runtime ingestion/query behavior or existing data is changed by this subset.
+
 ---
 
 ## 3. Data and Schema Integrity
