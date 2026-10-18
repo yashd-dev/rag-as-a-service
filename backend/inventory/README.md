@@ -5,6 +5,11 @@ From the repository root, using the existing Python environment:
 ```bash
 .venv/bin/python -m backend.scripts.inventory --help
 
+# Full Stage A inventory, with explicit credential-owner-wide scope authorization.
+# Includes both the configured model and an actual OCR excerpt probe.
+.venv/bin/python -m backend.scripts.inventory --env-file backend/.env \
+  --all-configured --output /tmp/opencode/inventory-all-new.json
+
 # Explicit identity-metadata discovery, if org/project/source IDs are not known.
 # Output contains IDs, not names, credentials, document text or source cursor data.
 .venv/bin/python -m backend.scripts.inventory --env-file backend/.env \
@@ -46,18 +51,32 @@ persistent output. No database fallback is allowed.
   `CREDENTIAL_ENCRYPTION_KEY` must match the existing persistent key. Source URL,
   token and mapping come from that row, never UI defaults. Table counts cover the
   entire configured input table and do not establish ownership of every row.
+  With `--all-configured`, use the separately supplied `OCR_TURSO_DB` and
+  `OCR_TURSO_DB_TOKEN` directly. The `pdfs.path/ocr_text/ocr_status/url` mapping was
+  discovered live and compared with `dataset-api/main.py`; it is validated against
+  the actual schema on every run. No frontend source creation or decryption key
+  is needed for this direct diagnostic. These variables are diagnostic inputs,
+  not a change to the runtime ingestion configuration.
 - Graph: explicitly set `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`; use a
   **read-only Neo4j account** on the deployment's default database. READ_ACCESS
   is routing, not authorization; server permissions remain necessary. No insecure
   default credentials are supplied. Schema/index information is database-wide;
   graph measurements use candidate `organization_id` / `project_id` properties.
   A schema review must confirm deployed scope mapping before interpreting zero
-  matches. No database-name configuration is introduced in this increment.
+  matches. `--all-configured` additionally measures unfiltered whole-database
+  totals: a verified zero-node/zero-edge database makes provenance and vector
+  numerators/denominators 0/0, never 100% or readiness. Nonempty topology-specific
+  provenance remains blocked until mapped. No database-name configuration is introduced.
 - Optional transient model probe (`--probe-model`): `OLLAMA_BASE_URL` (default
   `http://localhost:11434`), `OLLAMA_EMBEDDING_MODEL` (default `embeddinggemma`).
   Calls `/api/embed` with one fixed probe string and a 30-second timeout; no
   vector is persisted. A measured width is not corpus-wide model compatibility
   or proof of a pinned model revision.
+  `--all-configured` also calls `/api/tags` before/after probing and `/api/show`,
+  records the resolved model digest, and compares numeric dimensions for a query
+  probe and up to 1000 characters from actual OCR text (60-second timeout).
+  The OCR excerpt is sent only to the configured model service and only its hash
+  is included in the report; no embeddings are stored.
 
 Connection identifiers are hashed. Driver exception messages, decrypted secrets,
 source URLs and document text are excluded. Do not publish raw environment files.
@@ -84,13 +103,19 @@ stored mapping; graph server/index/constraint discovery, scoped labels/propertie
 relationship endpoint scope and duplicate ID groups; optional model dimension probe.
 Missing schema and measurement failure are explicit, never reported as empty data.
 
-**Still blocking Stage A:** deployed graph scope/topology mapping and semantic
-provenance review; chunk/entity/assertion vector coverage and evidence-link
-numerators/denominators; dangling source references; corpus reconciliation and
-per-vector content/model/revision/generation/staleness evidence; pinned served
-model compatibility; user review. This tool deliberately does not guess graph
-labels or provenance properties. Its graph report is discovery evidence for a
-subsequent bounded Stage A increment, not a complete inventory certificate.
+**Current live result:** `reports/2026-10-18-live.json` and its human-readable
+summary `reports/2026-10-18-live.md`. Measurements completed for the configured
+stores: 333 usable OCR texts, 97 application documents, no persisted chunk
+vectors, empty Neo4j, and matching real 768-dimensional source/query probes with
+a stable model digest. No unmeasured nonempty graph topology or persisted vector
+provenance is being waived: the inspected retrieval stores are actually empty.
+Expected future chunk counts cannot exist until canonical chunking; this is
+recorded as not applicable before indexing, not a fabricated coverage result.
+
+The remaining Stage A exit requirement is **user inventory review**, not service
+connectivity. Changes to source/model/schema invalidate affected eligibility.
+Nonempty graphs or failed measurements on a future run keep measurement status
+incomplete; the command never approves migration or starts ingestion.
 
 Legacy valid numeric vectors remain `unknown_blocked`, because project model
 labels do not prove model/content provenance. Missing/invalid vectors with text

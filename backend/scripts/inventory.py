@@ -55,6 +55,10 @@ def source_inventory(reader, schema, org, project, source_id, env):
 
 
 def build_report(args, env):
+    if getattr(args, "all_configured", False):
+        from backend.inventory.live import inventory
+
+        return inventory(env)
     result = {
         "started_at": now(), "scope": {"organization_id": args.organization_id,
                                        "project_id": args.project_id, "source_id": args.source_id},
@@ -137,13 +141,16 @@ def main(argv=None):
     parser.add_argument("--project-id")
     parser.add_argument("--source-id")
     parser.add_argument("--discover-scopes", action="store_true", help="Read identity metadata only; no inventory")
+    parser.add_argument("--all-configured", action="store_true", help="Explicitly authorize inventory of all configured database records and source OCR env connection")
     parser.add_argument("--probe-model", action="store_true", help="Transient Ollama embed request; never stores vectors")
     parser.add_argument("--output", type=Path, required=True, help="New JSON report path; refuses overwrite")
     args = parser.parse_args(argv)
-    if not args.discover_scopes and not (args.organization_id and args.project_id):
+    if not args.discover_scopes and not args.all_configured and not (args.organization_id and args.project_id):
         parser.error("--organization-id and --project-id required unless discovering scopes")
     if args.discover_scopes and (args.organization_id or args.project_id or args.source_id or args.probe_model):
         parser.error("Discovery cannot be combined with scoped inventory or model probes")
+    if args.all_configured and (args.discover_scopes or args.organization_id or args.project_id or args.source_id or args.probe_model):
+        parser.error("--all-configured cannot be combined with discovery, scope or probe flags; it includes model probing")
     env = {}
     if args.env_file:
         from dotenv import dotenv_values

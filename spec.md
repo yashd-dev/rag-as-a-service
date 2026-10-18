@@ -205,15 +205,15 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 **Stage A must produce this report before any live schema/data mutation or migration.** Do not run `create_app`, `backend.run`, startup migrations, graph `ensure_*`, source creation, ingestion or legacy backfill to obtain it. Read-only means no SQL/Cypher writes, index/constraint creation, status/cursor updates or persistent probe vectors. Tests must verify that the diagnostic path does not import/execute mutating startup hooks and attempts no write statements. Safe model probes may measure output dimensions without storing/indexing their results.
 
-- [ ] Record report timestamp, authorized org/project/source scope, redacted connection identifiers, database/server versions and reproducible read-only commands/queries. Use stable snapshot/watermark information where possible; record concurrent-change caveats.
-- [ ] Measure actual source-document/OCR counts, application-document counts, canonical chunk counts and embedding totals/valid/missing/stale/invalid counts, separated by store, scope and generation. Distinguish missing schema from an empty table/index; reconcile overlapping records rather than adding counts blindly.
-- [ ] Measure stored vector dimensions/distribution and numeric validity; record model/provider/revision provenance and query-model compatibility. Probe the intended served model's dimensions without persistence. A schema declaration, project-level model label or sample alone does not prove all vectors compatible; report any sampling and remaining unknown coverage.
-- [ ] Measure Neo4j node counts by label/type, edges by relationship type, chunk/entity vector coverage, vector-index configuration/state and source-provenance coverage with explicit numerator/denominator (including assertions linked to valid chunk/document evidence), plus dangling/duplicate records.
-- [ ] Classify migration records/counts with stable identifiers or a reproducible selector: **safe to copy**, **requires re-embedding**, **requires text/provenance repair**, or **unknown/blocked**. State evidence for classification; vectors with unknown model/content provenance are not safe to copy. Record the non-destructive repair/re-embedding plan and exclusions.
-- [ ] Record measured findings and report artifact location here (a secret-free local report may live under `backend/`); do not substitute the old local SQLite snapshot or UI defaults for live inventory.
+- [x] Record report timestamp, authorized org/project/source scope, redacted connection identifiers, database/server versions and reproducible read-only commands/queries. Evidence: `backend/inventory/reports/2026-10-18-live.{json,md}`, measurement window 09:02:36–09:02:46 UTC, all configured credential-owner-authorized stores; source before/after watermarks match; no cross-store snapshot claimed.
+- [x] Measure actual source-document/OCR counts, application-document counts, canonical chunk counts and embedding totals/valid/missing/stale/invalid counts, separated by store, scope and generation. Evidence: 876 source records / 333 usable texts; 97 application documents across 3 measured scopes / 0 legacy chunk-vector rows; 96 distinct source-path candidate matches, 1 separate upload; no separate canonical chunk table. Expected future chunk counts are not applicable before canonical chunking, not invented as zero missing work. Retrieval-store counts/distributions are measured empty, not inferred from a local snapshot.
+- [x] Measure stored vector dimensions/distribution and numeric validity; record model/provider/revision provenance and query-model compatibility. Evidence: full native `vector_extract` scan over 0 persisted vectors in all 3 projects; no stored generation/dimension/model distribution or unknown-provenance vector reuse. Actual query and OCR-excerpt probes both returned finite/nonzero 768-dimensional vectors; resolved `embeddinggemma:latest` digest `85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1` unchanged before/after; no vectors persisted.
+- [x] Measure Neo4j node counts by label/type, edges by relationship type, chunk/entity vector coverage, vector-index configuration/state and source-provenance coverage with explicit numerator/denominator, plus dangling/duplicate records. Evidence: Neo4j 5.26.32 Community, default `neo4j` database globally 0 nodes / 0 edges, 0 vector indexes, 0 constraints, 2 ONLINE token lookup indexes; vectors/provenance 0/0, dangling/duplicates 0 in the verified empty store. No claim of 100% coverage or readiness, or of inspecting other deployments/volumes.
+- [x] Classify migration records/counts with stable identifiers or a reproducible selector. Evidence: report disposition table and source/content-hash manifest: 0 vectors safe to copy / re-embed / repair / provenance-unknown; 333 usable source documents require initial canonical chunking/embedding, 543 excluded pending text/status repair; preserve 97 application records and reconcile 96 filename candidates. Preserve/exclude 13 invalid project mappings among 14 historical source configs. No destructive repair, cursor reset, re-OCR, data merge, migration or ingestion authorized/performed.
+- [x] Record measured findings and report artifact location here. Evidence: versioned live JSON and human-readable summary under `backend/inventory/reports/`; same source manifest hash across two full scans. These are live configured databases, not the old local SQLite snapshot or UI defaults.
 - [ ] Record inventory review: reviewer, date, scope, discrepancies/exclusions and migration eligibility decision. Present the report to the user for review; no migration or subsequent mutating stage starts until that review is recorded. Material changes to corpus/model/schema invalidate affected eligibility and require refreshed inventory/review.
 
-**Current result:** Stage A diagnostic access attempted on 2026-10-18; blocked at SQL read-only enforcement/confirmation before schema/row reads (`query_only_unavailable`, `ValueError`). Live counts, vector compatibility and provenance coverage remain unknown; **migration gate CLOSED**. If access is unavailable or required dimensions/counts remain unverified, finish only independent Stage A tooling/tests, report the blocker and stop.
+**Current result (supersedes the historical access failure below):** Stage A **live measurements complete**, service access resolved, report presented for **user review**. All configured Turso/Neo4j/model checks succeeded. **Migration/Stage B gate remains CLOSED_PENDING_USER_REVIEW** until the reviewer/date/decision are recorded; this is no longer a connectivity blocker. See `backend/inventory/reports/2026-10-18-live.md` for discrepancies, exclusions, zero-vector migration disposition and non-destructive plan.
 
 #### Stage A execution record — 2026-10-18 (open)
 
@@ -221,6 +221,23 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 - [x] A.3 live server-described discovery succeeded: `/tmp/opencode/inventory-scopes-hrana.json`, timestamp `2026-10-18T08:56:45Z`, same application connection fingerprint as the earlier failed attempt. Found 3 projects and 14 `turso_ocr` source configuration records. Historical PRAGMA failure is superseded by successful read-only statement description/execution, not bypassed by unchecked SQL. Raw tokens, URLs and encrypted fields were not emitted. `backend/docker-compose.yml` is pre-existing untracked user-requested work and is excluded from this section's commit.
 - [x] A.3 checks: scoped backend pytest **36 passed**; targeted Ruff **PASS**; `git diff --check` **PASS**. New transport tests require server approval before execution, reject false/missing read-only flags, reject cross-origin routing and server describe errors, and verify stream cleanup. Live Hrana schema/identity reads also passed. Final diff/new-file review and successful section commit are reported in the handoff.
+
+**A.4 selected bounded subset (scope recorded before editing):** add explicit `--all-configured` read-only inventory for the credential-owner-authorized application database, OCR source from `OCR_TURSO_DB` / `OCR_TURSO_DB_TOKEN`, deployed Neo4j default database, and served Ollama model. Discover actual org/project/source scopes and schemas, record watermarks, source content fingerprints and status exclusions, reconcile legacy filenames conservatively, measure vector/graph integrity and migration classifications, save a secret-free report, test meaningful failure/empty-store paths, and commit evidence. Acceptance: no startup/index/ingestion/schema writes, no arbitrary invented scope, no unknown-provenance copying, no empty-store denominators presented as readiness, full report presented for user review. A.3 commit `46eb03b` succeeded before A.4 began.
+
+**A.4 latest handoff — technical inventory complete, user review pending:**
+
+| Stage A exit criterion | Evidence / result |
+|---|---|
+| Actual source/application scoped counts and reconciliation | **PASS**: live report, source manifest over all 876 rows; 333 usable OCR texts; application 3 projects / 97 docs / 0 chunk vectors; 96 candidate source matches, no repeated path groups, 1 unmatched upload preserved. |
+| Stored dimensions/model provenance, served-model compatibility | **PASS for measured current state**: no persisted vectors or generations to classify as compatible; real query/source probes both 768D, finite/nonzero, served digest recorded and stable. Corpus not indexed; no semantic retrieval claim. |
+| Neo4j type/index/vector/provenance coverage and integrity | **PASS for measured empty database**: global 0 nodes/edges, no vector index, 0/0 evidence/vector denominators, no dangling/duplicate records. Future populated schema must be verified in its implementation stage. |
+| Non-destructive eligibility classification | **PASS (report only)**: copy 0 existing vectors; initial chunking/embedding for 333 eligible source texts; exclude/preserve 543 other source rows; preserve application docs and 13 orphaned source project mappings. |
+| No-write/startup behavior and relevant checks | Tooling tests include server pre-description/refusal, read-only SQLite/hash, source scope, pagination, changed model digests/dimensions, source/app reconciliation, graph empty/nonempty and independent service failure. Exact final check totals/commit hash are recorded in handoff. |
+| Required inventory reviewer/date/scope/decision | **PENDING USER REVIEW**: report presented; do not fabricate user approval or begin Stage B in this run. |
+
+**A.4 changed/new paths:** `backend/inventory/live.py`, `backend/scripts/inventory.py`, `backend/inventory/report.py`, `backend/inventory/README.md`, `backend/tests/test_live_inventory.py`, both live report artifacts and this checklist. Existing untracked `backend/docker-compose.yml` preserved/excluded. Schema/data/readiness mutations: **none**. Graph/vector/ingestion implementation remains for later stages; frontend unchanged. See report/README and Section 11 for exact commands and environment variables; `OCR_TURSO_DB` / `OCR_TURSO_DB_TOKEN` are now implemented direct diagnostic inputs only.
+
+- [x] A.4 final checks: `.venv/bin/python -m pytest backend -q -o addopts='' -p no:cacheprovider` **45 passed**; `.venv/bin/ruff check backend/inventory backend/scripts/inventory.py backend/tests` **PASS**; `git diff --check` **PASS**. Initial 36-test/44-test runs passed; Ruff import formatting/late-binding findings were corrected before final checks. Versioned live evidence passes manifest fingerprint, count reconciliation, empty-store/readiness and model-digest consistency assertions. Two complete read-only live runs produced the same source manifest; no failed live service measurement remains. Frontend checks not rerun for backend-only diagnostics. Final diff/new artifact review and A.4 Conventional Commit hash are in the user handoff.
 
 **A.1 selected bounded subset:** standalone read-only inventory transport, legacy SQL measurements, source mapping verification, graph schema discovery and transient model probe (Sections 2.7 / 11.3, tooling only). Scope and acceptance were announced before implementation: no app/startup or write paths, missing schema and unknown provenance explicit, regression tests and usage documentation. This is an incremental Stage A deliverable, not completion of Section 2.7 or permission to begin Stage B.
 
@@ -237,7 +254,7 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 - [x] A.2 tooling/evidence subset verified: enumerated access reasons added; same scoped pytest command **32 passed**, targeted Ruff **PASS**, `git diff --check` **PASS**. Previous evidence was preserved; the retry used a new filename. Deployment read-only confirmation still failed; no schema/row read, source decrypt/connect, Neo4j query, model probe, startup, migration or indexing was executed by the discovery command.
 - [x] Record attempted live command and secret-free artifact: `.venv/bin/python -m backend.scripts.inventory --env-file backend/.env --discover-scopes --output /tmp/opencode/inventory-scopes-20261018-retry.json`; report timestamp **2026-10-18T08:38:56Z**, connection fingerprint `sha256:6e5eb4f1f01a90d8`; versioned artifact `backend/inventory/reports/2026-10-18-access-blocker.json`. Initial attempt `/tmp/opencode/inventory-scopes-20261018.json` recorded an opaque `ValueError`; retry identified `query_only_unavailable`. Exit 2 is the command's documented closed-gate result, not a completed inventory. Neither attempt measures an empty corpus or proves credential validity.
 
-**Stage A exit-gate handoff (blocked; stop this run):**
+**Historical A.2 exit-gate handoff (superseded by A.3/A.4 above):**
 
 | Exit criterion | Evidence / result |
 |---|---|
@@ -250,7 +267,7 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 **Changed/new files and review:** A.1 committed `backend/inventory/{__init__.py,sql.py,report.py,graph.py,README.md}`, `backend/scripts/inventory.py`, `backend/tests/test_inventory.py`, and this checklist in `bc78080`. A.2 adds secret-free access reasons/tests, README evidence and `backend/inventory/reports/2026-10-18-access-blocker.json`; final status/diff/new artifact must be reviewed before its Conventional Commit. No application schema/data/readiness or frontend changes. Frontend checks were not rerun because this increment is standalone backend diagnostics.
 
-**Required next action:** establish a verified read-only SQL access path supported by the deployed driver/server (current failure does not distinguish unsupported pragma from remote access failure), then rerun discovery and supply/confirm authorized org/project/source IDs. Obtain read-only Neo4j access and intended Ollama model access, complete graph/provenance diagnostics and live reconciliation, present the completed inventory for user review and record that review. Continue **Stage A only** in a subsequent run; Stage B is ineligible. Exact environment names and application launch commands remain in Section 11 and `backend/inventory/README.md`. Existing backend launch still performs schema writes and must not be used to resolve this diagnostic blocker.
+**Historical A.2 required next action (resolved by A.3/A.4 except user review):** establish verified read-only SQL access, discover scopes, reach Neo4j/Ollama and complete inventory. Those measurements now succeeded; remaining gate is the user's inventory review. Existing backend launch still performs schema writes and was not used for these diagnostics.
 
 ---
 
@@ -547,7 +564,7 @@ Configure `backend/.env` and `web/.env` separately. Never paste credentials into
 
 ### 11.2 Existing launch and check commands
 
-Use a project Python environment with `backend/requirements.txt` dependencies installed. Existing code additionally imports sibling `ai.*`; until Stage A is complete it is not a self-contained backend install. Frontend dependencies are recorded in `web/bun.lock`.
+Use a project Python environment with `backend/requirements.txt` dependencies installed. Existing application code additionally imports sibling `ai.*`; until Stage B ownership replacement is complete it is not a self-contained backend install. Stage A diagnostics are independently backend-owned. Frontend dependencies are recorded in `web/bun.lock`.
 
 ```bash
 # Repository root: backend (WARNING: current startup executes schema/migration writes)
@@ -562,7 +579,7 @@ bun run start
 bun run lint
 bunx --no-install tsc --noEmit --incremental false
 
-# Repository root: scoped backend tests (currently collects zero tests)
+# Repository root: scoped backend tests (45 passed in latest Stage A verification)
 .venv/bin/python -m pytest backend -q -o addopts='' -p no:cacheprovider
 ```
 
@@ -620,9 +637,11 @@ These are core RAG acceptance gates, subject to Section 1 scope control. Retaine
 
 ---
 
-## 13. Current Audit/Planning Report — Implementation Still Pending
+## 13. Historical Audit/Planning Report — Baseline Before Implementation
 
 This report summarizes the documentation task completed on 2026-10-18. Replace/extend with measured implementation results after executing the plan; the unchecked implementation gates above are intentional.
+
+**Latest implementation status is in Section 2.7:** Stage A diagnostic tooling and live measurements are implemented/verified; user inventory review is pending. The items below preserve the original planning baseline and must not be read as the latest live results.
 
 ### Completed
 - Detailed scoped static audit of backend ingestion, configuration/schema, vector store, graph integration, generation, auth, routes and frontend API/actions/document/graph/playground flows.

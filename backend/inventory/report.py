@@ -75,7 +75,8 @@ def application_report(reader, org, project):
     if not required <= columns(schema, "chunk_embeddings"):
         report["blockers"].append("Cannot scan stored vectors: missing required columns")
         return report
-    stats = Counter()
+    stats = Counter({"missing": 0, "invalid": 0, "valid_numeric": 0,
+                     "nonempty_text": 0, "resolved_document": 0})
     dimensions = Counter()
     eligibility = Counter({"safe_to_copy": 0, "requires_reembedding": 0,
                            "requires_text_provenance_repair": 0, "unknown_blocked": 0})
@@ -115,15 +116,17 @@ def application_report(reader, org, project):
                          "order_by": "chunk_embeddings.id"},
             "classification_rule": "Repair missing text/document first; re-embed missing/invalid vectors; "
                                    "all remaining legacy rows blocked by unverified model/content provenance.",
-            "stale_count": None, "generation_distribution": None,
+            "stale_count": None if sum(eligibility.values()) else 0,
+            "generation_distribution": None if sum(eligibility.values()) else {},
         }
     except Exception as exc:  # noqa: BLE001 - unknown driver errors must not leak secrets
         # Driver errors can contain URLs, tokens, SQL values or document content.
         report["vectors"] = {"state": "blocked", "error_type": type(exc).__name__}
-    report["blockers"].append(
-        "Per-vector model/revision/content-hash/generation and staleness are unverified; "
-        "project labels cannot authorize copying"
-    )
+    if report["vectors"]["state"] != "measured" or sum(eligibility.values()):
+        report["blockers"].append(
+            "Per-vector model/revision/content-hash/generation and staleness are unverified; "
+            "project labels cannot authorize copying"
+        )
     return report
 
 
