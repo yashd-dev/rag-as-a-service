@@ -32,11 +32,6 @@ def migrate_db(conn) -> None:
         conn.execute(
             "ALTER TABLE projects ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'google/embeddinggemma-300m'"
         )
-    # Existing rows may advertise a historical UI choice. All persisted vectors
-    # use EmbeddingGemma, so normalize the metadata before creating new vectors.
-    conn.execute(
-        "UPDATE projects SET embedding_provider = 'huggingface', embedding_model = 'google/embeddinggemma-300m'"
-    )
     document_columns = {
         row[1] for row in conn.execute("PRAGMA table_info(documents)").fetchall()
     }
@@ -44,6 +39,9 @@ def migrate_db(conn) -> None:
         conn.execute(
             "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"
         )
+    for statement in Path(__file__).with_name("index_schema.sql").read_text().split(";"):
+        if statement.strip():
+            conn.execute(statement)
 
 
 @contextmanager
@@ -53,5 +51,8 @@ def db(database_url: str, auth_token: str):
     try:
         yield conn
         conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
     finally:
         conn.close()

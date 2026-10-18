@@ -4,7 +4,6 @@ from flask_cors import CORS
 
 def create_app(config=None) -> Flask:
     from backend.app.config import Config
-    from backend.app.db.connection import init_db
     from backend.app.routes.conversations import conversations_bp
     from backend.app.routes.credentials import credentials_bp
     from backend.app.routes.data_sources import data_sources_bp
@@ -17,8 +16,6 @@ def create_app(config=None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config or Config)
     CORS(app)
-
-    init_db(app.config["TURSO_DATABASE_URL"], app.config["TURSO_AUTH_TOKEN"])
 
     app.register_blueprint(health_bp, url_prefix="/api")
     app.register_blueprint(projects_bp, url_prefix="/api/projects")
