@@ -1,19 +1,19 @@
 from flask import Flask
 from flask_cors import CORS
 
-from backend.app.config import Config
-from backend.app.db.connection import init_db
-from backend.app.routes.health import health_bp
-from backend.app.routes.projects import projects_bp
-from backend.app.routes.credentials import credentials_bp
-from backend.app.routes.data_sources import data_sources_bp
-from backend.app.routes.documents import documents_bp
-from backend.app.routes.conversations import conversations_bp
-from backend.app.routes.query import query_bp
-from backend.app.routes.graph import graph_bp
 
+def create_app(config=None) -> Flask:
+    from backend.app.config import Config
+    from backend.app.db.connection import init_db
+    from backend.app.routes.conversations import conversations_bp
+    from backend.app.routes.credentials import credentials_bp
+    from backend.app.routes.data_sources import data_sources_bp
+    from backend.app.routes.documents import documents_bp
+    from backend.app.routes.graph import graph_bp
+    from backend.app.routes.health import health_bp
+    from backend.app.routes.projects import projects_bp
+    from backend.app.routes.query import query_bp
 
-def create_app(config: type[Config] | None = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config or Config)
     CORS(app)

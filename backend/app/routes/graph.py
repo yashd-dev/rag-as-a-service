@@ -1,9 +1,8 @@
 from flask import Blueprint, Response, current_app, jsonify
 
-from ai.graph.store import Neo4jGraphStore
-from ai.graph.visualizer import render_graph_html
 from backend.app.db.repository import ProjectRepository
 from backend.app.routes.projects import auth_or_error
+from backend.app.services.graph_store import Neo4jGraphStore, render_graph_html
 
 graph_bp = Blueprint("graph", __name__)
 
@@ -30,13 +29,11 @@ def graph_status(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    project, error = project_or_error(project_id, auth.organization_id)
+    _project, error = project_or_error(project_id, auth.organization_id)
     if error:
         return error
     store = graph_store()
     try:
-        store.ensure_constraints()
-        store.ensure_project(project)
         return jsonify(store.project_status(project_id, auth.organization_id))
     finally:
         store.close()
@@ -47,13 +44,11 @@ def graph_html(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    project, error = project_or_error(project_id, auth.organization_id)
+    _project, error = project_or_error(project_id, auth.organization_id)
     if error:
         return error
     store = graph_store()
     try:
-        store.ensure_constraints()
-        store.ensure_project(project)
         html = render_graph_html(store.project_graph(project_id, auth.organization_id))
     finally:
         store.close()
@@ -65,13 +60,11 @@ def graph_data(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    project, error = project_or_error(project_id, auth.organization_id)
+    _project, error = project_or_error(project_id, auth.organization_id)
     if error:
         return error
     store = graph_store()
     try:
-        store.ensure_constraints()
-        store.ensure_project(project)
         return jsonify(store.project_graph(project_id, auth.organization_id))
     finally:
         store.close()

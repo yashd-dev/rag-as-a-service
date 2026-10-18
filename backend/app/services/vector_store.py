@@ -1,8 +1,8 @@
 import json
 
-from ai.schemas.retrieval import RetrievedChunk
 from backend.app.db.connection import db
 from backend.app.db.repository import now_ms, rows_to_dicts
+from backend.app.services.rag import RetrievedChunk
 
 
 class TursoVectorStore:

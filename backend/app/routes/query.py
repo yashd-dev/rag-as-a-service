@@ -1,10 +1,10 @@
 from flask import Blueprint, current_app, jsonify, request
 
-from ai.rag.generator import build_grounded_prompt
 from backend.app.db.repository import ProjectRepository, SimpleRepository
 from backend.app.routes.projects import auth_or_error
 from backend.app.services.embedding_service import embedding_provider_for_project
 from backend.app.services.llm_client import generate_text_with_fallback
+from backend.app.services.rag import build_grounded_prompt
 from backend.app.services.vector_store import TursoVectorStore
 
 query_bp = Blueprint("query", __name__)
