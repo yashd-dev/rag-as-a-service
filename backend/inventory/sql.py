@@ -67,24 +67,19 @@ def open_reader(url, token=""):
     elif url.startswith(("libsql://", "https://")):
         if not token:
             raise AccessBlocked("missing_auth_token")
-        import libsql
+        from backend.inventory.hrana import Connection
 
         try:
-            connection = libsql.connect(database=url, auth_token=token)
+            connection = Connection(url, token)
         except Exception as exc:  # noqa: BLE001 - redact connection errors
             raise AccessBlocked("connection_failed", type(exc).__name__) from None
     else:
         raise AccessBlocked("unsupported_database_url_scheme")
     try:
-        # Fail closed if a server/driver cannot enforce/confirm query_only.
-        try:
+        if isinstance(connection, sqlite3.Connection):
             connection.execute("PRAGMA query_only = ON")
             if connection.execute("PRAGMA query_only").fetchone()[0] != 1:
                 raise AccessBlocked("query_only_not_confirmed")
-        except AccessBlocked:
-            raise
-        except Exception as exc:  # noqa: BLE001 - redact remote read-only errors
-            raise AccessBlocked("query_only_unavailable", type(exc).__name__) from None
         yield Reader(connection)
     finally:
         connection.close()

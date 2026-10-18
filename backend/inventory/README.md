@@ -36,9 +36,11 @@ persistent output. No database fallback is allowed.
 
 - Application: `TURSO_DATABASE_URL` (or `TURSO_CONNECTION_URL`) and
   `TURSO_AUTH_TOKEN`. Prefer deployment-issued **read-only tokens**. Every SQL
-  connection sets and verifies `PRAGMA query_only`; unsupported servers fail
-  closed. Existing local databases may be explicitly addressed by `file:/...`
-  and are opened with SQLite `mode=ro`. There is no local/remote data sync.
+  remote statement is first described by the server using Hrana HTTP `describe`;
+  execution is refused unless `is_readonly` is exactly true. This replaces the
+  unsupported remote `query_only` guard without permitting unchecked SQL.
+  Existing local databases may be explicitly addressed by `file:/...`
+  and are opened with SQLite `mode=ro` plus `query_only`. There is no local/remote data sync.
 - Source: explicit `--source-id` resolves an existing `data_sources` row in the
   selected organization; its stored mapping must match the selected project.
   `CREDENTIAL_ENCRYPTION_KEY` must match the existing persistent key. Source URL,
@@ -61,15 +63,17 @@ Connection identifiers are hashed. Driver exception messages, decrypted secrets,
 source URLs and document text are excluded. Do not publish raw environment files.
 Reports contain schema/identity metadata; review before sharing.
 
-Access failures have enumerated reasons: `missing_database_url`,
+Historical access failures have enumerated reasons: `missing_database_url`,
 `missing_auth_token`, `unsupported_database_url_scheme`, `connection_failed`,
 `query_only_unavailable`, or `query_only_not_confirmed`. They do not include driver
 messages. The 2026-10-18 configured access attempt was blocked at read-only
 confirmation (`query_only_unavailable`, `ValueError`), before any schema or row
 reads. Evidence: `reports/2026-10-18-access-blocker.json`. It does not establish
 whether the cause is driver/server pragma support or remote access; no corpus
-counts can be inferred. Resolve a verified read-only transport/permission path
-within Stage A before retrying; do not remove protections to force inventory.
+counts can be inferred from that artifact. The new server-described transport
+resolves the client guard incompatibility; it refuses unsupported describe calls,
+non-read statements and cross-origin bearer-token forwarding. Protocol reference:
+https://github.com/tursodatabase/libsql/blob/main/docs/HRANA_3_SPEC.md
 
 ## Coverage and limits
 

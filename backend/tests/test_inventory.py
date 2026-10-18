@@ -239,26 +239,39 @@ def test_all_pages_are_measured_not_only_first_sample(tmp_path):
     assert report["vectors"]["classification"]["unknown_blocked"] == 502
 
 
-def test_remote_sql_readonly_confirmation_is_mandatory(monkeypatch):
-    import libsql
+@pytest.mark.parametrize("readonly", [True, False, None])
+def test_remote_sql_described_before_execute_and_refuses_nonreads(monkeypatch, readonly):
+    import httpx
 
-    statements = []
+    requests = []
 
-    class Connection:
-        def execute(self, query):
-            statements.append(query)
-            return self
+    def respond(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        kind = body["requests"][0]["type"]
+        if kind == "describe":
+            return httpx.Response(200, json={"baton": "private-baton", "results": [{
+                "type": "ok", "response": {"result": {"is_readonly": readonly}}}]})
+        if kind == "execute":
+            assert readonly is True
+            assert body["baton"] == "private-baton"
+            assert body["requests"][1] == {"type": "close"}
+            return httpx.Response(200, json={"baton": None, "results": [{"type": "ok", "response": {
+                "result": {"cols": [{"name": "value"}], "rows": [[{"type": "integer", "value": "1"}]]}}}]})
+        assert kind == "close"
+        return httpx.Response(200, json={"baton": None, "results": []})
 
-        def fetchone(self):
-            return (0,)
-
-        def close(self):
-            statements.append("closed")
-
-    monkeypatch.setattr(libsql, "connect", lambda **kwargs: Connection())
-    with pytest.raises(RuntimeError), open_reader("libsql://test", "token"):
-        pytest.fail("Read-only not enforced")
-    assert statements == ["PRAGMA query_only = ON", "PRAGMA query_only", "closed"]
+    client_type = httpx.Client
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(
+        **kwargs, transport=httpx.MockTransport(respond)))
+    with open_reader("libsql://test", "secret-token") as reader:
+        if readonly is True:
+            assert reader.query("SELECT 1 AS value") == [{"value": 1}]
+        else:
+            with pytest.raises(RuntimeError):
+                reader.query("SELECT 1 AS value")
+    assert [r["requests"][0]["type"] for r in requests] == [
+        "describe", "execute" if readonly is True else "close"]
 
 
 def test_model_probe_is_transient_and_reports_measured_width(monkeypatch):
@@ -292,3 +305,27 @@ def test_configuration_blockers_are_actionable_without_disclosing_values(env, re
     report = build_report(args(), env)
     assert report["application"]["reason"] == reason
     assert "private" not in json.dumps(report)
+
+
+@pytest.mark.parametrize("payload", [
+    {"base_url": "https://foreign-host", "results": []},
+    {"baton": "baton", "results": [{"type": "error", "error": {"message": "private"}}]},
+])
+def test_hrana_description_error_or_foreign_origin_never_executes(monkeypatch, payload):
+    import httpx
+
+    requests = []
+
+    def respond(request):
+        body = json.loads(request.content)
+        requests.extend(r["type"] for r in body["requests"])
+        if body["requests"][0]["type"] == "close":
+            return httpx.Response(200, json={"results": []})
+        return httpx.Response(200, json=payload)
+
+    client_type = httpx.Client
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(
+        **kwargs, transport=httpx.MockTransport(respond)))
+    with open_reader("libsql://test", "token") as reader, pytest.raises(RuntimeError):
+        reader.query("SELECT 1")
+    assert "execute" not in requests
