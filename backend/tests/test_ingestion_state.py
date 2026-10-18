@@ -1,6 +1,8 @@
 import ast
 import io
 import json
+import os
+import re
 import sqlite3
 from pathlib import Path
 
@@ -186,8 +188,16 @@ def test_no_sibling_or_lightrag_runtime_dependencies():
         for node in ast.walk(tree):
             names = [alias.name for alias in node.names] if isinstance(node, ast.Import) else [node.module or ""] if isinstance(node, ast.ImportFrom) else []
             assert not any(name.split(".")[0].lower() in {"ai", "lightrag"} for name in names), str(path)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                assert not (node.func.attr in {"import_module", "__import__"} and any(isinstance(arg, ast.Constant) and str(arg.value).split(".")[0].lower() in {"ai", "lightrag"} for arg in node.args))
+            if isinstance(node, ast.Call):
+                function = node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id if isinstance(node.func, ast.Name) else ""
+                assert not (function in {"import_module", "__import__"} and any(isinstance(arg, ast.Constant) and str(arg.value).split(".")[0].lower() in {"ai", "lightrag"} for arg in node.args))
+    for directory, dirs, files in os.walk(root / "web"):
+        dirs[:] = [name for name in dirs if name not in {"node_modules", ".next", ".git"}]
+        for name in files:
+            if Path(name).suffix in {".ts", ".tsx", ".js", ".mjs"}:
+                text = (Path(directory) / name).read_text()
+                imports = re.findall(r'''(?:from\s+|import\s*(?:\(\s*)?)["']([^"']+)["']''', text)
+                assert all("lightrag" not in module.lower() and "/ai/" not in module for module in imports)
     requirements = (root / "backend/requirements.txt").read_text().lower()
     package = json.loads((root / "web/package.json").read_text())
     assert "lightrag" not in requirements

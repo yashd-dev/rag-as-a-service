@@ -115,3 +115,20 @@ def test_migration_failure_rolls_back(store, monkeypatch):
         raise RuntimeError("interrupted")
     assert query(path, "SELECT embedding_model FROM projects") == [("legacy-model",)]
     assert Path(path).exists()
+
+
+def test_failed_cli_migration_restores_pre_migration_schema_and_data(store, monkeypatch, tmp_path):
+    from backend.scripts import migrate
+    repo, path, _ = store
+    env = tmp_path / "migration.env"
+    env.write_text(f"TURSO_DATABASE_URL={repo.url}\nTURSO_AUTH_TOKEN=local\n")
+    def fail(conn):
+        conn.execute("CREATE TABLE should_rollback(id TEXT)")
+        conn.execute("UPDATE projects SET embedding_model='wrong'")
+        raise RuntimeError("simulated migration failure")
+    monkeypatch.setattr(migrate, "migrate_db", fail)
+    snapshot = tmp_path / "before-failure.db"
+    with pytest.raises(RuntimeError, match="simulated"):
+        migrate.main(["--env-file", str(env), "--apply", "--backup", str(snapshot)])
+    assert not query(path, "SELECT name FROM sqlite_master WHERE name='should_rollback'")
+    assert query(path, "SELECT * FROM projects") == query(snapshot, "SELECT * FROM projects")

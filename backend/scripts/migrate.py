@@ -7,8 +7,8 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 
-from backend.app.db.connection import connect, init_db, migrate_db
-from backend.inventory.sql import identifier, open_reader
+from backend.app.db.connection import connect, migrate_db
+from backend.inventory.sql import Reader, identifier, open_reader
 
 
 def backup(reader, path):
@@ -39,27 +39,29 @@ def main(argv=None):
     token = env.get("TURSO_AUTH_TOKEN", "")
     if args.apply and not args.backup:
         parser.error("--apply requires a new --backup path; stop application writers first")
-    with open_reader(url, token) as reader:
-        tables = reader.schema()
-        if args.apply:
-            backup(reader, args.backup)
     if not args.apply:
+        with open_reader(url, token) as reader:
+            tables = reader.schema()
         print("Read-only migration plan: initialize legacy schema" if "projects" not in tables else
               "Read-only migration plan: preserve legacy rows; ensure document_sources, index_generations, canonical_chunks")
         return
-    if "projects" not in tables:
-        init_db(url, token)
-    else:
-        conn = connect(url, token)
-        try:
-            conn.execute("BEGIN IMMEDIATE")
-            migrate_db(conn)
-            conn.commit()
-        except BaseException:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
+    conn = connect(url, token)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        reader = Reader(conn)
+        tables = reader.schema()
+        backup(reader, args.backup)
+        if "projects" not in tables:
+            for statement in (Path(__file__).parents[1] / "app/db/schema.sql").read_text().split(";"):
+                if statement.strip():
+                    conn.execute(statement)
+        migrate_db(conn)
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     print("Migration complete; backup retained; no ingestion or retrieval cutover")
 
 
