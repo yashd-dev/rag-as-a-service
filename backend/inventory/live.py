@@ -9,6 +9,7 @@ import httpx
 
 from backend.inventory.report import (
     application_report,
+    has_text,
     scan,
     source_report,
     vector_status,
@@ -45,7 +46,6 @@ def source_inventory(env):
         report["watermark_before"] = before
         report["coverage_by_status"] = reader.query(
             "SELECT ocr_status, count(*) AS records, "
-            "sum(CASE WHEN ocr_text IS NOT NULL AND length(trim(ocr_text)) > 0 THEN 1 ELSE 0 END) AS nonempty_text, "
             "sum(CASE WHEN page_count IS NOT NULL THEN 1 ELSE 0 END) AS with_page_count "
             "FROM pdfs GROUP BY ocr_status ORDER BY ocr_status"
         )
@@ -58,11 +58,13 @@ def source_inventory(env):
         probe_text = None
         scanned_nonempty = 0
         scanned_statuses = Counter()
+        nonempty_by_status = Counter()
         for row in scan(reader, "SELECT path, ocr_text, ocr_status, updated_at FROM pdfs ORDER BY path", batch_size=10):
             text = row["ocr_text"]
-            nonempty = isinstance(text, str) and bool(text.strip())
+            nonempty = has_text(text)
             scanned_nonempty += nonempty
             scanned_statuses[row["ocr_status"]] += 1
+            nonempty_by_status[row["ocr_status"]] += nonempty
             eligible = row["ocr_status"] == "done" and nonempty and bool(row["path"])
             manifest = {"source_id_sha256": digest(row["path"] or ""),
                         "content_sha256": digest(text) if isinstance(text, str) else None,
@@ -82,12 +84,17 @@ def source_inventory(env):
             and len(set(records) - {None}) == report["counts"]["distinct_ids"]
             and scanned_nonempty == (report["counts"]["nonempty_text"] or 0)
             and scanned_statuses == Counter({row["ocr_status"]: row["records"] for row in report["coverage_by_status"]})
+            and report["eligible_ocr_counts"]["rows"] == scanned_statuses["done"]
+            and report["eligible_ocr_counts"]["nonempty_text"] == nonempty_by_status["done"]
         )
+        for row in report["coverage_by_status"]:
+            row["nonempty_text"] = nonempty_by_status[row["ocr_status"]]
         report["queries"] = reader.queries
-        report["selector"] = (
-            "SELECT path FROM pdfs WHERE ocr_status = 'done' AND ocr_text IS NOT NULL "
-            "AND length(trim(ocr_text)) > 0 AND path IS NOT NULL ORDER BY path"
-        )
+        report["selector"] = {
+            "candidate_sql": "SELECT path, ocr_text FROM pdfs WHERE ocr_status = 'done' ORDER BY path",
+            "required_python_post_filter": "bool(path) and isinstance(ocr_text, str) and bool(ocr_text.strip())",
+            "eligible_source_id_sha256": [r["source_id_sha256"] for r in manifests if r["eligible_text"]],
+        }
         report["classification"] = {
             "unit": "source_document_not_chunk_vector",
             "safe_to_copy_vectors": 0,

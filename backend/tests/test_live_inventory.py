@@ -222,7 +222,8 @@ def test_source_change_during_initial_counts_is_detected(monkeypatch):
 
     def initial_counts(*args):
         events.append("counts")
-        return {"state": "measured", "counts": {"total": 2, "distinct_ids": 2, "nonempty_text": 2}}
+        return {"state": "measured", "counts": {"total": 2, "distinct_ids": 2, "nonempty_text": 2},
+                "eligible_ocr_counts": {"rows": 2, "nonempty_text": 2}}
 
     monkeypatch.setattr(live, "open_reader", reader)
     monkeypatch.setattr(live, "source_report", initial_counts)
@@ -233,3 +234,26 @@ def test_source_change_during_initial_counts_is_detected(monkeypatch):
     assert events[:2] == ["watermark", "counts"]
     assert report["watermarks_match"] is False
     assert report["counts_reconciled"] is False
+
+
+def test_source_counts_classification_and_selection_share_whitespace_policy(tmp_path):
+    from backend.inventory.report import source_report
+
+    path = tmp_path / "whitespace.db"
+    rows = [("a", "real text"), ("b", "\n\t"), ("c", "\u2003\u00a0"),
+            ("d", "\x00actual text"), ("e", None), ("f", "  ")]
+    with sqlite3.connect(path) as connection:
+        connection.execute("CREATE TABLE pdfs (path TEXT PRIMARY KEY, ocr_text TEXT, ocr_status TEXT, "
+                           "url TEXT, updated_at TEXT, etag TEXT, last_modified TEXT, page_count INTEGER)")
+        connection.executemany("INSERT INTO pdfs VALUES (?, ?, 'done', 'url', 'date', 'etag', 'date', NULL)", rows)
+    with open_reader("file:" + str(path)) as reader:
+        scoped = source_report(reader, live.SOURCE_MAPPING)
+        full, _, _ = live.source_inventory({"OCR_TURSO_DB": "file:" + str(path)})
+        candidates = reader.query(full["selector"]["candidate_sql"])
+    selected = [r["path"] for r in candidates if r["path"] and live.has_text(r["ocr_text"])]
+    assert selected == ["a", "d"]
+    assert scoped["eligible_ocr_counts"]["nonempty_text"] == len(selected)
+    assert full["classification"]["requires_initial_chunking_and_embedding"] == len(selected)
+    assert full["selector"]["eligible_source_id_sha256"] == [live.digest(key) for key in selected]
+    assert full["counts_reconciled"] is True
+    assert full["coverage_by_status"][0]["nonempty_text"] == len(selected)

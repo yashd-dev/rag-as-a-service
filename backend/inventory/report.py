@@ -30,6 +30,10 @@ def columns(schema, table):
     return {column["name"] for column in schema.get(table, [])}
 
 
+def has_text(value):
+    return isinstance(value, str) and bool(value.strip())
+
+
 def scan(reader, statement, parameters=(), batch_size=500):
     offset = 0
     while True:
@@ -98,11 +102,11 @@ def application_report(reader, org, project):
             stats[state] += 1
             if dimension is not None:
                 dimensions[str(dimension)] += 1
-            has_text = isinstance(row["content"], str) and bool(row["content"].strip())
+            nonempty = has_text(row["content"])
             linked = can_resolve_documents and row["document_id"] in document_ids
-            stats["nonempty_text"] += int(has_text)
+            stats["nonempty_text"] += int(nonempty)
             stats["resolved_document"] += int(linked)
-            if not has_text or not linked:
+            if not nonempty or not linked:
                 eligibility["requires_text_provenance_repair"] += 1
             elif state != "valid_numeric":
                 eligibility["requires_reembedding"] += 1
@@ -145,19 +149,23 @@ def source_report(reader, mapping):
     text = identifier(mapping["text_column"])
     source_id = identifier(mapping["id_column"])
     result["sqlite_version"] = reader.query("SELECT sqlite_version() AS version")[0]["version"]
-    result["counts"] = reader.query(
-        f"SELECT count(*) AS total, count(DISTINCT {source_id}) AS distinct_ids, "
-        f"sum(CASE WHEN {source_id} IS NULL THEN 1 ELSE 0 END) AS null_ids, "
-        f"sum(CASE WHEN {text} IS NOT NULL AND length(trim({text})) > 0 THEN 1 ELSE 0 END) AS nonempty_text "
-        f"FROM {name}"
-    )[0]
-    where = f"{identifier(status)} = ?" if status else "1 = 1"
-    parameters = (mapping.get("status_value"),) if status else ()
-    result["eligible_ocr_counts"] = reader.query(
-        f"SELECT count(*) AS rows, "
-        f"sum(CASE WHEN {text} IS NOT NULL AND length(trim({text})) > 0 THEN 1 ELSE 0 END) AS nonempty_text "
-        f"FROM {name} WHERE {where}", parameters
-    )[0]
+    status_field = identifier(status) if status else "NULL"
+    counts = {"total": 0, "null_ids": 0, "nonempty_text": 0}
+    eligible = {"rows": 0, "nonempty_text": 0}
+    ids = set()
+    for row in scan(reader, f"SELECT {source_id} AS source_id, {text} AS content, "
+                           f"{status_field} AS status FROM {name} ORDER BY {source_id}", batch_size=10):
+        nonempty = has_text(row["content"])
+        counts["total"] += 1
+        counts["null_ids"] += row["source_id"] is None
+        counts["nonempty_text"] += nonempty
+        if row["source_id"] is not None:
+            ids.add(row["source_id"])
+        if not status or row["status"] == mapping.get("status_value"):
+            eligible["rows"] += 1
+            eligible["nonempty_text"] += nonempty
+    result["counts"] = {**counts, "distinct_ids": len(ids)}
+    result["eligible_ocr_counts"] = eligible
     result["state"] = "measured"
     result["scope_caveat"] = "Counts cover the configured source table, not proven project ownership of each row."
     result["source_application_identity_reconciliation"] = "unknown: legacy filename is not a durable source mapping"

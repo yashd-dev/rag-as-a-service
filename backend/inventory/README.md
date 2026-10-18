@@ -105,6 +105,13 @@ stored mapping; graph server/index/constraint discovery, scoped labels/propertie
 relationship endpoint scope and duplicate ID groups; optional model dimension probe.
 Missing schema and measurement failure are explicit, never reported as empty data.
 
+OCR text counts and eligibility use one Python rule: the value must be a string
+and `bool(text.strip())` must be true (including Unicode whitespace). Source counts
+and content fingerprints are separate batched read passes; they must reconcile.
+The full report's `selector` contains candidate SQL, its **required Python post-filter**,
+and eligible source-ID hashes. Candidate SQL alone is not the eligible set; do not
+substitute SQLite's space-only `trim()` for that post-filter.
+
 **Current live result:** `reports/2026-10-18-live.json` and its human-readable
 summary `reports/2026-10-18-live.md`. Measurements completed for the configured
 stores: 333 usable OCR texts, 97 application documents, no persisted chunk

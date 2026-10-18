@@ -217,6 +217,10 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 #### Stage A execution record — 2026-10-18 (complete)
 
+**A.8 selected bounded audit-fix subset (before editing):** finding 3, one Python `str.strip()`-based text predicate for source counts, eligibility and source/chunk text checks. Replace SQL-trim-derived OCR counts with batched read-only Python counts, publish candidate SQL plus its exact post-filter and eligible source ID hashes, and test tab/newline/Unicode/NUL inputs through scoped and full inventory paths. Acceptance: counts/classifications/reproducible selection agree, no raw OCR in reports, no database writes; targeted checks and commit. A.7 committed as `39ed8a8`.
+
+- [x] A.8 implemented/verified in shared `has_text`, scoped source counts, full source status counts/classification and selector post-filter/ID hashes. Counts and fingerprint passes must reconcile. Scoped pytest **56 passed**, targeted Ruff **PASS**, `git diff --check` **PASS**. Regression fixture covers spaces, tabs/newlines, Unicode whitespace, null text and text beginning with NUL; scoped/full counts, classification and selected IDs agree. Original approved artifacts remain frozen; new live evidence will use the corrected selector contract.
+
 **A.7 selected bounded audit-fix subset (before editing):** finding 2, align explicit dotenv/environment precedence with `backend.app.config` without importing startup. Acceptance: conflicting database URL/token/model settings select dotenv values, unset dotenv values preserve the shell fallback, CLI help/README describe the rule, targeted tests and checks pass before commit. A.6 committed successfully as `0db349a`.
 
 - [x] A.7 implemented/verified: CLI now overlays defined dotenv values on the shell environment, matching existing backend precedence; null dotenv entries preserve the shell fallback. CLI help/README updated. `test_inventory.py` **37 passed**, targeted Ruff **PASS**, `git diff --check` **PASS**. Regression test drives the actual CLI with conflicting URL/token/model values and intercepts the report builder, so no startup or remote connection runs.
