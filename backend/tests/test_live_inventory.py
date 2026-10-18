@@ -271,3 +271,23 @@ def test_full_inventory_preserves_safe_access_reasons(monkeypatch, env, reason):
     assert report["source"]["reason"] == reason
     assert report["measurement_status"] == "incomplete"
     assert "private-host" not in json.dumps(report)
+
+
+def test_corrected_live_refresh_matches_approved_material_scope_and_eligibility():
+    directory = Path(__file__).parents[1] / "inventory/reports"
+    approved = json.loads((directory / "2026-10-18-live.json").read_text())
+    refreshed = json.loads((directory / "2026-10-18-audit-fixes.json").read_text())
+    assert refreshed["measurement_status"] == "complete"
+    assert refreshed["measurement_issues"] == live.measurement_issues(refreshed) == []
+    for name in ("source", "application", "neo4j", "model"):
+        assert refreshed[name]["connection_id"] == approved[name]["connection_id"]
+    for key in ("schema", "counts", "classification", "manifest", "manifest_sha256"):
+        assert refreshed["source"][key] == approved["source"][key]
+    assert refreshed["source"]["selector"]["eligible_source_id_sha256"] == [
+        row["source_id_sha256"] for row in approved["source"]["manifest"] if row["eligible_text"]]
+    for key in ("schema", "table_counts", "documents", "sources", "projects"):
+        assert refreshed["application"][key] == approved["application"][key]
+    for key in ("server", "database", "nodes", "edges", "coverage"):
+        assert refreshed["neo4j"][key] == approved["neo4j"][key]
+    assert refreshed["model"]["digest_before"] == refreshed["model"]["digest_after"] == approved["model"]["digest_before"]
+    assert refreshed["model"]["probes"] == approved["model"]["probes"]

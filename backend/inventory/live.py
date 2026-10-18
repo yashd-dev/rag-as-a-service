@@ -75,6 +75,7 @@ def source_inventory(env):
         report["manifest_sha256"] = digest(json.dumps(manifests, sort_keys=True))
         report["watermark_after"] = reader.query(watermark)[0]
         report["watermarks_match"] = report["watermark_before"] == report["watermark_after"]
+        # shortcut: independent reads miss edits preserving counts/timestamps; use a read snapshot before migrating under concurrent writes.
         report["counts_reconciled"] = (
             len(manifests) == report["counts"]["total"] == before["records"] == report["watermark_after"]["records"]
             and len(set(records) - {None}) == report["counts"]["distinct_ids"]

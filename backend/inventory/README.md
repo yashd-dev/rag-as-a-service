@@ -112,7 +112,7 @@ The full report's `selector` contains candidate SQL, its **required Python post-
 and eligible source-ID hashes. Candidate SQL alone is not the eligible set; do not
 substitute SQLite's space-only `trim()` for that post-filter.
 
-**Current live result:** `reports/2026-10-18-live.json` and its human-readable
+**Approved baseline:** `reports/2026-10-18-live.json` and its human-readable
 summary `reports/2026-10-18-live.md`. Measurements completed for the configured
 stores: 333 usable OCR texts, 97 application documents, no persisted chunk
 vectors, empty Neo4j, and matching real 768-dimensional source/query probes with
@@ -127,6 +127,14 @@ eligible for the next run.** The frozen JSON intentionally retains its original
 measurement-time pending-review fields. Changes to source/model/schema invalidate affected eligibility.
 Nonempty graphs or failed measurements on a future run keep measurement status
 incomplete; the command never approves migration or starts ingestion.
+
+**Audit-fixed refresh:** `reports/2026-10-18-audit-fixes.{json,md}` records the
+corrected live run, complete with no `measurement_issues`. A versioned regression
+compares its connection identities, source/content manifest, schemas, application
+records, model digest and exclusions with the approved baseline; all match.
+Source counts now reconcile across both read passes, and required unknown/vector
+coverage or unscanned global rows keep measurement status incomplete. These checks
+are not a cross-store snapshot; material changes still require affected refresh/review.
 
 Legacy valid numeric vectors remain `unknown_blocked`, because project model
 labels do not prove model/content provenance. Missing/invalid vectors with text

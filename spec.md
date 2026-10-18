@@ -215,7 +215,16 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 **Current result (supersedes historical pending/blocked records below): Stage A COMPLETE — user review approved on 2026-10-18.** All configured Turso/Neo4j/model measurements, diagnostic checks and inventory review passed. **Stage B is eligible for a subsequent run**, subject to its own section/commit gates and safe migration requirements. This run records approval and stops; no Stage B implementation or database writes occur. See `backend/inventory/reports/2026-10-18-live.md` for scope, discrepancies, exclusions and non-destructive disposition.
 
+**Latest audit-fix refresh:** all six audit findings corrected, **59 tests passed**, targeted Ruff/diff checks passed. `backend/inventory/reports/2026-10-18-audit-fixes.{json,md}` records the 09:31:37–09:31:58 UTC live run: `measurement_status=complete`, `measurement_issues=[]`, reconciled source counts and matching pre-count/post-scan watermarks. Regression comparison confirms the same connection identities, schemas, source/content manifest, application records, model digest and exclusions as the user-approved baseline. Existing approval still applies to that unchanged material inventory; no destructive operation or Stage B work performed.
+
 #### Stage A execution record — 2026-10-18 (complete)
+
+**A.11 selected bounded audit-fix subset (before refresh):** record a new read-only live inventory using all corrected paths, preserve the original approved artifacts, compare material scope/content/model/eligibility against that approval, and run final regression/Ruff/diff checks before committing the evidence. Acceptance: all live measurements complete with no measurement issues; source counts/watermarks and global/scoped vector coverage reconcile; changed connections/content/model/eligibility require renewed affected review rather than automatic approval. No app startup, ingestion, migration or Stage B work. A.10 committed as `25f3b1b`.
+
+- [x] A.11 live refresh completed and versioned without overwriting original evidence. Exact command: `.venv/bin/python -m backend.scripts.inventory --env-file backend/.env --all-configured --output backend/inventory/reports/2026-10-18-audit-fixes.json`; expected exit 2 retains the diagnostic review gate, while the report confirms complete measurements/no issues. Full source manifest and all material comparison fields match the approved snapshot. Existing 333/543 eligibility/disposition and 0-vector migration plan remain valid; no renewed approval is inferred for changed data.
+- [x] A.11 final checks: `.venv/bin/python -m pytest backend -q -o addopts='' -p no:cacheprovider` **59 passed**; `.venv/bin/ruff check backend/inventory backend/scripts/inventory.py backend/tests --no-cache` **PASS**; `git diff --check` **PASS**. Tests include runtime completion validation against the new live artifact and exact baseline/refresh comparison, not reconstructed summary counts. Independent-read limitation is explicitly marked with a `shortcut:` ceiling/upgrade comment; no snapshot guarantee is fabricated.
+
+**Audit-fix handoff:** finding 1 + 4 / A.6 `0db349a`; finding 2 / A.7 `39ed8a8`; finding 3 / A.8 `093cc8b`; finding 5 / A.9 `9c1293c`; finding 6 / A.10 `25f3b1b`. Each section's tests/checklist evidence/diff review preceded its successful Conventional Commit. A.11 evidence commit hash is reported in the user handoff. All six findings resolved; no dependencies added. New/final section files: corrected live report JSON + readable summary, baseline-comparison regression, diagnostic README and this checklist; original approved artifacts preserved. `backend/docker-compose.yml` remains pre-existing untracked work, preserved/excluded. Stage B eligibility remains subject to its own scope, migration/rollback requirements and refreshed affected inventory if corpus/model/schema changes. Stop after this Stage A repair run.
 
 **A.10 selected bounded audit-fix subset (before editing):** finding 6, remove the unused `confirmed_reads` initialization/increment after whole-tree caller search found only those two writes. Acceptance: delete exactly the unused counter, existing Hrana approval/refusal tests pass, targeted Ruff/diff review and section commit; no new test for a trivial dead-state deletion. A.9 committed as `9c1293c`.
 
@@ -603,7 +612,7 @@ bun run start
 bun run lint
 bunx --no-install tsc --noEmit --incremental false
 
-# Repository root: scoped backend tests (45 passed in latest Stage A verification)
+# Repository root: scoped backend tests (59 passed in latest Stage A audit-fix verification)
 .venv/bin/python -m pytest backend -q -o addopts='' -p no:cacheprovider
 ```
 
