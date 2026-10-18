@@ -281,3 +281,14 @@ def test_model_probe_is_transient_and_reports_measured_width(monkeypatch):
     assert report["model_probe"]["revision"] == "unverified"
     assert len(calls) == 1
     assert calls[0].url.path == "/api/embed"
+
+
+@pytest.mark.parametrize(("env", "reason"), [
+    ({}, "missing_database_url"),
+    ({"TURSO_DATABASE_URL": "libsql://private"}, "missing_auth_token"),
+    ({"TURSO_DATABASE_URL": "unsupported://private"}, "unsupported_database_url_scheme"),
+])
+def test_configuration_blockers_are_actionable_without_disclosing_values(env, reason):
+    report = build_report(args(), env)
+    assert report["application"]["reason"] == reason
+    assert "private" not in json.dumps(report)

@@ -1,0 +1,18 @@
+{
+  "started_at": "2026-10-18T08:38:56.761051+00:00",
+  "scope": {
+    "organization_id": null,
+    "project_id": null,
+    "source_id": null
+  },
+  "gate": "CLOSED",
+  "review": "pending user review",
+  "consistency": "Independent read statements, no cross-store snapshot; concurrent changes may affect counts. Refresh inventory before migration; no eligibility granted by this diagnostic.",
+  "application_connection_id": "sha256:6e5eb4f1f01a90d8",
+  "application": {
+    "state": "blocked",
+    "reason": "query_only_unavailable",
+    "error_type": "ValueError"
+  },
+  "finished_at": "2026-10-18T08:38:56.816045+00:00"
+}

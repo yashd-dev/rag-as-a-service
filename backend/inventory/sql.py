@@ -7,6 +7,15 @@ from contextlib import contextmanager
 from pathlib import Path
 
 
+class AccessBlocked(RuntimeError):
+    """Safe, enumerated reason; never carries a driver's exception message."""
+
+    def __init__(self, reason, error_type=None):
+        super().__init__(reason)
+        self.reason = reason
+        self.error_type = error_type
+
+
 def identifier(value):
     if not isinstance(value, str) or not value or "\x00" in value:
         raise ValueError("Invalid SQL identifier")
@@ -49,21 +58,33 @@ class Reader:
 
 @contextmanager
 def open_reader(url, token=""):
+    if not url:
+        raise AccessBlocked("missing_database_url")
     if url.startswith("file:"):
         # Resolve only existing files; no fallback or accidental empty creation.
         path = Path(url[5:]).resolve(strict=True)
         connection = sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)
-    elif url.startswith(("libsql://", "https://")) and token:
+    elif url.startswith(("libsql://", "https://")):
+        if not token:
+            raise AccessBlocked("missing_auth_token")
         import libsql
 
-        connection = libsql.connect(database=url, auth_token=token)
+        try:
+            connection = libsql.connect(database=url, auth_token=token)
+        except Exception as exc:  # noqa: BLE001 - redact connection errors
+            raise AccessBlocked("connection_failed", type(exc).__name__) from None
     else:
-        raise ValueError("An explicit file: path or authenticated Turso URL is required")
+        raise AccessBlocked("unsupported_database_url_scheme")
     try:
         # Fail closed if a server/driver cannot enforce/confirm query_only.
-        connection.execute("PRAGMA query_only = ON")
-        if connection.execute("PRAGMA query_only").fetchone()[0] != 1:
-            raise RuntimeError("Database did not confirm query_only")
+        try:
+            connection.execute("PRAGMA query_only = ON")
+            if connection.execute("PRAGMA query_only").fetchone()[0] != 1:
+                raise AccessBlocked("query_only_not_confirmed")
+        except AccessBlocked:
+            raise
+        except Exception as exc:  # noqa: BLE001 - redact remote read-only errors
+            raise AccessBlocked("query_only_unavailable", type(exc).__name__) from None
         yield Reader(connection)
     finally:
         connection.close()

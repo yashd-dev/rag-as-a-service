@@ -10,7 +10,7 @@ from pathlib import Path
 
 from backend.inventory.graph import graph_report
 from backend.inventory.report import application_report, columns, source_report
-from backend.inventory.sql import connection_id, open_reader
+from backend.inventory.sql import AccessBlocked, connection_id, open_reader
 
 
 def now():
@@ -18,6 +18,8 @@ def now():
 
 
 def blocked(exc):
+    if isinstance(exc, AccessBlocked):
+        return {"state": "blocked", "reason": exc.reason, "error_type": exc.error_type}
     return {"state": "blocked", "error_type": type(exc).__name__}
 
 

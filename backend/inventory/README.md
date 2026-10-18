@@ -61,6 +61,16 @@ Connection identifiers are hashed. Driver exception messages, decrypted secrets,
 source URLs and document text are excluded. Do not publish raw environment files.
 Reports contain schema/identity metadata; review before sharing.
 
+Access failures have enumerated reasons: `missing_database_url`,
+`missing_auth_token`, `unsupported_database_url_scheme`, `connection_failed`,
+`query_only_unavailable`, or `query_only_not_confirmed`. They do not include driver
+messages. The 2026-10-18 configured access attempt was blocked at read-only
+confirmation (`query_only_unavailable`, `ValueError`), before any schema or row
+reads. Evidence: `reports/2026-10-18-access-blocker.json`. It does not establish
+whether the cause is driver/server pragma support or remote access; no corpus
+counts can be inferred. Resolve a verified read-only transport/permission path
+within Stage A before retrying; do not remove protections to force inventory.
+
 ## Coverage and limits
 
 Implemented: schema discovery; scoped application counts; complete legacy vector
