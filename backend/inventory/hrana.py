@@ -57,7 +57,6 @@ class Connection:
         self.client = httpx.Client(
             headers={"Authorization": f"Bearer {token}"}, timeout=60, follow_redirects=False,
         )
-        self.confirmed_reads = 0
 
     def pipeline(self, base, baton, requests):
         response = self.client.post(base + "/v2/pipeline", json={"baton": baton, "requests": requests})
@@ -78,7 +77,6 @@ class Connection:
                 raise ReadOnlyError("Server could not describe diagnostic statement")
             if description["response"]["result"].get("is_readonly") is not True:
                 raise ReadOnlyError("Server did not confirm statement is read-only")
-            self.confirmed_reads += 1
             result, _ = self.pipeline(base, baton, [
                 {"type": "execute", "stmt": {"sql": statement,
                                             "args": [encode(value) for value in parameters]}},

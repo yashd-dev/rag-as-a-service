@@ -217,6 +217,10 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 
 #### Stage A execution record — 2026-10-18 (complete)
 
+**A.10 selected bounded audit-fix subset (before editing):** finding 6, remove the unused `confirmed_reads` initialization/increment after whole-tree caller search found only those two writes. Acceptance: delete exactly the unused counter, existing Hrana approval/refusal tests pass, targeted Ruff/diff review and section commit; no new test for a trivial dead-state deletion. A.9 committed as `9c1293c`.
+
+- [x] A.10 implemented/verified: removed two unused counter writes; server-side read-only checks and stream cleanup unchanged. Existing transport tests **5 passed** (32 unrelated tests deselected), targeted Ruff **PASS**, `git diff --check` **PASS**. No dependency added/removed.
+
 **A.9 selected bounded audit-fix subset (before editing):** finding 5, preserve existing secret-safe access reasons consistently in scoped/full diagnostics. Move the existing redacted exception formatter to the standalone SQL module, reuse it in both callers, and test missing source URL versus missing token without real connections; arbitrary exception messages must remain excluded. Acceptance: both paths preserve enumerated reasons, existing no-leak tests pass, relevant checks and section commit. A.8 committed as `093cc8b`.
 
 - [x] A.9 implemented/verified: shared `backend.inventory.sql.blocked` replaces the duplicate formatters; scoped and full CLI paths retain `AccessBlocked.reason` and optional underlying error type while excluding raw messages. Scoped pytest **58 passed**, targeted Ruff **PASS**, `git diff --check` **PASS**. Full-path regression tests distinguish missing OCR URL from missing token without network calls; existing arbitrary-error redaction tests pass.
