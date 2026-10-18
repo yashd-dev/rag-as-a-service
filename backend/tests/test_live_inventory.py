@@ -257,3 +257,17 @@ def test_source_counts_classification_and_selection_share_whitespace_policy(tmp_
     assert full["selector"]["eligible_source_id_sha256"] == [live.digest(key) for key in selected]
     assert full["counts_reconciled"] is True
     assert full["coverage_by_status"][0]["nonempty_text"] == len(selected)
+
+
+@pytest.mark.parametrize(("env", "reason"), [
+    ({}, "missing_database_url"),
+    ({"OCR_TURSO_DB": "libsql://private-host"}, "missing_auth_token"),
+])
+def test_full_inventory_preserves_safe_access_reasons(monkeypatch, env, reason):
+    monkeypatch.setattr(live, "app_inventory", lambda *args: {"state": "blocked"})
+    monkeypatch.setattr(live, "graph_inventory", lambda *args: {"state": "blocked"})
+    monkeypatch.setattr(live, "model_inventory", lambda *args: {"state": "blocked"})
+    report = live.inventory(env)
+    assert report["source"]["reason"] == reason
+    assert report["measurement_status"] == "incomplete"
+    assert "private-host" not in json.dumps(report)

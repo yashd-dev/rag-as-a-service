@@ -16,6 +16,12 @@ class AccessBlocked(RuntimeError):
         self.error_type = error_type
 
 
+def blocked(exc):
+    if isinstance(exc, AccessBlocked):
+        return {"state": "blocked", "reason": exc.reason, "error_type": exc.error_type}
+    return {"state": "blocked", "error_type": type(exc).__name__}
+
+
 def identifier(value):
     if not isinstance(value, str) or not value or "\x00" in value:
         raise ValueError("Invalid SQL identifier")

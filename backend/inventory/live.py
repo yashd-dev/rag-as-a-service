@@ -14,7 +14,7 @@ from backend.inventory.report import (
     source_report,
     vector_status,
 )
-from backend.inventory.sql import connection_id, identifier, open_reader
+from backend.inventory.sql import blocked, connection_id, identifier, open_reader
 
 SOURCE_MAPPING = {
     "table_name": "pdfs", "id_column": "path", "text_column": "ocr_text",
@@ -28,10 +28,6 @@ def timestamp():
 
 def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
-
-
-def failed(exc):
-    return {"state": "blocked", "error_type": type(exc).__name__}
 
 
 def source_inventory(env):
@@ -316,7 +312,7 @@ def inventory(env):
             else:
                 report[name] = model_inventory(env, text)
         except Exception as exc:  # noqa: BLE001 - secret-safe per-service diagnostic boundary
-            report[name] = failed(exc)
+            report[name] = blocked(exc)
     report["measurement_issues"] = measurement_issues(report)
     report["measurement_status"] = "incomplete" if report["measurement_issues"] else "complete"
     report["finished_at"] = timestamp()
