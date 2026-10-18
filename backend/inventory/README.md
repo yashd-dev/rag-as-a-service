@@ -112,8 +112,10 @@ provenance is being waived: the inspected retrieval stores are actually empty.
 Expected future chunk counts cannot exist until canonical chunking; this is
 recorded as not applicable before indexing, not a fabricated coverage result.
 
-The remaining Stage A exit requirement is **user inventory review**, not service
-connectivity. Changes to source/model/schema invalidate affected eligibility.
+The user approved this inventory/disposition on **2026-10-18**; the dated review
+record is in the readable report and `spec.md`. **Stage A is complete; Stage B is
+eligible for the next run.** The frozen JSON intentionally retains its original
+measurement-time pending-review fields. Changes to source/model/schema invalidate affected eligibility.
 Nonempty graphs or failed measurements on a future run keep measurement status
 incomplete; the command never approves migration or starts ingestion.
 
