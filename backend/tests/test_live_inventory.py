@@ -23,6 +23,7 @@ def test_source_full_scan_fingerprints_exclusions_and_no_text_emission(tmp_path)
         """)
     report, records, probe = live.source_inventory({"OCR_TURSO_DB": "file:" + str(path)})
     assert report["watermarks_match"] is True
+    assert report["counts_reconciled"] is True
     assert report["classification"]["requires_initial_chunking_and_embedding"] == 1
     assert report["classification"]["requires_text_provenance_repair"] == 3
     assert report["counts"]["distinct_ids"] == 4
@@ -173,3 +174,62 @@ def test_versioned_live_evidence_is_coherent_and_does_not_claim_index_readiness(
     assert report["neo4j"]["coverage"]["state"] == "verified_empty_database_not_ready"
     assert all(probe["dimension"] == 768 for probe in report["model"]["probes"])
     assert report["model"]["digest_before"] == report["model"]["digest_after"]
+
+
+@pytest.mark.parametrize("defect", [None, "orphan_vectors", "blockers", "unknown_staleness",
+                                   "unknown_generation", "unclassified", "short_scan", "source_changed"])
+def test_completion_rejects_missing_required_measurements(defect):
+    path = Path(__file__).parents[1] / "inventory/reports/2026-10-18-live.json"
+    report = json.loads(path.read_text())
+    report["source"]["counts_reconciled"] = True
+    project = report["application"]["projects"][0]
+    if defect == "orphan_vectors":
+        report["application"]["table_counts"]["chunk_embeddings"] = 3
+        report["application"]["global_vector_integrity"]["total"] = 3
+    elif defect == "blockers":
+        project["blockers"] = ["unverified vector provenance"]
+    elif defect == "unknown_staleness":
+        project["vectors"]["stale_count"] = None
+    elif defect == "unknown_generation":
+        project["vectors"]["generation_distribution"] = None
+    elif defect == "unclassified":
+        project["vectors"]["classification"] = {"unknown_blocked": 3}
+    elif defect == "short_scan":
+        project["tables"]["chunk_embeddings"]["count"] = 3
+    elif defect == "source_changed":
+        report["source"]["counts_reconciled"] = False
+    assert bool(live.measurement_issues(report)) is (defect is not None)
+
+
+def test_source_change_during_initial_counts_is_detected(monkeypatch):
+    events = []
+
+    class Reader:
+        def __init__(self):
+            self.queries = []
+
+        def query(self, sql):
+            if "max(updated_at)" in sql:
+                events.append("watermark")
+                return [{"records": 2 if len(events) == 1 else 1, "latest_updated_at": "date"}]
+            if "count(url)" in sql:
+                return [{"records": 1}]
+            return [{"ocr_status": "done", "records": 1}]
+
+    @contextmanager
+    def reader(*args):
+        yield Reader()
+
+    def initial_counts(*args):
+        events.append("counts")
+        return {"state": "measured", "counts": {"total": 2, "distinct_ids": 2, "nonempty_text": 2}}
+
+    monkeypatch.setattr(live, "open_reader", reader)
+    monkeypatch.setattr(live, "source_report", initial_counts)
+    monkeypatch.setattr(live, "scan", lambda *args, **kwargs: iter([
+        {"path": "one", "ocr_text": "real text", "ocr_status": "done", "updated_at": "date"},
+    ]))
+    report, _, _ = live.source_inventory({"OCR_TURSO_DB": "file:fixture"})
+    assert events[:2] == ["watermark", "counts"]
+    assert report["watermarks_match"] is False
+    assert report["counts_reconciled"] is False

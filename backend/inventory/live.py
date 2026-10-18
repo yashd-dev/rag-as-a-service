@@ -36,12 +36,13 @@ def failed(exc):
 def source_inventory(env):
     url = env.get("OCR_TURSO_DB", "")
     with open_reader(url, env.get("OCR_TURSO_DB_TOKEN", "")) as reader:
+        watermark = "SELECT count(*) AS records, max(updated_at) AS latest_updated_at FROM pdfs"
+        before = reader.query(watermark)[0]
         report = source_report(reader, SOURCE_MAPPING)
         if report["state"] != "measured":
             return report, {}, None
         report["connection_id"] = connection_id(url)
-        watermark = "SELECT count(*) AS records, max(updated_at) AS latest_updated_at FROM pdfs"
-        report["watermark_before"] = reader.query(watermark)[0]
+        report["watermark_before"] = before
         report["coverage_by_status"] = reader.query(
             "SELECT ocr_status, count(*) AS records, "
             "sum(CASE WHEN ocr_text IS NOT NULL AND length(trim(ocr_text)) > 0 THEN 1 ELSE 0 END) AS nonempty_text, "
@@ -55,9 +56,13 @@ def source_inventory(env):
         records = {}
         manifests = []
         probe_text = None
+        scanned_nonempty = 0
+        scanned_statuses = Counter()
         for row in scan(reader, "SELECT path, ocr_text, ocr_status, updated_at FROM pdfs ORDER BY path", batch_size=10):
             text = row["ocr_text"]
             nonempty = isinstance(text, str) and bool(text.strip())
+            scanned_nonempty += nonempty
+            scanned_statuses[row["ocr_status"]] += 1
             eligible = row["ocr_status"] == "done" and nonempty and bool(row["path"])
             manifest = {"source_id_sha256": digest(row["path"] or ""),
                         "content_sha256": digest(text) if isinstance(text, str) else None,
@@ -72,6 +77,12 @@ def source_inventory(env):
         report["manifest_sha256"] = digest(json.dumps(manifests, sort_keys=True))
         report["watermark_after"] = reader.query(watermark)[0]
         report["watermarks_match"] = report["watermark_before"] == report["watermark_after"]
+        report["counts_reconciled"] = (
+            len(manifests) == report["counts"]["total"] == before["records"] == report["watermark_after"]["records"]
+            and len(set(records) - {None}) == report["counts"]["distinct_ids"]
+            and scanned_nonempty == (report["counts"]["nonempty_text"] or 0)
+            and scanned_statuses == Counter({row["ocr_status"]: row["records"] for row in report["coverage_by_status"]})
+        )
         report["queries"] = reader.queries
         report["selector"] = (
             "SELECT path FROM pdfs WHERE ocr_status = 'done' AND ocr_text IS NOT NULL "
@@ -251,6 +262,35 @@ def model_inventory(env, probe_text):
             "note": "Probe only: does not index the corpus. Pin/verify this digest for later ingestion/query generations."}
 
 
+def measurement_issues(report):
+    issues = [f"{name}_not_measured" for name in ("source", "application", "neo4j", "model")
+              if report.get(name, {}).get("state") != "measured"]
+    source = report.get("source", {})
+    if source.get("watermarks_match") is not True or source.get("counts_reconciled") is not True:
+        issues.append("source_counts_or_watermarks_inconsistent")
+    if report.get("neo4j", {}).get("coverage", {}).get("state") != "verified_empty_database_not_ready":
+        issues.append("graph_coverage_unverified")
+    app = report.get("application", {})
+    scanned = 0
+    for project in app.get("projects", []):
+        vectors = project.get("vectors", {})
+        expected = project.get("tables", {}).get("chunk_embeddings", {}).get("count")
+        counts = vectors.get("counts", {})
+        measured = sum(counts.get(key, 0) for key in ("missing", "invalid", "valid_numeric"))
+        classified = sum(vectors.get("classification", {}).values())
+        scanned += measured
+        if (project.get("blockers") or vectors.get("state") != "measured" or vectors.get("full_scan") is not True
+                or expected != measured or classified != measured or vectors.get("stale_count") is None
+                or vectors.get("generation_distribution") is None):
+            issues.append("project_vector_coverage_unverified")
+    if not (app.get("table_counts", {}).get("chunk_embeddings")
+            == app.get("global_vector_integrity", {}).get("total") == scanned):
+        issues.append("global_vectors_not_fully_scanned")
+    if app.get("table_counts", {}).get("documents") != len(app.get("documents", [])):
+        issues.append("application_document_counts_inconsistent")
+    return issues
+
+
 def inventory(env):
     report = {"started_at": timestamp(), "gate": "CLOSED_PENDING_USER_REVIEW",
               "review": {"reviewer": None, "date": None, "decision": "pending"},
@@ -270,11 +310,7 @@ def inventory(env):
                 report[name] = model_inventory(env, text)
         except Exception as exc:  # noqa: BLE001 - secret-safe per-service diagnostic boundary
             report[name] = failed(exc)
-    report["measurement_status"] = "complete" if (
-        all(report[name].get("state") == "measured" for name in ("source", "application", "neo4j", "model"))
-        and report["source"].get("watermarks_match") is True
-        and report["neo4j"].get("coverage", {}).get("state") == "verified_empty_database_not_ready"
-        and all(p.get("vectors", {}).get("state") == "measured" for p in report["application"].get("projects", []))
-    ) else "incomplete"
+    report["measurement_issues"] = measurement_issues(report)
+    report["measurement_status"] = "incomplete" if report["measurement_issues"] else "complete"
     report["finished_at"] = timestamp()
     return report
