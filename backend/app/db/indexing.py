@@ -19,6 +19,104 @@ class IndexRepository:
         self.recipe = {"chunker": CHUNKER_VERSION, "embedding_provider": "ollama",
                        "embedding_model": config.get("OLLAMA_EMBEDDING_MODEL", "embeddinggemma")}
 
+    def record_failure(self, project, document, code):
+        try:
+            self.stage(project, "upload", document["id"], "", {"extraction_error": code},
+                       file_name=document["file_name"], document_id=document["id"])
+        except ValueError:
+            pass  # Empty input has already persisted a failed generation.
+
+    def readiness(self, project, document_id, reader=None):
+        if reader is None:
+            with open_reader(self.url, self.token) as connection:
+                return self.readiness(project, document_id, connection)
+        doc = reader.query("SELECT * FROM documents WHERE id=? AND project_id=? AND organization_id=?",
+                           (document_id, project["id"], project["organization_id"]))
+        if not doc:
+            raise IdentityConflict("Document not found in project")
+        schema_ready = bool(reader.query("SELECT name FROM sqlite_master WHERE name='document_sources' AND type='table'"))
+        generations = reader.query(
+            "SELECT g.* FROM document_sources s JOIN index_generations g ON g.id=s.current_generation "
+            "WHERE s.document_id=? AND g.document_id=s.document_id AND s.organization_id=? AND s.project_id=? AND g.organization_id=? AND g.project_id=?",
+            (document_id, project["organization_id"], project["id"], project["organization_id"], project["id"]),
+        ) if schema_ready else []
+        generation = generations[0] if generations else None
+        chunks = reader.query("SELECT * FROM canonical_chunks WHERE generation_id=? ORDER BY chunk_index", (generation["id"],)) if generation else []
+        return self._readiness(document_id, generation, chunks, schema_ready)
+
+    def _readiness(self, document_id, generation, chunks, schema_ready):
+        result = {"state": "pending", "capabilities": {"text": False, "vector": False, "graph": False},
+                  "generation": None, "coverage": {"expected_chunks": None, "valid_chunks": 0, "verified_vectors": 0, "verified_graph_chunks": 0},
+                  "verified_at": now_ms(), "failures": [], "retry_eligible": True,
+                  "unavailable": ["neo4j_vectors_not_verified", "graph_retrieval_not_verified"]}
+        if not schema_ready:
+            result["failures"] = [{"stage": "metadata", "code": "migration_required", "retryable": False}]
+            return result
+        if generation is None:
+            result["failures"] = [{"stage": "text", "code": "canonical_text_missing", "retryable": True}]
+            return result
+        expected = TextChunker().chunk(generation["source_text"])
+        metadata = json.loads(generation["source_metadata"])
+        valid = 0
+        for actual, chunk in zip(chunks, expected):
+            pages = [page for page in metadata.get("pages", []) if page["start"] < chunk.end and page["end"] > chunk.start]
+            if (actual["id"] == "chk_" + fingerprint([generation["id"], chunk.chunk_index, chunk.content])
+                    and actual["content"] == chunk.content and actual["content_hash"] == fingerprint(chunk.content)
+                    and actual["start_char"] == chunk.start and actual["end_char"] == chunk.end
+                    and actual["chunk_index"] == chunk.chunk_index and json.loads(actual["source_pages"]) == pages):
+                valid += 1
+        text_ready = (bool(expected) and valid == len(chunks) == len(expected)
+                      and fingerprint(generation["source_text"]) == generation["content_hash"]
+                      and generation["id"] == "gen_" + fingerprint([document_id, generation["source_text"], metadata, json.loads(generation["recipe_json"])]))
+        result.update(generation=generation["id"], state=generation["state"], attempts=generation["attempts"],
+                      source_observed_at=generation["created_at"], recipe=json.loads(generation["recipe_json"]))
+        result["coverage"].update(expected_chunks=len(expected), valid_chunks=valid)
+        result["capabilities"]["text"] = text_ready
+        code = generation["error_code"]
+        if generation["state"] == "processing" and generation["lease_until"] <= now_ms():
+            result["state"], code = "failed", "interrupted"
+        elif generation["state"] == "text_ready" and not text_ready:
+            result["state"], code = "failed", "canonical_integrity_failed"
+        elif generation["state"] not in {"pending", "processing", "text_ready", "failed", "graph_partial"}:
+            result["state"], code = "failed", "unsupported_readiness_claim"
+        if result["recipe"] != self.recipe or generation["chunker_version"] != CHUNKER_VERSION:
+            result["state"], code = "pending", "recipe_changed"
+        if code:
+            result["failures"] = [{"stage": "graph" if result["state"] == "graph_partial" else "text", "code": code, "retryable": True}]
+        result["retry_eligible"] = result["state"] not in {"processing", "text_ready"}
+        return result
+
+    def corpus_readiness(self, project):
+        # shortcut: recompute staged text integrity on reads; use publication proofs before serving large indexed corpora.
+        with open_reader(self.url, self.token) as reader:
+            documents = reader.query("SELECT * FROM documents WHERE project_id=? AND organization_id=? ORDER BY id", (project["id"], project["organization_id"]))
+            schema_ready = bool(reader.query("SELECT name FROM sqlite_master WHERE name='document_sources' AND type='table'"))
+            params = (project["id"], project["organization_id"], project["id"], project["organization_id"])
+            generations = reader.query(
+                "SELECT g.* FROM index_generations g JOIN document_sources s ON s.current_generation=g.id AND s.document_id=g.document_id "
+                "WHERE g.project_id=? AND g.organization_id=? AND s.project_id=? AND s.organization_id=?", params,
+            ) if schema_ready else []
+            chunks = reader.query(
+                "SELECT c.* FROM canonical_chunks c JOIN index_generations g ON g.id=c.generation_id "
+                "JOIN document_sources s ON s.current_generation=g.id AND s.document_id=g.document_id "
+                "WHERE g.project_id=? AND g.organization_id=? AND s.project_id=? AND s.organization_id=? ORDER BY c.chunk_index", params,
+            ) if schema_ready else []
+        by_document = {generation["document_id"]: generation for generation in generations}
+        by_generation = {}
+        for chunk in chunks:
+            by_generation.setdefault(chunk["generation_id"], []).append(chunk)
+        items = []
+        for doc in documents:
+            generation = by_document.get(doc["id"])
+            items.append({"document_id": doc["id"], **self._readiness(doc["id"], generation, by_generation.get(generation["id"], []) if generation else [], schema_ready)})
+        text_ready = bool(items) and all(item["capabilities"]["text"] and item["state"] == "text_ready" for item in items)
+        states = {state: sum(item["state"] == state for item in items) for state in ("pending", "processing", "text_ready", "failed", "graph_partial")}
+        return {"scope": "all_application_documents", "project_id": project["id"], "organization_id": project["organization_id"],
+                "generation": fingerprint([[item["document_id"], item["generation"]] for item in items]),
+                "state": "text_ready" if text_ready else "failed" if states["failed"] else "graph_partial" if states["graph_partial"] else "processing" if states["processing"] else "pending",
+                "capabilities": {"text": text_ready, "vector": False, "graph": False}, "counts": states | {"total": len(items), "excluded": 0},
+                "documents": items, "verified_at": now_ms()}
+
     def _plan(self, reader, project, source_key, record_id, text, metadata, file_name, document_id):
         org, project_id = project["organization_id"], project["id"]
         if not reader.query("SELECT id FROM projects WHERE id = ? AND organization_id = ?", (project_id, org)):
@@ -86,6 +184,8 @@ class IndexRepository:
             )
             previous = conn.execute("SELECT state FROM index_generations WHERE id = ?", (generation,)).fetchone()
             if previous and previous[0] == "text_ready":
+                if not self.readiness(project, doc_id, Reader(conn))["capabilities"]["text"]:
+                    raise ValueError("canonical_integrity_failed")
                 conn.execute("UPDATE documents SET status='text_ready', updated_at=? WHERE id=?", (timestamp, doc_id))
                 return plan | {"state": "text_ready", "unchanged": True}
             conn.execute(
@@ -116,7 +216,7 @@ class IndexRepository:
         except Exception as exc:
             with db(self.url, self.token) as conn:
                 conn.execute("UPDATE index_generations SET state='failed', error_code=?, lease_until=0, updated_at=? WHERE id=? AND lease_token=?",
-                             ("empty_source_text" if not text.strip() else type(exc).__name__, now_ms(), generation, lease))
+                             (metadata.get("extraction_error") or ("empty_source_text" if not text.strip() else type(exc).__name__), now_ms(), generation, lease))
                 conn.execute("UPDATE documents SET status='failed', updated_at=? WHERE id=? AND EXISTS (SELECT 1 FROM index_generations WHERE id=? AND lease_token=?)",
                              (now_ms(), doc_id, generation, lease))
             raise

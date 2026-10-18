@@ -18,7 +18,6 @@ class Chunk:
     content: str
     start: int
     end: int
-    token_count: int
 
 
 class TextChunker:
@@ -40,7 +39,7 @@ class TextChunker:
                         end = candidate
                         break
             start_char, end_char = words[offset].start(), words[end - 1].end()
-            chunks.append(Chunk(len(chunks), text[start_char:end_char], start_char, end_char, end - offset))
+            chunks.append(Chunk(len(chunks), text[start_char:end_char], start_char, end_char))
             if end == len(words):
                 break
             offset = end - self.overlap

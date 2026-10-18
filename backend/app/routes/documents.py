@@ -1,8 +1,10 @@
+import hashlib
 from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
 from werkzeug.utils import secure_filename
 
+from backend.app.db.indexing import IndexRepository
 from backend.app.db.repository import ProjectRepository, SimpleRepository
 from backend.app.routes.projects import auth_or_error
 from backend.app.services.ingestion_service import IngestionError, IngestionService
@@ -22,7 +24,11 @@ def create_document(project_id: str):
     uploaded_files = request.files.getlist("file")
     uploaded_file = uploaded_files[0] if uploaded_files else None
     payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return jsonify({"error": "JSON object is required"}), 400
     requested_names = [secure_filename(file.filename) for file in uploaded_files if file and file.filename]
+    if uploaded_files and any(not file.filename or not secure_filename(file.filename) for file in uploaded_files):
+        return jsonify({"error": "A valid filename is required"}), 400
     if not requested_names and payload.get("file_name"):
         requested_names = [str(payload.get("file_name", "")).strip()]
     if not requested_names:
@@ -48,7 +54,7 @@ def create_document(project_id: str):
                 f"content_length={request.content_length}",
                 flush=True,
             )
-        row = repo.create(
+        row = ingestion.register_upload(project, file_name, hashlib.file_digest(file.stream, "sha256").hexdigest(), auth.user_id) if file else repo.create(
             {
                 "project_id": project_id,
                 "organization_id": auth.organization_id,
@@ -58,6 +64,7 @@ def create_document(project_id: str):
             }
         )
         if file:
+            file.stream.seek(0)
             upload_dir = Path(current_app.config["UPLOAD_DIR"]) / auth.organization_id / project_id / row["id"]
             upload_dir.mkdir(parents=True, exist_ok=True)
             file_path = upload_dir / file_name
@@ -70,6 +77,8 @@ def create_document(project_id: str):
                 row = repo.get(row["id"], auth.organization_id)
                 print(f"upload failed document={row['id']} status={row['status']} error={exc}", flush=True)
                 errors.append({"document_id": row["id"], "file_name": file_name, "error": str(exc)})
+        row["readiness"] = ingestion.index.readiness(project, row["id"])
+        row["status"] = row["readiness"]["state"]
         rows.append(row)
     status_code = 207 if errors else 201
     if len(rows) == 1 and not errors:
@@ -93,7 +102,28 @@ def list_documents(project_id: str):
         ).list_for_org(auth.organization_id)
         if row["project_id"] == project_id
     ]
+    index = IndexRepository(current_app.config)
+    project = {"id": project_id, "organization_id": auth.organization_id}
+    readiness = {item["document_id"]: item for item in index.corpus_readiness(project)["documents"]}
+    for row in rows:
+        row["readiness"] = readiness[row["id"]]
+        row["legacy_status"] = row["status"]
+        row["status"] = row["readiness"]["state"]
     return jsonify({"items": rows})
+
+
+@documents_bp.get("/<project_id>/indexing/status")
+def indexing_status(project_id):
+    auth, error = auth_or_error()
+    if error:
+        return error
+    project = ProjectRepository(current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]).get(project_id, auth.organization_id)
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+    try:
+        return jsonify(IndexRepository(current_app.config).corpus_readiness(project))
+    except Exception:  # noqa: BLE001 - redact database/transport failures at HTTP boundary
+        return jsonify({"error": "Index readiness unavailable"}), 503
 
 
 @documents_bp.delete("/<project_id>/documents/<document_id>")
