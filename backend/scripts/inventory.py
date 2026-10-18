@@ -136,7 +136,7 @@ def build_report(args, env):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--env-file", type=Path, help="Explicit dotenv file; process environment takes precedence")
+    parser.add_argument("--env-file", type=Path, help="Explicit dotenv file; defined values override process environment, matching backend Config")
     parser.add_argument("--organization-id")
     parser.add_argument("--project-id")
     parser.add_argument("--source-id")
@@ -151,11 +151,10 @@ def main(argv=None):
         parser.error("Discovery cannot be combined with scoped inventory or model probes")
     if args.all_configured and (args.discover_scopes or args.organization_id or args.project_id or args.source_id or args.probe_model):
         parser.error("--all-configured cannot be combined with discovery, scope or probe flags; it includes model probing")
-    env = {}
+    env = dict(os.environ)
     if args.env_file:
         from dotenv import dotenv_values
-        env.update(dotenv_values(args.env_file))
-    env.update(os.environ)
+        env.update({key: value for key, value in dotenv_values(args.env_file).items() if value is not None})
     # Reserve a new report before any connections; never truncate prior evidence.
     with args.output.open("x", encoding="utf-8") as output:
         report = build_report(args, env)

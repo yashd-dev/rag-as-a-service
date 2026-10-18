@@ -329,3 +329,28 @@ def test_hrana_description_error_or_foreign_origin_never_executes(monkeypatch, p
     with open_reader("libsql://test", "token") as reader, pytest.raises(RuntimeError):
         reader.query("SELECT 1")
     assert "execute" not in requests
+
+
+def test_cli_dotenv_precedence_matches_backend_without_startup(tmp_path, monkeypatch):
+    from backend.scripts import inventory
+
+    env_file = tmp_path / "settings.env"
+    env_file.write_text("TURSO_DATABASE_URL=libsql://dotenv\nTURSO_AUTH_TOKEN=dotenv-token\n"
+                        "OLLAMA_EMBEDDING_MODEL=dotenv-model\nOLLAMA_BASE_URL\n")
+    monkeypatch.setenv("TURSO_DATABASE_URL", "libsql://shell")
+    monkeypatch.setenv("TURSO_AUTH_TOKEN", "shell-token")
+    monkeypatch.setenv("OLLAMA_EMBEDDING_MODEL", "shell-model")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://shell-model-service")
+    captured = {}
+
+    def capture(args, env):
+        captured.update(env)
+        return {}
+
+    monkeypatch.setattr(inventory, "build_report", capture)
+    assert inventory.main(["--env-file", str(env_file), "--discover-scopes",
+                           "--output", str(tmp_path / "report.json")]) == 2
+    assert captured["TURSO_DATABASE_URL"] == "libsql://dotenv"
+    assert captured["TURSO_AUTH_TOKEN"] == "dotenv-token"
+    assert captured["OLLAMA_EMBEDDING_MODEL"] == "dotenv-model"
+    assert captured["OLLAMA_BASE_URL"] == "http://shell-model-service"

@@ -33,7 +33,9 @@ snapshot**. Refresh after concurrent corpus/model/schema changes.
 
 ## Configuration and protections
 
-No implicit dotenv loading. `--env-file` is explicit, and process environment wins.
+No implicit dotenv loading. `--env-file` is explicit; defined dotenv values override
+the process environment, matching backend `Config` (`load_dotenv(override=True)`).
+Keys without a dotenv value retain the process-environment fallback.
 The command imports neither `backend.app` nor any sibling RAG implementation.
 It never invokes Flask, schema initialization, ensure functions, ingestion, source
 creation, backfill, graph writes or indexing. New local JSON evidence is its only
