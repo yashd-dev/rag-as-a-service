@@ -68,3 +68,43 @@ def test_graph_reads_are_scoped_bounded_and_never_write():
     store.driver = Driver()
     assert store.project_graph("p", "o") == {"nodes": [], "edges": [], "bounded": True}
     assert store.project_status("p", "o")["graph_ready"] is False
+
+
+def test_versioned_embedding_rejects_model_drift(monkeypatch):
+    provider = embeddings.EmbeddingGemmaProvider("http://model", "embeddinggemma")
+    provenance = {"provider": "ollama", "model": "embeddinggemma:latest", "revision": "a" * 64, "dimensions": 768}
+    revisions = iter([provenance, provenance | {"revision": "b" * 64}])
+    monkeypatch.setattr(provider, "revision", lambda: next(revisions))
+    monkeypatch.setattr(provider, "embed_texts", lambda texts: [[1.0] * 768 for _ in texts])
+    with pytest.raises(ValueError, match="during request"):
+        provider.embed_versioned(["Real canonical passage"], provenance)
+
+
+@pytest.mark.parametrize("models", [[], [{"name": "other:latest", "digest": "a" * 64}],
+                                  [{"name": "embeddinggemma:latest", "digest": "unknown"}]])
+def test_model_revision_must_be_resolved(monkeypatch, models):
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"models": models}
+    monkeypatch.setattr(embeddings.httpx, "get", lambda *args, **kwargs: Response())
+    with pytest.raises(ValueError, match="revision unavailable"):
+        embeddings.EmbeddingGemmaProvider("http://model", "embeddinggemma").resolve()
+
+
+def test_model_resolution_measures_real_output(monkeypatch):
+    provider = embeddings.EmbeddingGemmaProvider("http://model", "embeddinggemma")
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"models": [{"name": "embeddinggemma:latest", "digest": "a" * 64}]}
+    monkeypatch.setattr(embeddings.httpx, "get", lambda *args, **kwargs: Response())
+    monkeypatch.setattr(provider, "embed_texts", lambda texts: [[1.0] * 767])
+    with pytest.raises(ValueError, match="dimension-compatible"):
+        provider.resolve()
+    monkeypatch.setattr(provider, "embed_texts", lambda texts: [[1.0] * 768])
+    assert provider.resolve()["revision"] == "a" * 64

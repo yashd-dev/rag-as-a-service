@@ -1,4 +1,5 @@
 import math
+import re
 
 import httpx
 
@@ -31,6 +32,28 @@ class EmbeddingGemmaProvider:
 
     def embed_query(self, text):
         return self.embed_texts([text])[0]
+
+    def revision(self):
+        response = httpx.get(self.base_url + "/api/tags", timeout=30)
+        response.raise_for_status()
+        tag = self.model if ":" in self.model.rsplit("/", 1)[-1] else self.model + ":latest"
+        matches = [item for item in response.json().get("models", []) if item.get("name") == tag]
+        if len(matches) != 1 or not re.fullmatch(r"[0-9a-f]{64}", matches[0].get("digest", "")):
+            raise ValueError("Embedding model revision unavailable")
+        return {"provider": "ollama", "model": tag, "revision": matches[0]["digest"], "dimensions": 768}
+
+    def resolve(self):
+        provenance = self.revision()
+        self.embed_versioned(["Query model compatibility probe."], provenance)
+        return provenance
+
+    def embed_versioned(self, texts, provenance):
+        if self.revision() != provenance:
+            raise ValueError("Embedding model revision changed")
+        vectors = self.embed_texts(texts)
+        if self.revision() != provenance:
+            raise ValueError("Embedding model revision changed during request")
+        return validate_vectors(vectors, len(texts), provenance["dimensions"])
 
 
 def embedding_provider_for_project(
