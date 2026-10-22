@@ -21,6 +21,17 @@ def test_invalid_embeddings_are_rejected(vector):
         embeddings.validate_vectors([vector], 1)
 
 
+def test_dense_multilingual_ocr_and_long_words_fit_context_without_losing_spans():
+    text = "न्यायालय के समक्ष प्रस्तुत प्रश्न। " * 300 + "界" * 3000 + "\nFinal holding."
+    chunks = TextChunker().chunk(text)
+    covered = set()
+    for chunk in chunks:
+        assert chunk.content == text[chunk.start:chunk.end]
+        assert len(chunk.content.encode("utf-8")) <= 1800
+        covered.update(range(chunk.start, chunk.end))
+    assert all(i in covered for i, char in enumerate(text) if not char.isspace())
+
+
 def test_provider_posts_actual_text_and_validates_count(monkeypatch):
     def post(url, *, json, timeout):
         assert url == "http://model/api/embed"

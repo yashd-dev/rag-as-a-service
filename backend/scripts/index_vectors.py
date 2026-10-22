@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -25,6 +26,8 @@ def main(argv=None):
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--limit", type=int, default=8)
     args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
+    logging.getLogger("backend.app.services.neo4j_vectors").setLevel(logging.INFO)
     config = dict(os.environ) | {k: v for k, v in dotenv_values(args.env_file).items() if v is not None}
     config["TURSO_DATABASE_URL"] = config.get("TURSO_DATABASE_URL") or config.get("TURSO_CONNECTION_URL", "")
     with open_reader(config["TURSO_DATABASE_URL"], config["TURSO_AUTH_TOKEN"]) as reader:

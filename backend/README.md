@@ -1,8 +1,10 @@
-# Backend — Stage B
+# Backend — canonical indexing and Neo4j vectors
 
-Stage B owns canonical text, identity and processing state. It does **not** claim
-the corpus is indexed: Neo4j vectors, grounded graph retrieval and answer dispatch
-are the next stages. Current query modes return **409** with readiness details.
+Stage B owns canonical text, identity and processing state. Stage C adds real,
+model-versioned Neo4j vectors and semantic retrieval through an explicit CLI.
+The live corpus build and acceptance record are tracked in `spec.md`. Grounded
+graph retrieval and answer dispatch retain their D/E gates. The answer API still
+returns **409** with readiness details.
 
 ## Run from the repository root
 
@@ -30,8 +32,8 @@ Required existing settings: `TURSO_DATABASE_URL` (or `TURSO_CONNECTION_URL`) and
 `TURSO_AUTH_TOKEN`. OCR source credentials are stored encrypted; use their existing
 `CREDENTIAL_ENCRYPTION_KEY`. Flask's forwarded identity uses
 `BACKEND_INTERNAL_SECRET`. `OLLAMA_EMBEDDING_MODEL` records the intended recipe;
-the served digest/dimensions still need Stage C publication checks. Existing
-`NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` support read-only graph views.
+the served digest/dimensions are verified before vector builds and queries. Existing
+`NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` support graph reads and explicit vector builds.
 No new dependency or application environment variable was introduced.
 
 ## Preview and stage an existing OCR source
@@ -79,6 +81,64 @@ not an alternate retrieval vector store.
   Scanned PDFs require existing OCR input; this stage never silently runs OCR.
 - Failed/interrupted work is retryable. A live text-stage lease prevents competing
   workers; an expired lease can be reclaimed without letting the old worker publish.
+
+## Neo4j vector indexing and source-reviewed retrieval
+
+Stage C's canonical recipe is `words-v2:350:40:utf8-1800`. The old 350-word recipe
+could exceed the served EmbeddingGemma model's measured 2048-token context on
+dense OCR. The byte ceiling preserves exact spans without silent model truncation;
+long tokens are split with all non-whitespace source characters retained. Prior
+source/chunk generations remain intact. Re-stage the source after upgrading the
+recipe before building its vector generation.
+
+```bash
+# Default plan: read canonical metadata only, no model probe or graph connection.
+.venv/bin/python -m backend.scripts.index_vectors --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID"
+
+# Build/resume real chunk embeddings, leaving the generation unpublished.
+# Use batches of 16 on the configured CPU model; 64 exceeded its request timeout.
+.venv/bin/python -m backend.scripts.index_vectors --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --apply --batch-size 16
+
+# Diagnostic candidate retrieval, before LLM generation; includes text/spans/scores.
+.venv/bin/python -m backend.scripts.index_vectors --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" \
+  --query "Why did the court spare Ram Narain a return to prison after years on bail?"
+
+# Frozen user-reviewed source labels; output must be a NEW evidence filename.
+.venv/bin/python -m backend.scripts.evaluate_vectors --env-file backend/.env \
+  --fixture backend/evaluation/stage-c.json \
+  --output backend/inventory/reports/stage-c-vector-evaluation-new.json
+
+# Only after scoped integrity, actual retrieval review and rollback checks pass.
+.venv/bin/python -m backend.scripts.index_vectors --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --publish
+
+# Availability rollback: revoke this publication; retain all source/chunk/vectors.
+.venv/bin/python -m backend.scripts.index_vectors --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --withdraw
+```
+
+Indexes use the verified Neo4j 5.26 cosine vector API. Each index label partitions
+candidates **before top-k** by org, project, canonical corpus manifest and resolved
+model digest. No foreign tenant or stale generation can exhaust a global top-k.
+Numeric finiteness, 768 dimensions, vector hashes, exact canonical identity/spans,
+document containment and ONLINE index configuration are checked before retrieval.
+The model digest is checked before and after each embedding request. Neo4j scores
+are its measured cosine-index scores in [0,1], not answer-confidence estimates.
+
+`--apply` resumes only matching valid records and stores batch checkpoints/failure
+codes in Neo4j `RAGVectorJob`; retries repair malformed vectors. A failed/new build
+does not publish itself. Application Turso contains canonical input/control state,
+not the new retrieval vectors; legacy `chunk_embeddings` remains untouched.
+
+The canonical manifest advertises the current staged document set. Unstaged
+application document IDs are explicitly excluded in CLI output. Current limits:
+one retained index per corpus snapshot, full streamed integrity checks on query,
+and no cross-snapshot vector reuse/garbage collection. These favor correctness;
+Stage G owns higher-throughput incremental operations. No graph/hybrid mode,
+answer generation or citation faithfulness is inferred from vector acceptance.
 
 The three marked ceilings are full-source replay, a 60-second text-only lease,
 and full text-integrity validation on readiness reads. Before long model jobs or

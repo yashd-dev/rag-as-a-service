@@ -1,6 +1,7 @@
 """Immutable, tenant/model/corpus-partitioned semantic indexes for Neo4j 5.26."""
 
 import json
+import logging
 
 from neo4j import GraphDatabase, Query
 
@@ -55,6 +56,7 @@ class Neo4jVectorStore:
         if provenance.get("provider") != "ollama" or provenance.get("dimensions") != 768:
             raise ValueError("Unsupported embedding provenance")
         self.snapshot, self.provenance = snapshot, provenance
+        # shortcut: retain a separate index per immutable corpus snapshot; add cross-snapshot reuse/retention for frequent updates.
         self.key = fingerprint([snapshot["organization_id"], snapshot["project_id"], snapshot["manifest"], provenance])
         # All interpolated identifiers are internally generated hexadecimal hashes.
         self.label, self.index = "RAGV_" + self.key, "ragv_" + self.key
@@ -96,6 +98,7 @@ class Neo4jVectorStore:
                 yield record.data()
 
     def valid_ids(self, complete=False):
+        # shortcut: stream full integrity checks before reads; replace with invalidatable publication proofs for high query volume.
         expected = {row["id"]: row for row in self.snapshot["rows"]}
         valid, seen = set(), set()
         for record in self.records():
@@ -162,6 +165,7 @@ class Neo4jVectorStore:
                 self.write_batch(batch, vectors)
                 completed += len(batch)
                 self.checkpoint("processing", completed)
+                logging.getLogger(__name__).info("Verified vector checkpoint %s/%s", completed, len(self.snapshot["rows"]))
             self.valid_ids(complete=True)
             self.index_status()
             self.checkpoint("verified_unpublished", completed)

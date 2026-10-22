@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass
 
-CHUNKER_VERSION = "words-v1:350:40"
+CHUNKER_VERSION = "words-v2:350:40:utf8-1800"
 
 
 def fingerprint(value) -> str:
@@ -27,22 +27,31 @@ class TextChunker:
         self.size, self.overlap = size, overlap
 
     def chunk(self, text: str) -> list[Chunk]:
-        words = list(re.finditer(r"\S+", text))
+        # Byte ceiling leaves room below EmbeddingGemma's 2048-token context, including dense multilingual OCR.
+        words = []
+        for word in re.finditer(r"\S+", text):
+            if len(word.group().encode("utf-8")) <= 1800:
+                words.append((word.start(), word.end()))
+            else:
+                words.extend((word.start() + part.start(), word.start() + part.end())
+                             for part in re.finditer(r".{1,450}", word.group()))
         chunks = []
         offset = 0
         while offset < len(words):
             end = min(offset + self.size, len(words))
+            while end > offset + 1 and len(text[words[offset][0]:words[end - 1][1]].encode("utf-8")) > 1800:
+                end -= 1
             # Prefer a paragraph/sentence boundary near the end without rewriting OCR.
             if end < len(words):
                 for candidate in range(end, max(offset + self.overlap + 1, end - 40), -1):
-                    if words[candidate - 1].group().endswith((".", "?", "!")) or "\n\n" in text[words[candidate - 1].end():words[candidate].start()]:
+                    if text[words[candidate - 1][0]:words[candidate - 1][1]].endswith((".", "?", "!")) or "\n\n" in text[words[candidate - 1][1]:words[candidate][0]]:
                         end = candidate
                         break
-            start_char, end_char = words[offset].start(), words[end - 1].end()
+            start_char, end_char = words[offset][0], words[end - 1][1]
             chunks.append(Chunk(len(chunks), text[start_char:end_char], start_char, end_char))
             if end == len(words):
                 break
-            offset = end - self.overlap
+            offset = end - min(self.overlap, (end - offset) // 8)
         return chunks
 
 
