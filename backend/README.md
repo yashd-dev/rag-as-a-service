@@ -140,6 +140,102 @@ and no cross-snapshot vector reuse/garbage collection. These favor correctness;
 Stage G owns higher-throughput incremental operations. No graph/hybrid mode,
 answer generation or citation faithfulness is inferred from vector acceptance.
 
+## Stage D — LLM enrichment and evidence-backed graph retrieval
+
+The independent Stage D implementation can be developed/tested while C indexes.
+Live enrichment requires **complete, published Stage C vectors**. The current
+corpus has not yet passed that gate; no live extraction job has been started.
+
+`GraphExtractor` calls the existing configured Ollama graph model with a strict
+JSON schema. Entity names and assertion quotations must occur verbatim in the
+canonical chunk. Supported assertions are `CITES`, `INTERPRETS`, `OVERRULES`,
+`DISTINGUISHES` and `DECIDED_BY`, with validated endpoint types, explicit predicate
+and negation/direction checks. Unsupported output fails visibly; it never becomes
+a co-occurrence-derived legal assertion. Model digest, extraction recipe/schema
+and inference options identify a separate graph generation.
+
+Exact AIR/year/Supreme-Court/page citations can share an entity across documents.
+Other names remain document-scoped; there is no fuzzy name merging or invented
+alias resolution. Every mention/assertion keeps all exact chunk/document/span
+evidence. Conservative validation can reject legitimate indirect statements;
+the model's legal accuracy and corpus coverage still require live source review.
+Explicit relation predicates currently have English validators; regional-language
+relations require reviewed language-specific rules before coverage can be claimed.
+
+```text
+RAGVectorChunk ← FROM_CHUNK ─ RAGEvidence ─ SUPPORTS → RAGEntity:Case/Statute/…
+RAGVectorChunk ← FROM_CHUNK ─ RAGEvidence ─ SUPPORTS → RAGAssertion
+                                                    ├─ SUBJECT → Document/Case
+                                                    └─ OBJECT  → Case/Provision/…
+```
+
+`RAGExtraction` records per-chunk attempts, content hash, extractor profile,
+validated cached output and precise failure codes. A repeat run reuses validated
+extraction rather than calling the model again, and reconstructs its graph evidence
+atomically to repair missing/corrupt derived records. Shared evidence from other
+chunks is retained. Empty extraction remains explicit and cannot by itself publish
+a usable legal graph. `--status` verifies nodes, endpoint links, every quoted span,
+type coverage and extraction completeness.
+An explicit rebuild revokes that generation's publication before processing;
+successful repair/re-extraction must be reverified before republishing.
+Reports include at most eight assertion samples with up to three source quotations
+each, so a small partial batch can be reviewed before spending on the full corpus.
+
+```bash
+# Read-only plan: no model or Neo4j calls.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID"
+
+# AFTER Stage C acceptance/publication: inspect a small enrichment batch first.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --apply --max-chunks 4
+
+# Resume a further bounded batch, or use --max-chunks 0 for all remaining work.
+# Partial coverage/failures exit 2; inspect the explicit report and retained ledger.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --status
+
+# Diagnostic retrieval of connected source evidence, without generating an answer.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --query "$QUESTION"
+
+# Only after manually reviewed live graph retrieval and integrity acceptance.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --publish
+
+# Roll back graph availability without deleting vectors, text or prior generations.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --withdraw
+```
+
+Graph retrieval starts from actual Neo4j vector seeds and expands through shared
+typed entities or supported assertions. Defaults: 4 seeds, 2 hops, 8 path candidates
+per frontier chunk, 24 total passages; hard maxima are 8/2/20/40. Visited chunks
+prevent cycles. Added passages carry the exact graph path and evidence spans;
+only vector seeds have similarity scores. No expansion returns the explicit
+`no_connected_evidence` status instead of masquerading as successful GraphRAG.
+All candidates are scoped by graph/vector generation, organization and project.
+
+Existing settings: `GRAPH_LLM_MODEL` (default `smollm2:135m`),
+`GRAPH_LLM_TIMEOUT_SECONDS` (60; must be >0 and <=120), `GRAPH_LLM_NUM_PREDICT`
+(700; 1–4096), `GRAPH_LLM_NUM_CTX` (4096 minimum), and
+`GRAPH_EXTRACTION_MAX_CHUNKS` (0 means all new attempts). No new application
+environment variable or dependency was added. Availability of the configured
+model has been checked via tags; actual legal extraction quality remains unverified.
+
+Isolated storage/traversal verification uses explicitly supplied disposable Neo4j
+and controlled test-only vectors/model responses; it makes **no Ollama requests**:
+
+```bash
+STAGE_D_TEST_NEO4J_URI=bolt://127.0.0.1:17688 \
+STAGE_D_TEST_NEO4J_PASSWORD="$DISPOSABLE_PASSWORD" \
+  .venv/bin/python -m pytest backend/tests/test_evidence_graph.py -q -o addopts='' -p no:cacheprovider
+```
+
+Stage D live acceptance is pending: configured-model extraction, reviewed actual
+cross-document evidence, failures/coverage, and independent graph retrieval.
+Stage E owns answer dispatch/hybrid fusion; Stage F owns frontend integration.
+
 The three marked ceilings are full-source replay, a 60-second text-only lease,
 and full text-integrity validation on readiness reads. Before long model jobs or
 large-corpus serving, implement durable scheduling, lease renewal and publication

@@ -4,6 +4,7 @@ import httpx
 import pytest
 
 from backend.app.services.graph_extraction import (
+    GRAPH_EXTRACTION_SCHEMA,
     ExtractionError,
     GraphExtractor,
     entity_identity,
@@ -50,6 +51,8 @@ def test_namesakes_are_not_merged_across_documents_or_graph_generations():
     ("Whether this judgment overruled AIR 1967 SC 1326 is disputed.", "OVERRULES"),
     ("This judgment mentioned AIR 1967 SC 1326.", "DISTINGUISHES"),
     ("This judgment refused to distinguish AIR 1967 SC 1326.", "DISTINGUISHES"),
+    ("Case Alpha overruled AIR 1967 SC 1326.", "OVERRULES"),
+    ("This judgment was overruled by AIR 1967 SC 1326.", "OVERRULES"),
 ])
 def test_negated_uncertain_and_cooccurrence_relations_are_rejected(text, kind):
     payload = cited_payload(text)
@@ -68,6 +71,14 @@ def test_reversed_active_relation_and_wrong_endpoint_types_are_rejected():
     assert validate_extraction(payload, chunk(text), "graph")["assertions"][0]["relation"] == "OVERRULES"
     payload["entities"][1]["type"] = "Person"
     with pytest.raises(ExtractionError, match="invalid_endpoints"):
+        validate_extraction(payload, chunk(text), "graph")
+
+
+def test_clipped_quote_cannot_hide_surrounding_sentence_negation():
+    text = "It is not true that Case Alpha overruled Case Beta."
+    payload = {"entities": [{"name": "Case Alpha", "type": "Case"}, {"name": "Case Beta", "type": "Case"}],
+               "relations": [{"source": 0, "target": 1, "relation": "OVERRULES", "quote": "Case Alpha overruled Case Beta"}]}
+    with pytest.raises(ExtractionError, match="unsupported_relation"):
         validate_extraction(payload, chunk(text), "graph")
 
 
@@ -126,3 +137,23 @@ def test_parse_failure_and_model_drift_never_return_synthetic_graphs():
 def test_graph_requests_always_have_bounded_timeouts(timeout):
     with pytest.raises(ValueError, match="timeout"):
         graph_extraction_llm({"GRAPH_LLM_TIMEOUT_SECONDS": timeout})
+
+
+@pytest.mark.parametrize("settings", [{"GRAPH_LLM_NUM_PREDICT": -1}, {"GRAPH_LLM_NUM_PREDICT": 4097}, {"GRAPH_LLM_NUM_CTX": 512}])
+def test_graph_output_and_source_context_are_bounded(settings):
+    with pytest.raises(ValueError, match="bounded output"):
+        graph_extraction_llm(settings)
+
+
+def test_ollama_structured_request_uses_exact_source_schema_and_timeout(monkeypatch):
+    response_payload = json.dumps(cited_payload())
+    def post(url, *, json, timeout):
+        assert url == "http://model/api/generate" and timeout == 60
+        assert json["format"] == GRAPH_EXTRACTION_SCHEMA and json["stream"] is False
+        assert json["options"] == {"temperature": 0, "num_predict": 700, "num_ctx": 4096}
+        assert "This judgment cited AIR 1967 SC 1326." in json["prompt"]
+        return httpx.Response(200, json={"response": response_payload}, request=httpx.Request("POST", url))
+    monkeypatch.setattr("backend.app.services.llm_client.httpx.post", post)
+    llm = graph_extraction_llm({"OLLAMA_BASE_URL": "http://model", "GRAPH_LLM_MODEL": "test"})
+    monkeypatch.setattr(llm, "revision", lambda: {"model": "test:latest", "revision": "a" * 64})
+    assert GraphExtractor(llm, "vectors").extract(chunk("This judgment cited AIR 1967 SC 1326."))["assertions"]

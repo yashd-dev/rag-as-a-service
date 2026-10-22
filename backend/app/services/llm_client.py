@@ -100,6 +100,9 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
     timeout = float(app_config.get("GRAPH_LLM_TIMEOUT_SECONDS", 60))
     if not math.isfinite(timeout) or not 0 < timeout <= 120:
         raise ValueError("Graph extraction timeout must be between 0 and 120 seconds")
+    predictions, context = int(app_config.get("GRAPH_LLM_NUM_PREDICT", 700)), int(app_config.get("GRAPH_LLM_NUM_CTX", 4096))
+    if not 1 <= predictions <= 4096 or context < 4096:
+        raise ValueError("Graph extraction requires bounded output and at least 4096 context tokens")
     return OllamaGenerateLlm(
         app_config["OLLAMA_BASE_URL"],
         app_config["GRAPH_LLM_MODEL"],
@@ -107,8 +110,8 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
         json_mode=True,
         options={
             "temperature": 0,
-            "num_predict": int(app_config.get("GRAPH_LLM_NUM_PREDICT", 300)),
-            "num_ctx": int(app_config.get("GRAPH_LLM_NUM_CTX", 4096)),
+            "num_predict": predictions,
+            "num_ctx": context,
         },
         json_schema=GRAPH_EXTRACTION_SCHEMA,
     )
