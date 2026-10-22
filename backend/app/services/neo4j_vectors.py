@@ -187,19 +187,25 @@ class Neo4jVectorStore:
         # Roll back availability only; retain vectors, canonical input and every other partition.
         self._run("MATCH (p:RAGVectorPublication {key:$key}) DELETE p", write=True, key=self.key)
 
+    def require_publication(self):
+        publication = self._run("MATCH (p:RAGVectorPublication {key:$key}) RETURN properties(p) AS publication", key=self.key)
+        if len(publication) != 1 or any(publication[0]["publication"].get(k) != v for k, v in {
+            "manifest": self.snapshot["manifest"], "provenance": json.dumps(self.provenance, sort_keys=True),
+            "expected_chunks": len(self.snapshot["rows"]), "organization_id": self.snapshot["organization_id"],
+            "project_id": self.snapshot["project_id"],
+        }.items()):
+            raise ValueError("Vector generation not published")
+        self.index_status()
+        self.valid_ids(complete=True)
+
     def search(self, provider, query, limit=8, require_publication=True):
         if not isinstance(query, str) or not query.strip() or not 1 <= limit <= 100:
             raise ValueError("Require a query and limit between 1 and 100")
         if require_publication:
-            publication = self._run("MATCH (p:RAGVectorPublication {key:$key}) RETURN properties(p) AS publication", key=self.key)
-            if len(publication) != 1 or any(publication[0]["publication"].get(k) != v for k, v in {
-                "manifest": self.snapshot["manifest"], "provenance": json.dumps(self.provenance, sort_keys=True),
-                "expected_chunks": len(self.snapshot["rows"]), "organization_id": self.snapshot["organization_id"],
-                "project_id": self.snapshot["project_id"],
-            }.items()):
-                raise ValueError("Vector generation not published")
-        self.index_status()
-        self.valid_ids(complete=True)
+            self.require_publication()
+        else:
+            self.index_status()
+            self.valid_ids(complete=True)
         vector = provider.embed_versioned([query], self.provenance)[0]
         # Candidate selection is partitioned before top-k, not a global search followed by tenant filtering.
         result = self._run("CALL db.index.vector.queryNodes($index, $limit, $vector) YIELD node, score "

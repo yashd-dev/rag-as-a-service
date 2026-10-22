@@ -243,13 +243,21 @@ class EvidenceGraph:
         self.vectors._run("MATCH (p:RAGGraphPublication {key:$key}) DELETE p", write=True, key=self.key)
 
     def require_vectors(self):
-        self.vectors.index_status()
-        self.vectors.valid_ids(complete=True)
-        publications = self.vectors._run("MATCH (p:RAGVectorPublication {key:$key}) RETURN properties(p) AS publication", key=self.vectors.key)
-        expected = {"manifest": self.vectors.snapshot["manifest"], "provenance": json.dumps(self.vectors.provenance, sort_keys=True),
-                    "expected_chunks": len(self.rows), "organization_id": self.scope["organization_id"], "project_id": self.scope["project_id"]}
+        try:
+            self.vectors.require_publication()
+        except ValueError:
+            raise ValueError("Stage C vector publication required") from None
+
+    def require_publication(self):
+        publications = self.vectors._run("MATCH (p:RAGGraphPublication {key:$key}) RETURN properties(p) AS publication", key=self.key)
+        expected = self.scope | {"profile_json": json.dumps(self.profile, sort_keys=True)}
         if len(publications) != 1 or any(publications[0]["publication"].get(k) != v for k, v in expected.items()):
-            raise ValueError("Stage C vector publication required")
+            raise ValueError("Graph generation not published")
+        self.require_vectors()
+        status = self.integrity()
+        if not status["assertions"]:
+            raise ValueError("Graph has no supported assertions")
+        return status
 
     def neighbors(self, row, fanout):
         common = "MATCH (seed:RAGVectorChunk {key:$seed})<-[:FROM_CHUNK]-(left:RAGEvidence {graph_key:$graph}) "
@@ -269,11 +277,9 @@ class EvidenceGraph:
                 or not (1 <= seed_limit <= 8 and 1 <= hops <= 2 and 1 <= fanout <= 20 and seed_limit <= evidence_limit <= 40)):
             raise ValueError("Graph retrieval budget exceeded")
         if require_publication:
-            publications = self.vectors._run("MATCH (p:RAGGraphPublication {key:$key}) RETURN properties(p) AS publication", key=self.key)
-            expected = self.scope | {"profile_json": json.dumps(self.profile, sort_keys=True)}
-            if len(publications) != 1 or any(publications[0]["publication"].get(k) != v for k, v in expected.items()):
-                raise ValueError("Graph generation not published")
-        self.integrity()
+            self.require_publication()
+        else:
+            self.integrity()
         seeds = self.vectors.search(provider, query, seed_limit)
         found = {item["chunk"]["id"]: {"chunk": item["chunk"], "score": item["score"], "method": "vector_seed", "path": []} for item in seeds}
         frontier = list(found)
