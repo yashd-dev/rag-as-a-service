@@ -1,44 +1,12 @@
+import math
+import re
 from dataclasses import dataclass
 
 import httpx
 from openai import OpenAI
 
 from backend.app.services.crypto import SecretBox
-
-GRAPH_EXTRACTION_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["entities", "relations"],
-    "properties": {
-        "entities": {
-            "type": "array",
-            "maxItems": 4,
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["name", "type"],
-                "properties": {
-                    "name": {"type": "string"},
-                    "type": {"type": "string"},
-                },
-            },
-        },
-        "relations": {
-            "type": "array",
-            "maxItems": 4,
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["source", "target", "relation"],
-                "properties": {
-                    "source": {"type": "string"},
-                    "target": {"type": "string"},
-                    "relation": {"type": "string"},
-                },
-            },
-        },
-    },
-}
+from backend.app.services.graph_extraction import GRAPH_EXTRACTION_SCHEMA
 
 
 @dataclass(frozen=True)
@@ -71,6 +39,15 @@ class OllamaGenerateLlm:
         self.json_mode = json_mode
         self.options = options or {}
         self.json_schema = json_schema
+
+    def revision(self):
+        response = httpx.get(self.base_url + "/api/tags", timeout=30)
+        response.raise_for_status()
+        tag = self.model if ":" in self.model.rsplit("/", 1)[-1] else self.model + ":latest"
+        matches = [item for item in response.json().get("models", []) if item.get("name") == tag]
+        if len(matches) != 1 or not re.fullmatch(r"[0-9a-f]{64}", matches[0].get("digest", "")):
+            raise ValueError("Graph model revision unavailable")
+        return {"model": tag, "revision": matches[0]["digest"]}
 
     def generate(self, prompt: str) -> str:
         payload = {"model": self.model, "prompt": prompt, "stream": False}
@@ -120,11 +97,13 @@ def credential_llm_config(credential: dict, encryption_key: str) -> LlmConfig:
 
 
 def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
-    timeout = app_config.get("GRAPH_LLM_TIMEOUT_SECONDS")
+    timeout = float(app_config.get("GRAPH_LLM_TIMEOUT_SECONDS", 60))
+    if not math.isfinite(timeout) or not 0 < timeout <= 120:
+        raise ValueError("Graph extraction timeout must be between 0 and 120 seconds")
     return OllamaGenerateLlm(
         app_config["OLLAMA_BASE_URL"],
         app_config["GRAPH_LLM_MODEL"],
-        float(timeout) if timeout not in (None, "", 0, "0") else None,
+        timeout,
         json_mode=True,
         options={
             "temperature": 0,
@@ -142,6 +121,6 @@ def fallback_generation_llm(app_config: dict) -> OllamaGenerateLlm:
 def generate_text_with_fallback(app_config: dict, messages: list[dict]) -> str:
     try:
         return OpenAICompatibleLlm(platform_llm_config(app_config)).complete(messages)
-    except Exception:
+    except Exception:  # noqa: BLE001 - existing platform-to-local generation fallback
         prompt = "\n".join(f"{message.get('role', 'user')}: {message.get('content', '')}" for message in messages)
         return fallback_generation_llm(app_config).generate(prompt)
