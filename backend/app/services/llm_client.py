@@ -3,10 +3,11 @@ import re
 from dataclasses import dataclass
 
 import httpx
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
 from backend.app.services.crypto import SecretBox
 from backend.app.services.graph_extraction import GRAPH_EXTRACTION_SCHEMA
+from backend.app.services.grounding import ANSWER_SCHEMA, GenerationFailure
 
 
 @dataclass(frozen=True)
@@ -20,14 +21,18 @@ class LlmConfig:
 class OpenAICompatibleLlm:
     def __init__(self, config: LlmConfig):
         self.config = config
-        self.client = OpenAI(api_key=config.api_key, base_url=config.base_url.rstrip("/"))
+        self.client = OpenAI(api_key=config.api_key, base_url=config.base_url.rstrip("/"), timeout=60, max_retries=1)
+        self.last_model = config.model
 
-    def complete(self, messages: list[dict], temperature: float = 0.2) -> str:
+    def complete(self, messages: list[dict], temperature: float = 0.2, json_mode: bool = False) -> str:
         response = self.client.chat.completions.create(
             model=self.config.model,
             messages=messages,
             temperature=temperature,
+            max_tokens=1024,
+            **({"response_format": {"type": "json_object"}} if json_mode else {}),
         )
+        self.last_model = response.model or self.config.model
         return response.choices[0].message.content or ""
 
 
@@ -39,6 +44,7 @@ class OllamaGenerateLlm:
         self.json_mode = json_mode
         self.options = options or {}
         self.json_schema = json_schema
+        self.last_model = model
 
     def revision(self):
         response = httpx.get(self.base_url + "/api/tags", timeout=30)
@@ -67,6 +73,7 @@ class OllamaGenerateLlm:
         )
         response.raise_for_status()
         body = response.json()
+        self.last_model = body.get("model") or self.model
         text = str(body.get("response") or "")
         print(
             f"ollama_generate done model={self.model} response_chars={len(text)} "
@@ -117,8 +124,31 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
     )
 
 
-def fallback_generation_llm(app_config: dict) -> OllamaGenerateLlm:
-    return OllamaGenerateLlm(app_config["OLLAMA_BASE_URL"], app_config["FALLBACK_LLM_MODEL"])
+def fallback_generation_llm(app_config: dict, json_mode: bool = False) -> OllamaGenerateLlm:
+    return OllamaGenerateLlm(app_config["OLLAMA_BASE_URL"], app_config["FALLBACK_LLM_MODEL"], timeout=60,
+                             json_mode=json_mode, json_schema=ANSWER_SCHEMA if json_mode else None,
+                             options={"temperature": 0, "num_ctx": 8192, "num_predict": 1024})
+
+
+def generate_grounded(app_config, messages):
+    reason = "platform_credentials_missing"
+    if app_config.get("PLATFORM_LLM_API_KEY"):
+        client = None
+        try:
+            client = OpenAICompatibleLlm(platform_llm_config(app_config))
+            raw = client.complete(messages, temperature=0, json_mode=True)
+            return raw, {"provider": "openai_compatible", "model": client.last_model, "fallback": False, "fallback_reason": None}
+        except (OpenAIError, httpx.HTTPError, ValueError):
+            reason = "platform_unavailable"
+        finally:
+            if client is not None:
+                client.client.close()
+    try:
+        fallback = fallback_generation_llm(app_config, json_mode=True)
+        raw = fallback.generate("\n".join(message["role"] + ": " + message["content"] for message in messages))
+        return raw, {"provider": "ollama", "model": fallback.last_model, "fallback": True, "fallback_reason": reason}
+    except (httpx.HTTPError, ValueError):
+        raise GenerationFailure("generation_unavailable") from None
 
 
 def generate_text_with_fallback(app_config: dict, messages: list[dict]) -> str:
