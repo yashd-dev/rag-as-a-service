@@ -34,7 +34,9 @@ class CredentialService:
         return self.safe(row, api_key)
 
     def list(self, auth: AuthContext) -> list[dict]:
-        return [self.safe(row) for row in self.repository.list_for_org(auth.organization_id)]
+        return [
+            self.safe(row) for row in self.repository.list_for_org(auth.organization_id)
+        ]
 
     def safe(self, row: dict, plain_secret: str | None = None) -> dict:
         safe_row = dict(row)

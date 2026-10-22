@@ -11,9 +11,14 @@ credentials_bp = Blueprint("credentials", __name__)
 
 def service() -> CredentialService:
     repo = SimpleRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"], "provider_credentials", "cred"
+        current_app.config["TURSO_DATABASE_URL"],
+        current_app.config["TURSO_AUTH_TOKEN"],
+        "provider_credentials",
+        "cred",
     )
-    return CredentialService(repo, SecretBox(current_app.config["CREDENTIAL_ENCRYPTION_KEY"]))
+    return CredentialService(
+        repo, SecretBox(current_app.config["CREDENTIAL_ENCRYPTION_KEY"])
+    )
 
 
 @credentials_bp.post("")

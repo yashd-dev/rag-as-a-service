@@ -45,7 +45,9 @@ class Reader:
             raise ValueError("Diagnostic SQL must be a read")
         if ";" in statement or "--" in statement or "/*" in statement:
             raise ValueError("Multiple statements/comments are prohibited")
-        if re.search(r"\b(load_extension|writefile|readfile)\s*\(", statement, re.IGNORECASE):
+        if re.search(
+            r"\b(load_extension|writefile|readfile)\s*\(", statement, re.IGNORECASE
+        ):
             raise ValueError("Extension and filesystem functions are prohibited")
         self.queries.append(statement)
         cursor = self.connection.execute(statement, parameters)

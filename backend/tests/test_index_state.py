@@ -23,12 +23,16 @@ def test_repeatable_migration_preserves_legacy_rows_and_backup(store, tmp_path):
     snapshot = tmp_path / "backup.db"
     main(["--env-file", str(env), "--apply", "--backup", str(snapshot)])
     assert snapshot.stat().st_mode & 0o777 == 0o600
-    assert query(snapshot, "SELECT * FROM projects") == query(path, "SELECT * FROM projects")
+    assert query(snapshot, "SELECT * FROM projects") == query(
+        path, "SELECT * FROM projects"
+    )
     with sqlite3.connect(path) as conn:
         conn.execute("DROP TABLE canonical_chunks")
         conn.execute("DROP TABLE index_generations")
         conn.execute("DROP TABLE document_sources")
-        conn.execute("INSERT INTO documents VALUES('legacy','p','o','u','old.pdf','ready',1,1)")
+        conn.execute(
+            "INSERT INTO documents VALUES('legacy','p','o','u','old.pdf','ready',1,1)"
+        )
         migrate_db(conn)
         migrate_db(conn)
     assert query(path, "SELECT embedding_model FROM projects") == [("legacy-model",)]
@@ -40,7 +44,10 @@ def test_repeatable_migration_preserves_legacy_rows_and_backup(store, tmp_path):
 def test_replay_same_source_keeps_identity_generation_and_exact_spans(store):
     repo, path, project = store
     text = "Article 21.\n\n" * 400
-    metadata = {"url": "https://example.test/judgment", "pages": [{"page": 1, "start": 0, "end": len(text)}]}
+    metadata = {
+        "url": "https://example.test/judgment",
+        "pages": [{"page": 1, "start": 0, "end": len(text)}],
+    }
     before = path.read_bytes()
     plan = repo.stage(project, "source", "record", text, metadata, dry_run=True)
     assert path.read_bytes() == before
@@ -49,21 +56,28 @@ def test_replay_same_source_keeps_identity_generation_and_exact_spans(store):
     assert plan["generation"] == first["generation"] == second["generation"]
     assert query(path, "SELECT count(*) FROM documents") == [(1,)]
     assert query(path, "SELECT attempts FROM index_generations") == [(1,)]
-    for content, start, end, pages in query(path, "SELECT content,start_char,end_char,source_pages FROM canonical_chunks"):
+    for content, start, end, pages in query(
+        path, "SELECT content,start_char,end_char,source_pages FROM canonical_chunks"
+    ):
         assert content == text[start:end] and '"page": 1' in pages
 
 
 def test_legacy_id_adopted_only_once_and_ambiguity_rejected(store):
     repo, path, project = store
     with sqlite3.connect(path) as conn:
-        conn.execute("INSERT INTO documents VALUES('old','p','o','u','judgment','ready',1,1)")
+        conn.execute(
+            "INSERT INTO documents VALUES('old','p','o','u','judgment','ready',1,1)"
+        )
     result = repo.stage(project, "source", 12, "Source text", file_name="judgment")
     assert result["document_id"] == "old"
     with pytest.raises(IdentityConflict):
         repo.stage(project, "other-source", 12, "Other text", file_name="judgment")
     with sqlite3.connect(path) as conn:
         for value in ("a", "b"):
-            conn.execute("INSERT INTO documents VALUES(?,'p','o','u','ambiguous','pending',1,1)", (value,))
+            conn.execute(
+                "INSERT INTO documents VALUES(?,'p','o','u','ambiguous','pending',1,1)",
+                (value,),
+            )
     with pytest.raises(IdentityConflict):
         repo.stage(project, "source", "ambiguous", "Text", file_name="ambiguous")
 
@@ -82,17 +96,26 @@ def test_generations_preserved_and_recipe_change_invalidates(store):
 def test_failure_and_expired_processing_retry_durably(store, monkeypatch):
     repo, path, project = store
     from backend.app.db import indexing
+
     original = indexing.TextChunker.chunk
-    monkeypatch.setattr(indexing.TextChunker, "chunk", lambda *args: (_ for _ in ()).throw(RuntimeError("private payload")))
+    monkeypatch.setattr(
+        indexing.TextChunker,
+        "chunk",
+        lambda *args: (_ for _ in ()).throw(RuntimeError("private payload")),
+    )
     with pytest.raises(RuntimeError):
         repo.stage(project, "s", 1, "OCR input")
-    assert query(path, "SELECT state,error_code,attempts FROM index_generations") == [("failed", "RuntimeError", 1)]
+    assert query(path, "SELECT state,error_code,attempts FROM index_generations") == [
+        ("failed", "RuntimeError", 1)
+    ]
     monkeypatch.setattr(indexing.TextChunker, "chunk", original)
     repo.stage(project, "s", 1, "OCR input")
     with sqlite3.connect(path) as conn:
         conn.execute("UPDATE index_generations SET state='processing', lease_until=0")
     repo.stage(project, "s", 1, "OCR input")
-    assert query(path, "SELECT state,attempts FROM index_generations") == [("text_ready", 3)]
+    assert query(path, "SELECT state,attempts FROM index_generations") == [
+        ("text_ready", 3)
+    ]
     assert query(path, "SELECT count(*) FROM canonical_chunks") == [(1,)]
 
 
@@ -100,15 +123,24 @@ def test_scope_and_live_lease_reject_competing_work(store):
     repo, path, project = store
     result = repo.stage(project, "s", 1, "OCR")
     with pytest.raises(IdentityConflict):
-        repo.stage(project | {"organization_id": "foreign"}, "s", 1, "OCR", document_id=result["document_id"])
+        repo.stage(
+            project | {"organization_id": "foreign"},
+            "s",
+            1,
+            "OCR",
+            document_id=result["document_id"],
+        )
     with sqlite3.connect(path) as conn:
-        conn.execute("UPDATE index_generations SET state='processing',lease_until=9999999999999")
+        conn.execute(
+            "UPDATE index_generations SET state='processing',lease_until=9999999999999"
+        )
     assert repo.stage(project, "s", 1, "Changed text")["busy"] is True
     assert query(path, "SELECT count(*) FROM index_generations") == [(1,)]
 
 
 def test_migration_failure_rolls_back(store, monkeypatch):
     from backend.app.db import connection
+
     repo, path, _ = store
     with pytest.raises(RuntimeError), connection.db(repo.url, repo.token) as conn:
         conn.execute("UPDATE projects SET embedding_model='wrong'")
@@ -117,18 +149,27 @@ def test_migration_failure_rolls_back(store, monkeypatch):
     assert Path(path).exists()
 
 
-def test_failed_cli_migration_restores_pre_migration_schema_and_data(store, monkeypatch, tmp_path):
+def test_failed_cli_migration_restores_pre_migration_schema_and_data(
+    store, monkeypatch, tmp_path
+):
     from backend.scripts import migrate
+
     repo, path, _ = store
     env = tmp_path / "migration.env"
     env.write_text(f"TURSO_DATABASE_URL={repo.url}\nTURSO_AUTH_TOKEN=local\n")
+
     def fail(conn):
         conn.execute("CREATE TABLE should_rollback(id TEXT)")
         conn.execute("UPDATE projects SET embedding_model='wrong'")
         raise RuntimeError("simulated migration failure")
+
     monkeypatch.setattr(migrate, "migrate_db", fail)
     snapshot = tmp_path / "before-failure.db"
     with pytest.raises(RuntimeError, match="simulated"):
         migrate.main(["--env-file", str(env), "--apply", "--backup", str(snapshot)])
-    assert not query(path, "SELECT name FROM sqlite_master WHERE name='should_rollback'")
-    assert query(path, "SELECT * FROM projects") == query(snapshot, "SELECT * FROM projects")
+    assert not query(
+        path, "SELECT name FROM sqlite_master WHERE name='should_rollback'"
+    )
+    assert query(path, "SELECT * FROM projects") == query(
+        snapshot, "SELECT * FROM projects"
+    )

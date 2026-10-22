@@ -3,20 +3,23 @@ import os
 
 from dotenv import load_dotenv
 
-
 load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=True)
 
 
 class Config:
     BACKEND_INTERNAL_SECRET = os.getenv("BACKEND_INTERNAL_SECRET", "")
     CREDENTIAL_ENCRYPTION_KEY = os.getenv("CREDENTIAL_ENCRYPTION_KEY", "")
-    TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL") or os.getenv("TURSO_CONNECTION_URL", "")
+    TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL") or os.getenv(
+        "TURSO_CONNECTION_URL", ""
+    )
     TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
     PLATFORM_LLM_BASE_URL = os.getenv(
         "PLATFORM_LLM_BASE_URL",
         "https://generativelanguage.googleapis.com/v1beta/openai",
     )
-    PLATFORM_LLM_API_KEY = os.getenv("PLATFORM_LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "")
+    PLATFORM_LLM_API_KEY = os.getenv("PLATFORM_LLM_API_KEY") or os.getenv(
+        "GEMINI_API_KEY", ""
+    )
     PLATFORM_LLM_MODEL = os.getenv("PLATFORM_LLM_MODEL", "gemini-2.5-flash")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GRAPH_LLM_MODEL = os.getenv("GRAPH_LLM_MODEL", "smollm2:135m")
@@ -36,6 +39,10 @@ class Config:
     NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password123")
     UNSTRUCTURED_API_KEY = os.getenv("UNSTRUCTURED_API_KEY", "")
-    UNSTRUCTURED_API_URL = os.getenv("UNSTRUCTURED_API_URL") or os.getenv("UNSTRUCTURED_API_UR", "")
+    UNSTRUCTURED_API_URL = os.getenv("UNSTRUCTURED_API_URL") or os.getenv(
+        "UNSTRUCTURED_API_UR", ""
+    )
     UNSTRUCTURED_POLL_SECONDS = int(os.getenv("UNSTRUCTURED_POLL_SECONDS", "10"))
-    UNSTRUCTURED_PARTITION_STRATEGY = os.getenv("UNSTRUCTURED_PARTITION_STRATEGY", "hi_res")
+    UNSTRUCTURED_PARTITION_STRATEGY = os.getenv(
+        "UNSTRUCTURED_PARTITION_STRATEGY", "hi_res"
+    )

@@ -36,8 +36,14 @@ def database(tmp_path):
 
 
 def args(**kwargs):
-    return argparse.Namespace(organization_id="o", project_id="p", source_id=None,
-                              discover_scopes=False, probe_model=False, **kwargs)
+    return argparse.Namespace(
+        organization_id="o",
+        project_id="p",
+        source_id=None,
+        discover_scopes=False,
+        probe_model=False,
+        **kwargs,
+    )
 
 
 def test_full_scan_is_scoped_and_never_confuses_labels_with_provenance(tmp_path):
@@ -50,8 +56,10 @@ def test_full_scan_is_scoped_and_never_confuses_labels_with_provenance(tmp_path)
         assert report["tables"]["chunk_embeddings"]["count"] == 5
         assert report["vectors"]["dimensions"] == {"3": 2, "2": 2}
         assert report["vectors"]["classification"] == {
-            "safe_to_copy": 0, "requires_reembedding": 2,
-            "requires_text_provenance_repair": 2, "unknown_blocked": 1,
+            "safe_to_copy": 0,
+            "requires_reembedding": 2,
+            "requires_text_provenance_repair": 2,
+            "unknown_blocked": 1,
         }
         assert report["vectors"]["counts"]["resolved_document"] == 4
         assert report["vectors"]["stale_count"] is None
@@ -78,15 +86,23 @@ def test_native_decoder_failure_is_not_success_or_guessed_blob(tmp_path):
     assert "dimensions" not in report["vectors"]
 
 
-@pytest.mark.parametrize("statement", [
-    "DELETE FROM projects", "CREATE TABLE x (id)", "WITH x AS (SELECT 1) DELETE FROM projects",
-    "PRAGMA query_only = OFF", "SELECT 1; DELETE FROM projects", "SELECT load_extension('x')",
-    "SELECT writefile('path', 'content')",
-])
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "DELETE FROM projects",
+        "CREATE TABLE x (id)",
+        "WITH x AS (SELECT 1) DELETE FROM projects",
+        "PRAGMA query_only = OFF",
+        "SELECT 1; DELETE FROM projects",
+        "SELECT load_extension('x')",
+        "SELECT writefile('path', 'content')",
+    ],
+)
 def test_reader_rejects_write_paths_before_driver(statement):
     class NeverExecute:
         def execute(self, *args):
             pytest.fail("Rejected statement reached database")
+
     with pytest.raises(ValueError):
         Reader(NeverExecute()).query(statement)
 
@@ -98,11 +114,19 @@ def test_no_accidental_file_creation(tmp_path):
     assert not path.exists()
 
 
-@pytest.mark.parametrize(("value", "state", "dimension"), [
-    (None, "missing", None), ([], "invalid", None), ([True, 2], "invalid", 2),
-    ([float("nan")], "invalid", 1), ([float("inf")], "invalid", 1),
-    ([0, 0], "invalid", 2), ("not JSON", "invalid", None), ([1, -1], "valid_numeric", 2),
-])
+@pytest.mark.parametrize(
+    ("value", "state", "dimension"),
+    [
+        (None, "missing", None),
+        ([], "invalid", None),
+        ([True, 2], "invalid", 2),
+        ([float("nan")], "invalid", 1),
+        ([float("inf")], "invalid", 1),
+        ([0, 0], "invalid", 2),
+        ("not JSON", "invalid", None),
+        ([1, -1], "valid_numeric", 2),
+    ],
+)
 def test_vector_validation(value, state, dimension):
     assert vector_status(value) == (state, dimension)
 
@@ -110,37 +134,49 @@ def test_vector_validation(value, state, dimension):
 def test_source_mapping_is_discovered_quoted_and_never_emits_text(tmp_path):
     path = tmp_path / "ocr.db"
     with sqlite3.connect(path) as connection:
-        connection.executescript('''
+        connection.executescript("""
             CREATE TABLE "legal source" ("record id" TEXT, "OCR" TEXT, "state" TEXT);
             INSERT INTO "legal source" VALUES ('one', 'private judgment', 'done'),
                 ('two', '', 'done'), ('three', NULL, 'pending');
-        ''')
+        """)
     with open_reader("file:" + str(path)) as reader:
-        report = source_report(reader, {"table_name": "legal source", "id_column": "record id",
-                                       "text_column": "OCR", "status_column": "state", "status_value": "done"})
+        report = source_report(
+            reader,
+            {
+                "table_name": "legal source",
+                "id_column": "record id",
+                "text_column": "OCR",
+                "status_column": "state",
+                "status_value": "done",
+            },
+        )
         assert report["counts"]["total"] == 3
         assert report["eligible_ocr_counts"] == {"rows": 2, "nonempty_text": 1}
         assert "private judgment" not in json.dumps(report)
-        assert source_report(reader, {"table_name": "assumed"})["state"] == "mapping_not_verified"
+        assert (
+            source_report(reader, {"table_name": "assumed"})["state"]
+            == "mapping_not_verified"
+        )
     assert identifier('odd"column') == '"odd""column"'
 
 
 def test_source_membership_checked_before_decryption(tmp_path):
     path = tmp_path / "sources.db"
     with sqlite3.connect(path) as connection:
-        connection.executescript('''
+        connection.executescript("""
             CREATE TABLE data_sources (id TEXT, organization_id TEXT, source_type TEXT,
                 prefix TEXT, endpoint_url TEXT, encrypted_secret_access_key TEXT);
             INSERT INTO data_sources VALUES ('s', 'o', 'turso_ocr',
                 '{"project_id":"foreign"}', 'must-not-connect', 'must-not-decrypt');
-        ''')
+        """)
     with open_reader("file:" + str(path)) as reader:
         assert source_inventory(reader, reader.schema(), "o", "p", "s", {}) == {
-            "state": "source_project_mismatch"}
+            "state": "source_project_mismatch"
+        }
 
 
 def test_standalone_command_imports_no_startup_or_sibling_modules():
-    script = '''
+    script = """
 import importlib.abc, sys
 class BlockStartup(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
@@ -152,8 +188,10 @@ try:
     main(["--help"])
 except SystemExit as exc:
     assert exc.code == 0
-'''
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=False)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, check=False
+    )
     assert result.returncode == 0, result.stderr
 
 
@@ -213,11 +251,27 @@ def test_command_full_run_and_startup_boundary(tmp_path):
     path = database(tmp_path)
     report_path = tmp_path / "report.json"
     # Invoke with an empty environment to prevent configured production access.
-    env = {"PATH": os.environ.get("PATH", ""), "TURSO_DATABASE_URL": "file:" + str(path)}
-    result = subprocess.run([
-        sys.executable, "-m", "backend.scripts.inventory", "--organization-id", "o",
-        "--project-id", "p", "--output", str(report_path),
-    ], env=env, capture_output=True, text=True, check=False)
+    env = {
+        "PATH": os.environ.get("PATH", ""),
+        "TURSO_DATABASE_URL": "file:" + str(path),
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "backend.scripts.inventory",
+            "--organization-id",
+            "o",
+            "--project-id",
+            "p",
+            "--output",
+            str(report_path),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     assert result.returncode == 2, result.stderr
     report = json.loads(report_path.read_text())
     assert report["application"]["tables"]["documents"]["count"] == 1
@@ -240,7 +294,9 @@ def test_all_pages_are_measured_not_only_first_sample(tmp_path):
 
 
 @pytest.mark.parametrize("readonly", [True, False, None])
-def test_remote_sql_described_before_execute_and_refuses_nonreads(monkeypatch, readonly):
+def test_remote_sql_described_before_execute_and_refuses_nonreads(
+    monkeypatch, readonly
+):
     import httpx
 
     requests = []
@@ -250,20 +306,48 @@ def test_remote_sql_described_before_execute_and_refuses_nonreads(monkeypatch, r
         requests.append(body)
         kind = body["requests"][0]["type"]
         if kind == "describe":
-            return httpx.Response(200, json={"baton": "private-baton", "results": [{
-                "type": "ok", "response": {"result": {"is_readonly": readonly}}}]})
+            return httpx.Response(
+                200,
+                json={
+                    "baton": "private-baton",
+                    "results": [
+                        {
+                            "type": "ok",
+                            "response": {"result": {"is_readonly": readonly}},
+                        }
+                    ],
+                },
+            )
         if kind == "execute":
             assert readonly is True
             assert body["baton"] == "private-baton"
             assert body["requests"][1] == {"type": "close"}
-            return httpx.Response(200, json={"baton": None, "results": [{"type": "ok", "response": {
-                "result": {"cols": [{"name": "value"}], "rows": [[{"type": "integer", "value": "1"}]]}}}]})
+            return httpx.Response(
+                200,
+                json={
+                    "baton": None,
+                    "results": [
+                        {
+                            "type": "ok",
+                            "response": {
+                                "result": {
+                                    "cols": [{"name": "value"}],
+                                    "rows": [[{"type": "integer", "value": "1"}]],
+                                }
+                            },
+                        }
+                    ],
+                },
+            )
         assert kind == "close"
         return httpx.Response(200, json={"baton": None, "results": []})
 
     client_type = httpx.Client
-    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(
-        **kwargs, transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(
+        httpx,
+        "Client",
+        lambda **kwargs: client_type(**kwargs, transport=httpx.MockTransport(respond)),
+    )
     with open_reader("libsql://test", "secret-token") as reader:
         if readonly is True:
             assert reader.query("SELECT 1 AS value") == [{"value": 1}]
@@ -271,7 +355,9 @@ def test_remote_sql_described_before_execute_and_refuses_nonreads(monkeypatch, r
             with pytest.raises(RuntimeError):
                 reader.query("SELECT 1 AS value")
     assert [r["requests"][0]["type"] for r in requests] == [
-        "describe", "execute" if readonly is True else "close"]
+        "describe",
+        "execute" if readonly is True else "close",
+    ]
 
 
 def test_model_probe_is_transient_and_reports_measured_width(monkeypatch):
@@ -284,11 +370,17 @@ def test_model_probe_is_transient_and_reports_measured_width(monkeypatch):
         return httpx.Response(200, json={"embeddings": [[1, 2, 3]]})
 
     client_type = httpx.Client
-    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(
-        **kwargs, transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(
+        httpx,
+        "Client",
+        lambda **kwargs: client_type(**kwargs, transport=httpx.MockTransport(respond)),
+    )
     options = args()
     options.probe_model = True
-    report = build_report(options, {"OLLAMA_BASE_URL": "http://model", "OLLAMA_EMBEDDING_MODEL": "configured"})
+    report = build_report(
+        options,
+        {"OLLAMA_BASE_URL": "http://model", "OLLAMA_EMBEDDING_MODEL": "configured"},
+    )
     assert report["model_probe"]["dimension"] == 3
     assert report["model_probe"]["persisted"] is False
     assert report["model_probe"]["revision"] == "unverified"
@@ -296,21 +388,33 @@ def test_model_probe_is_transient_and_reports_measured_width(monkeypatch):
     assert calls[0].url.path == "/api/embed"
 
 
-@pytest.mark.parametrize(("env", "reason"), [
-    ({}, "missing_database_url"),
-    ({"TURSO_DATABASE_URL": "libsql://private"}, "missing_auth_token"),
-    ({"TURSO_DATABASE_URL": "unsupported://private"}, "unsupported_database_url_scheme"),
-])
+@pytest.mark.parametrize(
+    ("env", "reason"),
+    [
+        ({}, "missing_database_url"),
+        ({"TURSO_DATABASE_URL": "libsql://private"}, "missing_auth_token"),
+        (
+            {"TURSO_DATABASE_URL": "unsupported://private"},
+            "unsupported_database_url_scheme",
+        ),
+    ],
+)
 def test_configuration_blockers_are_actionable_without_disclosing_values(env, reason):
     report = build_report(args(), env)
     assert report["application"]["reason"] == reason
     assert "private" not in json.dumps(report)
 
 
-@pytest.mark.parametrize("payload", [
-    {"base_url": "https://foreign-host", "results": []},
-    {"baton": "baton", "results": [{"type": "error", "error": {"message": "private"}}]},
-])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"base_url": "https://foreign-host", "results": []},
+        {
+            "baton": "baton",
+            "results": [{"type": "error", "error": {"message": "private"}}],
+        },
+    ],
+)
 def test_hrana_description_error_or_foreign_origin_never_executes(monkeypatch, payload):
     import httpx
 
@@ -324,8 +428,11 @@ def test_hrana_description_error_or_foreign_origin_never_executes(monkeypatch, p
         return httpx.Response(200, json=payload)
 
     client_type = httpx.Client
-    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(
-        **kwargs, transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(
+        httpx,
+        "Client",
+        lambda **kwargs: client_type(**kwargs, transport=httpx.MockTransport(respond)),
+    )
     with open_reader("libsql://test", "token") as reader, pytest.raises(RuntimeError):
         reader.query("SELECT 1")
     assert "execute" not in requests
@@ -335,8 +442,10 @@ def test_cli_dotenv_precedence_matches_backend_without_startup(tmp_path, monkeyp
     from backend.scripts import inventory
 
     env_file = tmp_path / "settings.env"
-    env_file.write_text("TURSO_DATABASE_URL=libsql://dotenv\nTURSO_AUTH_TOKEN=dotenv-token\n"
-                        "OLLAMA_EMBEDDING_MODEL=dotenv-model\nOLLAMA_BASE_URL\n")
+    env_file.write_text(
+        "TURSO_DATABASE_URL=libsql://dotenv\nTURSO_AUTH_TOKEN=dotenv-token\n"
+        "OLLAMA_EMBEDDING_MODEL=dotenv-model\nOLLAMA_BASE_URL\n"
+    )
     monkeypatch.setenv("TURSO_DATABASE_URL", "libsql://shell")
     monkeypatch.setenv("TURSO_AUTH_TOKEN", "shell-token")
     monkeypatch.setenv("OLLAMA_EMBEDDING_MODEL", "shell-model")
@@ -348,8 +457,18 @@ def test_cli_dotenv_precedence_matches_backend_without_startup(tmp_path, monkeyp
         return {}
 
     monkeypatch.setattr(inventory, "build_report", capture)
-    assert inventory.main(["--env-file", str(env_file), "--discover-scopes",
-                           "--output", str(tmp_path / "report.json")]) == 2
+    assert (
+        inventory.main(
+            [
+                "--env-file",
+                str(env_file),
+                "--discover-scopes",
+                "--output",
+                str(tmp_path / "report.json"),
+            ]
+        )
+        == 2
+    )
     assert captured["TURSO_DATABASE_URL"] == "libsql://dotenv"
     assert captured["TURSO_AUTH_TOKEN"] == "dotenv-token"
     assert captured["OLLAMA_EMBEDDING_MODEL"] == "dotenv-model"

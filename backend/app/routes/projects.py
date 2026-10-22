@@ -9,7 +9,10 @@ projects_bp = Blueprint("projects", __name__)
 
 def service() -> ProjectService:
     return ProjectService(
-        ProjectRepository(current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"])
+        ProjectRepository(
+            current_app.config["TURSO_DATABASE_URL"],
+            current_app.config["TURSO_AUTH_TOKEN"],
+        )
     )
 
 

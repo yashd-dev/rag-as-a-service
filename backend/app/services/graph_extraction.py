@@ -9,7 +9,16 @@ import httpx
 from backend.app.services.rag import fingerprint
 
 EXTRACTOR_VERSION = "quoted-legal-v2"
-ENTITY_TYPES = ("Case", "Statute", "Provision", "Court", "Judge", "Person", "Organization", "LegalConcept")
+ENTITY_TYPES = (
+    "Case",
+    "Statute",
+    "Provision",
+    "Court",
+    "Judge",
+    "Person",
+    "Organization",
+    "LegalConcept",
+)
 # shortcut: explicit predicates are English; add reviewed language-specific validators before claiming regional-language relation coverage.
 RELATION_CUES = {
     "CITES": r"\b(?:cite|cites|cited|citing|referred to|relied on)\b",
@@ -19,18 +28,38 @@ RELATION_CUES = {
     "DECIDED_BY": r"\b(?:decided by|delivered by)\b",
 }
 GRAPH_EXTRACTION_SCHEMA = {
-    "type": "object", "additionalProperties": False, "required": ["entities", "relations"],
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["entities", "relations"],
     "properties": {
-        "entities": {"type": "array", "maxItems": 8, "items": {
-            "type": "object", "additionalProperties": False, "required": ["name", "type"],
-            "properties": {"name": {"type": "string", "minLength": 2, "maxLength": 300},
-                           "type": {"type": "string", "enum": list(ENTITY_TYPES)}}}},
-        "relations": {"type": "array", "maxItems": 8, "items": {
-            "type": "object", "additionalProperties": False, "required": ["source", "target", "relation", "quote"],
-            "properties": {"source": {"type": "integer", "minimum": -1, "maximum": 7},
-                           "target": {"type": "integer", "minimum": 0, "maximum": 7},
-                           "relation": {"type": "string", "enum": list(RELATION_CUES)},
-                           "quote": {"type": "string", "minLength": 1, "maxLength": 1800}}}},
+        "entities": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["name", "type"],
+                "properties": {
+                    "name": {"type": "string", "minLength": 2, "maxLength": 300},
+                    "type": {"type": "string", "enum": list(ENTITY_TYPES)},
+                },
+            },
+        },
+        "relations": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["source", "target", "relation", "quote"],
+                "properties": {
+                    "source": {"type": "integer", "minimum": -1, "maximum": 7},
+                    "target": {"type": "integer", "minimum": 0, "maximum": 7},
+                    "relation": {"type": "string", "enum": list(RELATION_CUES)},
+                    "quote": {"type": "string", "minLength": 1, "maxLength": 1800},
+                },
+            },
+        },
     },
 }
 
@@ -42,16 +71,30 @@ class ExtractionError(ValueError):
 def occurrences(text, quote, row):
     if not isinstance(quote, str) or not quote or quote not in text:
         raise ExtractionError("invalid_evidence")
-    return [{"chunk_id": row["id"], "document_id": row["document_id"], "generation_id": row["generation_id"],
-             "start_char": row["start_char"] + match.start(), "end_char": row["start_char"] + match.end(), "quote": quote}
-            for match in re.finditer(re.escape(quote), text)]
+    return [
+        {
+            "chunk_id": row["id"],
+            "document_id": row["document_id"],
+            "generation_id": row["generation_id"],
+            "start_char": row["start_char"] + match.start(),
+            "end_char": row["start_char"] + match.end(),
+            "quote": quote,
+        }
+        for match in re.finditer(re.escape(quote), text)
+    ]
 
 
 def entity_identity(entity, row, graph_key):
     name = " ".join(unicodedata.normalize("NFKC", entity["name"]).casefold().split())
-    citation = re.fullmatch(r"a\.?\s*i\.?\s*r\.?\s+([12]\d{3})\s+s\.?\s*c\.?\s+(\d{1,6})", name)
+    citation = re.fullmatch(
+        r"a\.?\s*i\.?\s*r\.?\s+([12]\d{3})\s+s\.?\s*c\.?\s+(\d{1,6})", name
+    )
     # Exact reporter/year/court/page identity is shared; a person's/case's similar name is not.
-    identity = ["air-sc", *citation.groups()] if entity["type"] == "Case" and citation else [row["document_id"], entity["type"], name]
+    identity = (
+        ["air-sc", *citation.groups()]
+        if entity["type"] == "Case" and citation
+        else [row["document_id"], entity["type"], name]
+    )
     return fingerprint([graph_key, identity])
 
 
@@ -62,60 +105,166 @@ def validate_extraction(payload, row, graph_key):
         if not isinstance(payload[collection], list) or len(payload[collection]) > 8:
             raise ExtractionError("parse_error")
     text = row["content"]
-    if row["content_hash"] != fingerprint(text) or row["end_char"] - row["start_char"] != len(text):
+    if row["content_hash"] != fingerprint(text) or row["end_char"] - row[
+        "start_char"
+    ] != len(text):
         raise ExtractionError("canonical_integrity_failed")
     entities = []
     for entity in payload["entities"]:
-        if (not isinstance(entity, dict) or set(entity) != {"name", "type"} or entity["type"] not in ENTITY_TYPES
-                or not isinstance(entity["name"], str) or not 2 <= len(entity["name"]) <= 300
-                or entity["name"].casefold().strip() in {"he", "she", "they", "appellant", "respondent", "the court", "this case"}):
+        if (
+            not isinstance(entity, dict)
+            or set(entity) != {"name", "type"}
+            or entity["type"] not in ENTITY_TYPES
+            or not isinstance(entity["name"], str)
+            or not 2 <= len(entity["name"]) <= 300
+            or entity["name"].casefold().strip()
+            in {
+                "he",
+                "she",
+                "they",
+                "appellant",
+                "respondent",
+                "the court",
+                "this case",
+            }
+        ):
             raise ExtractionError("invalid_entity")
-        entities.append(entity | {"key": entity_identity(entity, row, graph_key), "mentions": occurrences(text, entity["name"], row)})
+        entities.append(
+            entity
+            | {
+                "key": entity_identity(entity, row, graph_key),
+                "mentions": occurrences(text, entity["name"], row),
+            }
+        )
     assertions = []
     for relation in payload["relations"]:
-        if not isinstance(relation, dict) or set(relation) != {"source", "target", "relation", "quote"}:
+        if not isinstance(relation, dict) or set(relation) != {
+            "source",
+            "target",
+            "relation",
+            "quote",
+        }:
             raise ExtractionError("parse_error")
-        source, target, kind, quote = (relation[key] for key in ("source", "target", "relation", "quote"))
-        if (type(source) is not int or type(target) is not int or not -1 <= source < len(entities)
-                or not 0 <= target < len(entities) or source == target or not isinstance(kind, str) or kind not in RELATION_CUES):
+        source, target, kind, quote = (
+            relation[key] for key in ("source", "target", "relation", "quote")
+        )
+        if (
+            type(source) is not int
+            or type(target) is not int
+            or not -1 <= source < len(entities)
+            or not 0 <= target < len(entities)
+            or source == target
+            or not isinstance(kind, str)
+            or kind not in RELATION_CUES
+        ):
             raise ExtractionError("invalid_endpoints")
         evidence = occurrences(text, quote, row)
-        if len(quote) > 1800 or entities[target]["name"] not in quote or (source != -1 and entities[source]["name"] not in quote):
+        if (
+            len(quote) > 1800
+            or entities[target]["name"] not in quote
+            or (source != -1 and entities[source]["name"] not in quote)
+        ):
             raise ExtractionError("invalid_evidence")
-        expected_target = {"CITES": {"Case"}, "OVERRULES": {"Case"}, "DISTINGUISHES": {"Case"},
-                           "INTERPRETS": {"Statute", "Provision"}, "DECIDED_BY": {"Court", "Judge"}}[kind]
-        if entities[target]["type"] not in expected_target or (source != -1 and entities[source]["type"] != "Case"):
+        expected_target = {
+            "CITES": {"Case"},
+            "OVERRULES": {"Case"},
+            "DISTINGUISHES": {"Case"},
+            "INTERPRETS": {"Statute", "Provision"},
+            "DECIDED_BY": {"Court", "Judge"},
+        }[kind]
+        if entities[target]["type"] not in expected_target or (
+            source != -1 and entities[source]["type"] != "Case"
+        ):
             raise ExtractionError("invalid_endpoints")
         cue = re.search(RELATION_CUES[kind], quote, re.IGNORECASE)
         contexts = []
         for span in evidence:
-            start, end = span["start_char"] - row["start_char"], span["end_char"] - row["start_char"]
+            start, end = (
+                span["start_char"] - row["start_char"],
+                span["end_char"] - row["start_char"],
+            )
             prefix = re.split(r"\n\n|[.!?]\s+", text[:start])[-1]
             suffix = re.split(r"\n\n|[.!?](?:\s+|$)", text[end:], maxsplit=1)[0]
             contexts.append(prefix + quote + suffix)
-        if (not cue or any(re.search(r"\b(?:not|never|no|neither|without|cannot|whether|declined|refused)\b", context, re.IGNORECASE) for context in contexts)
-                or (source != -1 and (quote.find(entities[source]["name"]) >= cue.start()
-                                     or quote.find(entities[target]["name"], cue.end()) == -1))):
+        if (
+            not cue
+            or any(
+                re.search(
+                    r"\b(?:not|never|no|neither|without|cannot|whether|declined|refused)\b",
+                    context,
+                    re.IGNORECASE,
+                )
+                for context in contexts
+            )
+            or (
+                source != -1
+                and (
+                    quote.find(entities[source]["name"]) >= cue.start()
+                    or quote.find(entities[target]["name"], cue.end()) == -1
+                )
+            )
+        ):
             raise ExtractionError("unsupported_relation")
         if source == -1 and kind != "CITES":
-            auxiliary = r"(?:was\s+)?" if kind == "DECIDED_BY" else r"(?:has\s+|have\s+)?"
-            if (not re.search(r"\b(?:this judgment|this court|we)\s+" + auxiliary + "(?:" + RELATION_CUES[kind] + ")", quote, re.IGNORECASE)
-                    or (kind != "DECIDED_BY" and re.search(r"\b(?:overruled|distinguished|interpreted)\s+by\b", quote, re.IGNORECASE))):
+            auxiliary = (
+                r"(?:was\s+)?" if kind == "DECIDED_BY" else r"(?:has\s+|have\s+)?"
+            )
+            if not re.search(
+                r"\b(?:this judgment|this court|we)\s+"
+                + auxiliary
+                + "(?:"
+                + RELATION_CUES[kind]
+                + ")",
+                quote,
+                re.IGNORECASE,
+            ) or (
+                kind != "DECIDED_BY"
+                and re.search(
+                    r"\b(?:overruled|distinguished|interpreted)\s+by\b",
+                    quote,
+                    re.IGNORECASE,
+                )
+            ):
                 raise ExtractionError("unsupported_relation")
-        source_key = entities[source]["key"] if source != -1 else fingerprint([graph_key, "document", row["document_id"]])
+        source_key = (
+            entities[source]["key"]
+            if source != -1
+            else fingerprint([graph_key, "document", row["document_id"]])
+        )
         if source_key == entities[target]["key"]:
             raise ExtractionError("invalid_endpoints")
-        assertions.append({"key": fingerprint([graph_key, source_key, entities[target]["key"], kind]), "source": source_key,
-                           "target": entities[target]["key"], "relation": kind, "evidence": evidence})
-    return {"entities": entities, "assertions": assertions, "chunk_id": row["id"], "content_hash": row["content_hash"],
-            "method": "llm_explicit_quote", "extractor_version": EXTRACTOR_VERSION, "payload": payload}
+        assertions.append(
+            {
+                "key": fingerprint(
+                    [graph_key, source_key, entities[target]["key"], kind]
+                ),
+                "source": source_key,
+                "target": entities[target]["key"],
+                "relation": kind,
+                "evidence": evidence,
+            }
+        )
+    return {
+        "entities": entities,
+        "assertions": assertions,
+        "chunk_id": row["id"],
+        "content_hash": row["content_hash"],
+        "method": "llm_explicit_quote",
+        "extractor_version": EXTRACTOR_VERSION,
+        "payload": payload,
+    }
 
 
 class GraphExtractor:
     def __init__(self, llm, vector_partition):
         self.llm = llm
-        self.profile = {"version": EXTRACTOR_VERSION, "provider": "ollama", **llm.revision(),
-                        "options": dict(llm.options), "schema_hash": fingerprint(GRAPH_EXTRACTION_SCHEMA)}
+        self.profile = {
+            "version": EXTRACTOR_VERSION,
+            "provider": "ollama",
+            **llm.revision(),
+            "options": dict(llm.options),
+            "schema_hash": fingerprint(GRAPH_EXTRACTION_SCHEMA),
+        }
         self.key = fingerprint([vector_partition, self.profile])
 
     def extract(self, row):

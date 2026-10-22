@@ -39,7 +39,9 @@ def migrate_db(conn) -> None:
         conn.execute(
             "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"
         )
-    for statement in Path(__file__).with_name("index_schema.sql").read_text().split(";"):
+    for statement in (
+        Path(__file__).with_name("index_schema.sql").read_text().split(";")
+    ):
         if statement.strip():
             conn.execute(statement)
 

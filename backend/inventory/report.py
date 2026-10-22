@@ -15,7 +15,9 @@ def vector_status(value):
         if not isinstance(vector, (list, tuple)) or not vector:
             return "invalid", None
         if any(
-            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+            isinstance(v, bool)
+            or not isinstance(v, (int, float))
+            or not math.isfinite(v)
             for v in vector
         ):
             return "invalid", len(vector)
@@ -37,7 +39,9 @@ def has_text(value):
 def scan(reader, statement, parameters=(), batch_size=500):
     offset = 0
     while True:
-        rows = reader.query(statement + " LIMIT ? OFFSET ?", (*parameters, batch_size, offset))
+        rows = reader.query(
+            statement + " LIMIT ? OFFSET ?", (*parameters, batch_size, offset)
+        )
         yield from rows
         if len(rows) < batch_size:
             return
@@ -48,7 +52,9 @@ def application_report(reader, org, project):
     schema = reader.schema()
     report = {
         "schema": schema,
-        "sqlite_version": reader.query("SELECT sqlite_version() AS version")[0]["version"],
+        "sqlite_version": reader.query("SELECT sqlite_version() AS version")[0][
+            "version"
+        ],
         "tables": {},
         "blockers": [],
     }
@@ -65,37 +71,69 @@ def application_report(reader, org, project):
         project_key = "id" if table == "projects" else "project_id"
         where = f"organization_id = ? AND {project_key} = ?"
         result = reader.query(
-            f"SELECT count(*) AS count FROM {identifier(table)} WHERE {where}", (org, project)
+            f"SELECT count(*) AS count FROM {identifier(table)} WHERE {where}",
+            (org, project),
         )[0]
         report["tables"][table] = {"state": "measured", **result}
     if report["tables"].get("projects", {}).get("count") != 1:
-        report["blockers"].append("Scope must resolve to exactly one application project")
+        report["blockers"].append(
+            "Scope must resolve to exactly one application project"
+        )
     if {"embedding_provider", "embedding_model"} <= columns(schema, "projects"):
         report["project_model_labels_not_vector_provenance"] = reader.query(
             "SELECT embedding_provider, embedding_model FROM projects "
-            "WHERE organization_id = ? AND id = ?", (org, project)
+            "WHERE organization_id = ? AND id = ?",
+            (org, project),
         )
-    required = {"id", "content", "embedding", "document_id", "organization_id", "project_id"}
+    required = {
+        "id",
+        "content",
+        "embedding",
+        "document_id",
+        "organization_id",
+        "project_id",
+    }
     if not required <= columns(schema, "chunk_embeddings"):
-        report["blockers"].append("Cannot scan stored vectors: missing required columns")
+        report["blockers"].append(
+            "Cannot scan stored vectors: missing required columns"
+        )
         return report
-    stats = Counter({"missing": 0, "invalid": 0, "valid_numeric": 0,
-                     "nonempty_text": 0, "resolved_document": 0})
+    stats = Counter(
+        {
+            "missing": 0,
+            "invalid": 0,
+            "valid_numeric": 0,
+            "nonempty_text": 0,
+            "resolved_document": 0,
+        }
+    )
     dimensions = Counter()
-    eligibility = Counter({"safe_to_copy": 0, "requires_reembedding": 0,
-                           "requires_text_provenance_repair": 0, "unknown_blocked": 0})
+    eligibility = Counter(
+        {
+            "safe_to_copy": 0,
+            "requires_reembedding": 0,
+            "requires_text_provenance_repair": 0,
+            "unknown_blocked": 0,
+        }
+    )
     # Use the database's supported vector decoder, never guess a BLOB encoding.
     statement = (
         "SELECT id, document_id, content, vector_extract(embedding) AS vector "
         "FROM chunk_embeddings WHERE organization_id = ? AND project_id = ? ORDER BY id"
     )
-    can_resolve_documents = {"id", "organization_id", "project_id"} <= columns(schema, "documents")
+    can_resolve_documents = {"id", "organization_id", "project_id"} <= columns(
+        schema, "documents"
+    )
     document_ids = set()
     if can_resolve_documents:
-        document_ids = {row["id"] for row in scan(
-            reader, "SELECT id FROM documents WHERE organization_id = ? AND project_id = ? ORDER BY id",
-            (org, project),
-        )}
+        document_ids = {
+            row["id"]
+            for row in scan(
+                reader,
+                "SELECT id FROM documents WHERE organization_id = ? AND project_id = ? ORDER BY id",
+                (org, project),
+            )
+        }
     try:
         for row in scan(reader, statement, (org, project)):
             state, dimension = vector_status(row["vector"])
@@ -114,16 +152,24 @@ def application_report(reader, org, project):
                 # Legacy rows have no per-vector model, revision or content hash.
                 eligibility["unknown_blocked"] += 1
         report["vectors"] = {
-            "state": "measured", "full_scan": True, "counts": dict(stats),
-            "dimensions": dict(dimensions), "classification": dict(eligibility),
-            "selector": {"organization_id": org, "project_id": project,
-                         "order_by": "chunk_embeddings.id"},
+            "state": "measured",
+            "full_scan": True,
+            "counts": dict(stats),
+            "dimensions": dict(dimensions),
+            "classification": dict(eligibility),
+            "selector": {
+                "organization_id": org,
+                "project_id": project,
+                "order_by": "chunk_embeddings.id",
+            },
             "classification_rule": "Repair missing text/document first; re-embed missing/invalid vectors; "
-                                   "all remaining legacy rows blocked by unverified model/content provenance.",
+            "all remaining legacy rows blocked by unverified model/content provenance.",
             "stale_count": None if sum(eligibility.values()) else 0,
             "generation_distribution": None if sum(eligibility.values()) else {},
         }
-    except Exception as exc:  # noqa: BLE001 - unknown driver errors must not leak secrets
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - unknown driver errors must not leak secrets
         # Driver errors can contain URLs, tokens, SQL values or document content.
         report["vectors"] = {"state": "blocked", "error_type": type(exc).__name__}
     if report["vectors"]["state"] != "measured" or sum(eligibility.values()):
@@ -141,20 +187,41 @@ def source_report(reader, mapping):
     status = mapping.get("status_column")
     if status:
         required.add(status)
-    result = {"schema": schema, "mapping": {k: mapping.get(k) for k in (
-        "table_name", "id_column", "text_column", "status_column", "url_column")}}
-    if table not in schema or None in required or not required <= columns(schema, table):
+    result = {
+        "schema": schema,
+        "mapping": {
+            k: mapping.get(k)
+            for k in (
+                "table_name",
+                "id_column",
+                "text_column",
+                "status_column",
+                "url_column",
+            )
+        },
+    }
+    if (
+        table not in schema
+        or None in required
+        or not required <= columns(schema, table)
+    ):
         return {**result, "state": "mapping_not_verified"}
     name = identifier(table)
     text = identifier(mapping["text_column"])
     source_id = identifier(mapping["id_column"])
-    result["sqlite_version"] = reader.query("SELECT sqlite_version() AS version")[0]["version"]
+    result["sqlite_version"] = reader.query("SELECT sqlite_version() AS version")[0][
+        "version"
+    ]
     status_field = identifier(status) if status else "NULL"
     counts = {"total": 0, "null_ids": 0, "nonempty_text": 0}
     eligible = {"rows": 0, "nonempty_text": 0}
     ids = set()
-    for row in scan(reader, f"SELECT {source_id} AS source_id, {text} AS content, "
-                           f"{status_field} AS status FROM {name} ORDER BY {source_id}", batch_size=10):
+    for row in scan(
+        reader,
+        f"SELECT {source_id} AS source_id, {text} AS content, "
+        f"{status_field} AS status FROM {name} ORDER BY {source_id}",
+        batch_size=10,
+    ):
         nonempty = has_text(row["content"])
         counts["total"] += 1
         counts["null_ids"] += row["source_id"] is None
@@ -167,6 +234,10 @@ def source_report(reader, mapping):
     result["counts"] = {**counts, "distinct_ids": len(ids)}
     result["eligible_ocr_counts"] = eligible
     result["state"] = "measured"
-    result["scope_caveat"] = "Counts cover the configured source table, not proven project ownership of each row."
-    result["source_application_identity_reconciliation"] = "unknown: legacy filename is not a durable source mapping"
+    result["scope_caveat"] = (
+        "Counts cover the configured source table, not proven project ownership of each row."
+    )
+    result["source_application_identity_reconciliation"] = (
+        "unknown: legacy filename is not a durable source mapping"
+    )
     return result

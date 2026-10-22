@@ -23,11 +23,21 @@ class DataSourceService:
             if not str(payload.get(field, "")).strip():
                 raise ValidationError(f"{field} is required")
         if payload["source_type"] == "turso_ocr":
-            for field in ("turso_database_url", "turso_auth_token", "table_name", "id_column", "text_column"):
+            for field in (
+                "turso_database_url",
+                "turso_auth_token",
+                "table_name",
+                "id_column",
+                "text_column",
+            ):
                 if not str(payload.get(field, "")).strip():
                     raise ValidationError(f"{field} is required")
             batch_size = min(max(int(payload.get("batch_size") or 50), 1), 500)
-            max_documents = int(payload["max_documents"]) if str(payload.get("max_documents", "")).strip() else None
+            max_documents = (
+                int(payload["max_documents"])
+                if str(payload.get("max_documents", "")).strip()
+                else None
+            )
             if max_documents is not None and max_documents < 1:
                 raise ValidationError("max_documents must be greater than 0")
             metadata = {
@@ -40,7 +50,9 @@ class DataSourceService:
                 "url_column": payload.get("url_column") or "url",
                 "batch_size": batch_size,
                 "max_documents": max_documents,
-                "skip_graph_extraction": payload_bool(payload, "skip_graph_extraction", False),
+                "skip_graph_extraction": payload_bool(
+                    payload, "skip_graph_extraction", False
+                ),
                 "ingestion_status": "pending",
                 "ingestion_started_at": None,
                 "ingestion_finished_at": None,
@@ -61,7 +73,9 @@ class DataSourceService:
                     "public_base_url": None,
                     "prefix": json.dumps(metadata),
                     "encrypted_access_key_id": None,
-                    "encrypted_secret_access_key": self.secret_box.encrypt(payload["turso_auth_token"]),
+                    "encrypted_secret_access_key": self.secret_box.encrypt(
+                        payload["turso_auth_token"]
+                    ),
                     "region": None,
                     "is_public": 0,
                 }
@@ -84,8 +98,12 @@ class DataSourceService:
                 "endpoint_url": payload.get("endpoint_url"),
                 "public_base_url": payload.get("public_base_url"),
                 "prefix": payload.get("prefix"),
-                "encrypted_access_key_id": self.secret_box.encrypt(access_key) if access_key else None,
-                "encrypted_secret_access_key": self.secret_box.encrypt(secret_key) if secret_key else None,
+                "encrypted_access_key_id": (
+                    self.secret_box.encrypt(access_key) if access_key else None
+                ),
+                "encrypted_secret_access_key": (
+                    self.secret_box.encrypt(secret_key) if secret_key else None
+                ),
                 "region": payload.get("region"),
                 "is_public": int(is_public),
             }
@@ -93,13 +111,19 @@ class DataSourceService:
         return self.safe(row, access_key)
 
     def list(self, auth: AuthContext) -> list[dict]:
-        return [self.safe(row) for row in self.repository.list_for_org(auth.organization_id)]
+        return [
+            self.safe(row) for row in self.repository.list_for_org(auth.organization_id)
+        ]
 
     def safe(self, row: dict, plain_access_key: str | None = None) -> dict:
         safe_row = dict(row)
         safe_row.pop("encrypted_access_key_id", None)
         safe_row.pop("encrypted_secret_access_key", None)
-        metadata = json.loads(str(safe_row.get("prefix") or "{}")) if safe_row.get("source_type") == "turso_ocr" else {}
+        metadata = (
+            json.loads(str(safe_row.get("prefix") or "{}"))
+            if safe_row.get("source_type") == "turso_ocr"
+            else {}
+        )
         for key in (
             "ingestion_status",
             "ingestion_started_at",

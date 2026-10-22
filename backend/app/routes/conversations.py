@@ -11,12 +11,15 @@ def create_conversation(project_id: str):
     auth, error = auth_or_error()
     if error:
         return error
-    if not ProjectRepository(current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]).get(
-        project_id, auth.organization_id
-    ):
+    if not ProjectRepository(
+        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
+    ).get(project_id, auth.organization_id):
         return jsonify({"error": "Project not found"}), 404
     row = SimpleRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"], "conversations", "conv"
+        current_app.config["TURSO_DATABASE_URL"],
+        current_app.config["TURSO_AUTH_TOKEN"],
+        "conversations",
+        "conv",
     ).create(
         {
             "project_id": project_id,
