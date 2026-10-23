@@ -1,0 +1,74 @@
+{
+  "expected_chunks": 10417,
+  "valid_extractions": 0,
+  "empty_extractions": 0,
+  "entities": 0,
+  "assertions": 0,
+  "evidence_spans": 0,
+  "entity_types": {},
+  "relation_types": {},
+  "provenance": {
+    "verified_spans": 0,
+    "total_spans": 0,
+    "dangling_spans": 0
+  },
+  "assertion_samples": [],
+  "graph_key": "b0d12f91da6ee0718b3a3c54c96de07e16c724470ab95614b0a5dcec4eb83548",
+  "state": "graph_partial",
+  "attempted": 2,
+  "reused": 0,
+  "recorded_at": "2026-10-23T16:35:38.942745+00:00",
+  "operation": "bounded_installed_qwen_trial",
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "documents": 333,
+  "extractor": {
+    "version": "quoted-legal-v2",
+    "provider": "ollama",
+    "model": "qwen2.5:3b",
+    "revision": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+    "options": {
+      "temperature": 0,
+      "num_predict": 1500,
+      "num_ctx": 4096
+    },
+    "schema_hash": "dda06fe4af699445bc77df783c4c193db6f8325fd3ad537c2d5344f41e4c4461"
+  },
+  "request_timeout_seconds": 120,
+  "persisted_configuration_changed": false,
+  "failure_summary": {
+    "invalid_evidence": 2,
+    "pending": 10415
+  },
+  "attempted_failures": [
+    {
+      "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+      "code": "invalid_evidence"
+    },
+    {
+      "chunk_id": "chk_f424e1616c03f190cf8f8b9671278e661fd25a3a5ed371e94b66e18224c36f4b",
+      "code": "invalid_evidence"
+    }
+  ],
+  "pending_chunk_ids_omitted": true,
+  "model_progress_log": [
+    "ollama_generate start model=qwen2.5:3b json_mode=True prompt_chars=2581 timeout=120.0 options={'temperature': 0, 'num_predict': 1500, 'num_ctx': 4096}",
+    "ollama_generate done model=qwen2.5:3b response_chars=788 eval_count=263 done_reason=stop total_duration=86798302522",
+    "ollama_generate start model=qwen2.5:3b json_mode=True prompt_chars=2654 timeout=120.0 options={'temperature': 0, 'num_predict': 1500, 'num_ctx': 4096}",
+    "ollama_generate done model=qwen2.5:3b response_chars=838 eval_count=244 done_reason=stop total_duration=66252660161"
+  ],
+  "unvalidated_model_responses": [
+    {
+      "canonical_content_hash": "ccb1fb58315696fa9531695e5daf81caf7e908b84e8f083eb75a76dc392be79a",
+      "response": "{\n  \"entities\": [\n    {\n      \"name\": \"A\\n\\nll\\n\\nc\\n\\n0\\n\\nE\\n\\nF\\n\\nG\\n\\nH\\n\\n87\",\n      \"type\": \"Judge\"\n    },\n    {\n      \"name\": \"R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\",\n      \"type\": \"Case\"\n    },\n    {\n      \"name\": \"Industrial Dispute-Services of employees of State Undertakings transferred to Corporation\",\n      \"type\": \"LegalConcept\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"CITES\",\n      \"quote\": \"R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"INTERPRETS\",\n      \"quote\": \"Industrial Dispute-Services of employees of State Undertakings transferred to Corporation\"\n    }\n  ]\n}",
+      "response_chars": 788,
+      "truncated_in_report": false
+    },
+    {
+      "canonical_content_hash": "716c45b6f76861721cfebc7514dad7a4f42af2351da84f261eb0ea6e7915cf44",
+      "response": "{\n  \"entities\": [\n    {\n      \"name\": \"Corporation\",\n      \"type\": \"Organization\"\n    },\n    {\n      \"name\": \"State Government\",\n      \"type\": \"Organization\"\n    },\n    {\n      \"name\": \"Labour Court\",\n      \"type\": \"Organization\"\n    },\n    {\n      \"name\": \"High Court\",\n      \"type\": \"Organization\"\n    },\n    {\n      \"name\": \"this judgment\",\n      \"type\": \"Person\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"DISTINGUISHES\",\n      \"quote\": \"The Labour Court rejected the contention.\"\n    },\n    {\n      \"source\": 3,\n      \"target\": 0,\n      \"relation\": \"DISTINGUISHES\",\n      \"quote\": \"The High Court dismissed the petition.\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 2,\n      \"relation\": \"DISTINGUISHES\",\n      \"quote\": \"By certificat~ appeal was filed in this Court.\"\n    }\n  ]\n}",
+      "response_chars": 838,
+      "truncated_in_report": false
+    }
+  ],
+  "verified_vectors_retained": 10417
+}

@@ -42,3 +42,21 @@ The next bounded diagnostic may trial the already-installed larger local model
 with enough output budget before selecting/adopting a replacement configuration.
 Keep model/recipe generations separate, retain this failed probe, validate exact
 source output and do not scale or publish on the strength of model availability.
+
+## Installed Qwen trial
+
+`stage-d-live-batch-02.json` records a process-local `qwen2.5:3b` trial on the same
+first two chunks. Output budget 1500, context 4096, timeout 120 seconds. Both JSON
+responses completed (`eval_count=263/244`, not output-truncated) but both failed
+exact evidence validation: **0 accepted / 2 attempted**, 10,415 pending for that
+distinct extractor generation. The 10,417 C vectors remain intact and published.
+
+Raw responses are explicitly labeled **unvalidated** in that artifact. They show
+rewritten OCR, a page-header sequence classified as a judge, and unsupported/wrongly
+referenced relations. Complete JSON is not enough to establish usable graph facts.
+No persisted application model setting or graph publication changed.
+
+The next user-directed step stays local and temporary: a standalone GLM Edge 1.5B
+smoke on a simple synthetic statement and a real OCR excerpt, with no graph writes.
+The hosted model metadata check does not authorize sending judgment text to it;
+no hosted extraction integration/trial has been performed.
