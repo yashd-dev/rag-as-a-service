@@ -341,10 +341,13 @@ class Neo4jVectorStore:
             self.valid_ids(complete=True)
         vector = provider.embed_versioned([query], self.provenance)[0]
         # Candidate selection is partitioned before top-k, not a global search followed by tenant filtering.
+        # Small HNSW k missed an exact top-8 passage live; overfetch and rescore actual vectors.
         result = self._run(
-            "CALL db.index.vector.queryNodes($index, $limit, $vector) YIELD node, score "
-            "RETURN properties(node) AS chunk, score ORDER BY score DESC",
+            "CALL db.index.vector.queryNodes($index, $candidates, $vector) YIELD node "
+            "WITH node, vector.similarity.cosine(node.embedding,$vector) AS score "
+            "RETURN properties(node) AS chunk, score ORDER BY score DESC, node.id LIMIT $limit",
             index=self.index,
+            candidates=max(64, limit * 8),
             limit=limit,
             vector=vector,
         )

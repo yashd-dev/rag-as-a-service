@@ -148,7 +148,10 @@ def test_batch_rejects_invalid_vectors_and_foreign_rows_before_write(store):
         )
 
 
-def test_search_uses_partitioned_top_k_and_refuses_foreign_result(store, monkeypatch):
+@pytest.mark.parametrize("limit,candidates", [(1, 64), (8, 64), (100, 800)])
+def test_search_uses_partitioned_top_k_and_refuses_foreign_result(
+    store, monkeypatch, limit, candidates
+):
     monkeypatch.setattr(store, "index_status", lambda: None)
     monkeypatch.setattr(store, "valid_ids", lambda **kwargs: {"chunk"})
     item = record(store)
@@ -167,7 +170,11 @@ def test_search_uses_partitioned_top_k_and_refuses_foreign_result(store, monkeyp
                 }
             ]
         assert "db.index.vector.queryNodes" in query
-        assert params["index"] == store.index and params["limit"] == 8
+        assert params["index"] == store.index and params["limit"] == limit
+        assert (
+            params["candidates"] == candidates and "vector.similarity.cosine" in query
+        )
+        assert "LIMIT $limit" in query
         return [{"chunk": item["chunk"].copy(), "score": 0.9}]
 
     monkeypatch.setattr(store, "_run", run)
@@ -176,14 +183,14 @@ def test_search_uses_partitioned_top_k_and_refuses_foreign_result(store, monkeyp
         def embed_versioned(self, texts, provenance):
             return [[1.0] * 768]
 
-    result = store.search(Provider(), "semantic question")
+    result = store.search(Provider(), "semantic question", limit=limit)
     assert result[0]["score"] == 0.9 and "embedding" not in result[0]["chunk"]
     item["chunk"]["organization_id"] = "foreign"
     with pytest.raises(ValueError, match="Foreign"):
-        store.search(Provider(), "semantic question")
+        store.search(Provider(), "semantic question", limit=limit)
     monkeypatch.setattr(store, "_run", lambda *args, **kwargs: [])
     with pytest.raises(ValueError, match="not published"):
-        store.search(Provider(), "semantic question")
+        store.search(Provider(), "semantic question", limit=limit)
 
 
 def test_index_configuration_is_checked_not_just_its_name(store, monkeypatch):

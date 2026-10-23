@@ -123,6 +123,9 @@ recipe before building its vector generation.
 Indexes use the verified Neo4j 5.26 cosine vector API. Each index label partitions
 candidates **before top-k** by org, project, canonical corpus manifest and resolved
 model digest. No foreign tenant or stale generation can exhaust a global top-k.
+Search requests `max(64, 8*k)` approximate candidates within that partition and
+rescores their actual vectors with Neo4j cosine before returning k. This fixes a
+measured small-k recall miss; exhaustive exact top-k is not assumed.
 Numeric finiteness, 768 dimensions, vector hashes, exact canonical identity/spans,
 document containment and ONLINE index configuration are checked before retrieval.
 The model digest is checked before and after each embedding request. Neo4j scores
