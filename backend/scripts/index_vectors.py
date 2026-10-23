@@ -109,9 +109,7 @@ def main(argv=None):
             raise ValueError("Canonical input changed during operation")
         print(json.dumps(result))
         return 0
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - CLI boundary emits secret-safe failure codes
+    except Exception as exc:  # noqa: BLE001
         # Do not emit driver messages, connection strings, source text or credentials on failure.
         print(
             json.dumps(summary | {"state": "failed", "error_code": type(exc).__name__})

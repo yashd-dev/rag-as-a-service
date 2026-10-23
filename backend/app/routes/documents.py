@@ -157,9 +157,8 @@ def list_documents(project_id: str):
                 "documents"
             ]
         }
-    except (
-        Exception
-    ):  # noqa: BLE001 - read-only status failures must not leak connection details
+    except Exception:  # noqa: BLE001
+        # Read-only status failures must not leak connection details.
         return (
             jsonify(
                 {
@@ -188,9 +187,8 @@ def indexing_status(project_id):
         return jsonify({"error": "Project not found"}), 404
     try:
         return jsonify(RetrievalService(current_app.config, project).status())
-    except (
-        Exception
-    ):  # noqa: BLE001 - redact database/transport failures at HTTP boundary
+    except Exception:  # noqa: BLE001
+        # Redact database/transport failures at the HTTP boundary.
         return jsonify({"error": "Index readiness unavailable"}), 503
 
 

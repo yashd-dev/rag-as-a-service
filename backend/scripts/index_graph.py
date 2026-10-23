@@ -108,9 +108,8 @@ def main(argv=None):
     logging.getLogger("backend.app.services.evidence_graph").setLevel(logging.INFO)
     try:
         result = execute(args)
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - CLI trust boundary redacts transport credentials and source text
+    except Exception as exc:  # noqa: BLE001
+        # The CLI boundary redacts transport credentials and source text.
         print(json.dumps({"state": "failed", "error_code": type(exc).__name__}))
         return 2
     print(json.dumps(result, ensure_ascii=False))

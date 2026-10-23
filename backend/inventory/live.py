@@ -477,9 +477,8 @@ def inventory(env):
                 report[name] = graph_inventory(env)
             else:
                 report[name] = model_inventory(env, text)
-        except (
-            Exception
-        ) as exc:  # noqa: BLE001 - secret-safe per-service diagnostic boundary
+        except Exception as exc:  # noqa: BLE001
+            # Keep the per-service diagnostic boundary secret-safe.
             report[name] = blocked(exc)
     report["measurement_issues"] = measurement_issues(report)
     report["measurement_status"] = (

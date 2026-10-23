@@ -101,14 +101,12 @@ def query_project(project_id):
                 result["readiness"] = RetrievalService(
                     current_app.config, project
                 ).status()
-            except (
-                Exception
-            ):  # noqa: BLE001 - retain the original safe error if status is also unavailable
+            except Exception:  # noqa: BLE001
+                # Retain the original safe error if status is also unavailable.
                 result["readiness"] = None
         return jsonify(result), exc.status
-    except (
-        Exception
-    ):  # noqa: BLE001 - redact database/transport failures at HTTP boundary
+    except Exception:  # noqa: BLE001
+        # Redact database/transport failures at the HTTP boundary.
         return jsonify({"error": "Query unavailable", "code": "query_unavailable"}), 503
 
 
@@ -129,9 +127,8 @@ def source_passage(project_id, chunk_id):
             ),
             503,
         )
-    except (
-        Exception
-    ):  # noqa: BLE001 - never emit source/store exceptions containing text or credentials
+    except Exception:  # noqa: BLE001
+        # Never emit source/store exceptions containing text or credentials.
         return (
             jsonify(
                 {"error": "Source passage unavailable", "code": "source_unavailable"}

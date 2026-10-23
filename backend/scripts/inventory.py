@@ -103,9 +103,8 @@ def build_report(args, env):
                             args.source_id,
                             env,
                         )
-                    except (
-                        Exception
-                    ) as exc:  # noqa: BLE001 - secret-safe diagnostic boundary
+                    except Exception as exc:  # noqa: BLE001
+                        # Keep the diagnostic boundary secret-safe.
                         result["source"] = blocked(exc)
                 else:
                     result["source"] = {

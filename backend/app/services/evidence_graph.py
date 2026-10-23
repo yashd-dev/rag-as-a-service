@@ -430,9 +430,8 @@ class EvidenceGraph:
             # shortcut: replay cached graph writes for repair; add per-chunk storage proofs when repeat runs become costly.
             try:
                 self.write_chunk(row, result)
-            except (
-                Exception
-            ) as exc:  # noqa: BLE001 - preserve safe per-chunk storage failure and continue independent work
+            except Exception as exc:  # noqa: BLE001
+                # Preserve safe per-chunk storage failure and continue independent work.
                 self.attempt(row, type(exc).__name__)
             logging.getLogger(__name__).info(
                 "Graph checkpoint attempted=%s reused=%s expected=%s",

@@ -167,9 +167,7 @@ def application_report(reader, org, project):
             "stale_count": None if sum(eligibility.values()) else 0,
             "generation_distribution": None if sum(eligibility.values()) else {},
         }
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - unknown driver errors must not leak secrets
+    except Exception as exc:  # noqa: BLE001
         # Driver errors can contain URLs, tokens, SQL values or document content.
         report["vectors"] = {"state": "blocked", "error_type": type(exc).__name__}
     if report["vectors"]["state"] != "measured" or sum(eligibility.values()):

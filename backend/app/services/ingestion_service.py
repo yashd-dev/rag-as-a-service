@@ -186,9 +186,8 @@ class TursoOcrIngestionService(IngestionService):
                             dry_run=dry_run,
                         )
                         plans.append(plan)
-                    except (
-                        Exception
-                    ) as exc:  # noqa: BLE001 - continue batch with secret-safe per-record failure
+                    except Exception as exc:  # noqa: BLE001
+                        # Continue the batch with secret-safe per-record failures.
                         failed += 1
                         failures.append(
                             {
@@ -233,9 +232,8 @@ class TursoOcrIngestionService(IngestionService):
                     },
                 )
             return result
-        except (
-            Exception
-        ):  # noqa: BLE001 - persist safe progress and redact source transport errors
+        except Exception:  # noqa: BLE001
+            # Persist safe progress and redact source transport errors.
             if not dry_run:
                 self.sources.update(
                     source["id"],

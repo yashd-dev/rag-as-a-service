@@ -154,9 +154,8 @@ class QueryService:
                     ],
                 },
             }
-        except (
-            Exception
-        ) as exc:  # noqa: BLE001 - persist failed outcomes and redact provider/DB errors before the HTTP boundary
+        except Exception as exc:  # noqa: BLE001
+            # Persist failed outcomes and redact provider/DB errors before the HTTP boundary.
             code = (
                 exc.code
                 if isinstance(
@@ -177,8 +176,7 @@ class QueryService:
                     self.auth.organization_id,
                     {"status": "failed", "answer": None},
                 )
-            except (
-                Exception
-            ):  # noqa: BLE001 - failed persistence must never return a completed answer
+            except Exception:  # noqa: BLE001
+                # Failed persistence must never return a completed answer.
                 code, status = "query_persistence_failed", 503
             raise QueryFailure(code, status, run["id"]) from None
