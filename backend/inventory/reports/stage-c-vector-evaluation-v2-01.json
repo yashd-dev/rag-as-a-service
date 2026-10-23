@@ -1,0 +1,1280 @@
+{
+  "scope": {
+    "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+    "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+    "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+    "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+    "model": "embeddinggemma:latest",
+    "revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+    "dimensions": 768,
+    "chunker_version": "words-v2:350:40:utf8-1800",
+    "top_k": 8,
+    "answer_generation": false
+  },
+  "source_review": {
+    "reviewer": "Project user in this conversation",
+    "date": "2026-10-23",
+    "decision": "approved_expected_passages",
+    "preparation": "User explicitly selected Approve versioned correction after reviewing the actual sentence reasoning span and the new semantic question against the previously reviewed handwriting passage. New semantic-only query is approved before any retrieval evaluation of that query. No passing result is assumed."
+  },
+  "mode": "vector",
+  "path": "neo4j_partitioned_vector_index",
+  "answer_generated": false,
+  "measured_at": "2026-10-23T15:29:49.488930+00:00",
+  "cases": [
+    {
+      "id": "exact-case",
+      "query": "RAM NARAIN v. STATE OF UTTAR PRADESH April 5, 1973",
+      "expected_chunk_ids": [
+        "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa"
+      ],
+      "passed": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "lexical_baseline": {
+        "method": "BM25 k1=1.5 b=0.75 unicode-word-tokenization",
+        "ranked": [
+          {
+            "id": "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa",
+            "score": 29.583420511339035
+          },
+          {
+            "id": "chk_203613b9889279ef5403215d3c27bb6155b3b264207d5470b524bf553ae57d95",
+            "score": 20.711378049586372
+          },
+          {
+            "id": "chk_9c9f68cb09edb4f2b3e2517df6d97e3ca9a128f92558fb75b4dafcd413c53e72",
+            "score": 20.659124675442946
+          },
+          {
+            "id": "chk_618f3f23820c4373b64033af929aff5b84835f8132004362116e0f1e4e5271e7",
+            "score": 20.3808142627988
+          },
+          {
+            "id": "chk_a69db231030bdf83561cbd38ed34ac646921ca0d19997774a2d230cd1829d669",
+            "score": 19.84477105064964
+          },
+          {
+            "id": "chk_ddcedf209f8ad3c0b608883d791e5834e20d9fa5633e0887052d2314fd48ecd4",
+            "score": 19.17559623325685
+          },
+          {
+            "id": "chk_396a8860bd75ffc5adce384ac73fa7c1122a994351b558edecefd6efd6f67366",
+            "score": 19.075445418202573
+          },
+          {
+            "id": "chk_bfa70e094d274a194961564c5a9756331140e1c4025b782a803e2ef71cacd024",
+            "score": 18.82394550216771
+          }
+        ],
+        "expected_hits": 1
+      },
+      "control_note": null,
+      "ranked": [
+        {
+          "score": 0.8090342879295349,
+          "chunk": {
+            "start_char": 0,
+            "chunk_index": 0,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 1716,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "A\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAM NARAIN v. STATE OF UTTAR PRADESH April 5, 1973 [K. K. MATHEW AND I. D. DuA, JJ,]\n\nIndian Evidence Act, 1872, s. 45-Han_dwriting Expert-Sole testi mony for conviction--Courts below comparing handwriting for theniselves and c.greeing with Expert-No illegality in conviction--Sente,nce-Lapse of tin1e-Sentence reduced to period already undergone.\n\nThe appellant was convicted of an offence under s. 384 read with the s. 511 Indian Penal Code. The conviotion was solely based <>.ti the conclusion that the two anonymous letters dema:nding ransom for kidn•pped boy had been written by him. The appellant having categori cally denied his authorship of those letters a handwriting expert was produced in support of t~ prosecution case, and believing the expert testimony the three cpurts below agreed in co!t?Victing appellant. In this Court the sole question for consideration was as to the legality and propriety of the appeUant's conviction on the uncorroborated testi It was urged by the appellant Iha: it mony of the handwriting expert. was not safe to record a findi$lg about a person's hand~riting merely on the basis of comparison because the opinion of the handwriting expert is not conclusive.\n\nthe\n\nDismissing the appeal. HELD : (i) The legal position enundiated in Fakhruddin's case the\n\ncannot be said to be inconsistent with the earlier decisions to which reference has been made therein.\n\nratio of\n\nftnyone of [916A]\n\nFakhruddin v. State of Madh,va Pradesh, A.LR. 1967 S.C. 1326, Ram Chandra v. State of U. P., A.LR. 1957 S.C. 381, Ishwari Prasad Misra v. Mohammad Isa, A.LR. 1963 S.C. 1728 and Sha.lhi Kumar Banerjee, v. Subodh Kumar Banerjee, A.I.R. 1964 S.C. 529, re ferred to.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257102,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "b1fc81122317ce91c3516bb8025038361db1d06060864fffb8306d8087c5b507",
+            "id": "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa",
+            "source_pages": "[]",
+            "key": "2600a1e21ceddc385950bd1c14d15a16da254091177812dd31e541a49d676858",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.8081490397453308,
+          "chunk": {
+            "start_char": 15487,
+            "chunk_index": 10,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_b60f6eb37777f7b54013ffab871c36a44a38646a44094282b95f113b4ff09122",
+            "file_name": "data/pdf/year=1973/english/1973_3_510_514_EN.pdf",
+            "end_char": 17121,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b44187eacb934da9ac27dc0b6dfca1bd",
+            "content": "May 1, 1970 but it was neither listed nor heard in court. The following order dated May 18, 1970 (as translated into English) was recorded by the learned Judge in Hindi :-\n\n\"Perused the applications dated 7-4-70 and 30--4-70\n\npresented on behalf of the appellant.\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF'\n\nG\n\nH\n\nRAMNARAIN v. RAJASTHAN (Dua,!.)\n\n469\n\nA\n\nn\n\nc\n\nD\n\nE\n\nF\n\nG\n\nff\n\nI have decided the case on 17-4-70 and there is therefore no question of saying anything on the merits now. As far as IreJnember Shri Chiranjilal Agarwal did mention during the course of the arguments on 7-4-70 that he wanted to present an application. Then I had told him that if the application is presented it will also be taken into consideration. Thereafter during the course of the arguments no application was presented before me.\n\nin my Chan1ber, nor anyone said anything to me on 29-4-70 about this application.\n\nI never saw the application dated 7-4-70\n\nSd/- H. D. GATTANI J.\"\n\nThe appellant's grievance before us is that non-consideratior of his application dated April 7, 1970 has resulted in grave mis carriage of justice. Developing this point it has been contended that the manner in which this part of the case was dealt with sug gests non-application of judicial mind by the High Court to the case as a whole.\n\nThe second point strongly pressed by Shri Nuruddin Ahmed is that the appellant's conviction is based solely on the testimony of Banwari Lal (P.W. 1), the approver, whose evidenee has not been corroborated in material paruculars, connecting the appellant with the alleged offence in question. The appellant's conviction is; therefore, unsustainable. P.W.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702631769,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "1319ee81b73d011f905395040b367ecb1ce8a78cb73b5122128e222c101f3936",
+            "id": "chk_a44af3cb03694f1b4f38d7d0e3abb3366ce84eb955bed97ebd2b244d62f22436",
+            "source_pages": "[]",
+            "key": "ca5f235ee73cbd2d4b7cb5a84f7fe95f7a06803ffece2a432ada096dd7ce9c5c",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7918173670768738,
+          "chunk": {
+            "start_char": 0,
+            "chunk_index": 0,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_b60f6eb37777f7b54013ffab871c36a44a38646a44094282b95f113b4ff09122",
+            "file_name": "data/pdf/year=1973/english/1973_3_510_514_EN.pdf",
+            "end_char": 1793,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b44187eacb934da9ac27dc0b6dfca1bd",
+            "content": "A\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAMNARAIN v. STATE OF RAJASTHAN January 31, 1973 [A. ALAG!RISWAMI, I. D. DUA AND C. A. VAIDIALINGAM, JJ.] Indian Penal Code-Accused convicted under s. 461 and 120B Applicalion under· s. 561·A of the Cr. P. C. not considered-Whether there was grave miscarriage of justice.\n\nThe appellant was &llesed to have eintered into a conspiracy with othero, to persuade membern of the public to part with money for purchasing residential plots. in a village, 'Khand Gawadi' and in fur therence of this conspiracy, they we're alleged to have sale proceedings PGttas, and the signatures of othe<rs on such pattas and sale proceedings. The appellant himself affixed his signatures as Sarpanch and put the seal of the village pancbayat on the forged documents. 1he trial court held the appellant guilty of the offences of conspiracy under s. 120-B and be was also found guilty of the offences under s. 467 I. P. C. On appeal the High Court confirmed the· appellant's cqirviction on both these counts, but reduced bis sentence. The appel lant's grievance before this Court was that non-consideration of his application under s. 561-A Cr. P.C. dated April 7, 1970, which was filed on May 1, 1970, but neither listed nor heard and !ms resulted in grave miscarriage of justice. On 18th May 1970, the Hon'ble High Court made an order as follows·: \"Perused application dated 7·4-1970 a,nd 30-4-1970. is, 'Ibe therefore, no question of saying anything on the merits now\". second point strongly presented by the appellant is that the appellant's conviction was based solely on the testimony of P.W. 1, the approver, \\Vhose evide:nce has not been corroborated In material part's.\n\nforged\n\nI have decided the case on 17-4-1970 and there\n\nAllowing the appeal,\n\nHELD: (i) The application under s.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702604768,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "8ee50fb4917179965b200d5b690be0f407d0dafe77a02fecc6dd56de4c2f86ec",
+            "id": "chk_e0caac9d3a7762527ba4fc0a826c40650f3bdc6977d9cb3b409d14d413939e7b",
+            "source_pages": "[]",
+            "key": "72097525a135b005e3d6ed5c4afd473c41b50e5bc64b8a59e72e6909662ee0ab",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7896983623504639,
+          "chunk": {
+            "start_char": 16785,
+            "chunk_index": 11,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 18481,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "adjourn the hearing of th.is case to have the documents before us for our examination.\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nRAM NARAIN v. U.P. STATE (Dua, J.)\n\n917\n\nThe next question is one of sentence which is always a matter of some difficulty. It generally poses a complex problem which views requires a working compromise between the coQipetin.e; based on reformative, deterrent retributive theories of punishments. Though a large number of factors fall for consider ation in determining the appropriate sentence; the broad object of punishment. of an accused found guilty in progressive civilized societies is to impress on the guilty party that commission of crimes does not pay and that it is both against his individual interest and also against the larger interest ot the society to which he belongs. The. sentence to ~ appropriate should, therefore, In the case·in hand the be neither too harsh nor too lenient. imposition of rigorous imprisonment for one yea{ upheld by the appellate and the revisional courts may not have been considered by us in the nomal course to be too harsh calling for interference under Article 136 of the Constitution. The difficulty now posed is !hat the . appellant is on bail and he has serve.!l out only one month's sentence. He was originally sentenced by the trial Court on April 17, 1967 for the offence committed as far back as 1964. The proceeding against him have lasted fq_r more than 8 years. 'l'o send He was released on bail by this Court in January, 1970. him back to jail now after the lapse of so many years for serving out the remaining period of sentence seems to us on the facts and circumstances of this case to bj:l somewhat harsh.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288015,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "1f9cab4c2e93d9e124b70e9cbfe0cd17dbdc8fe4f76edd2ff8f98624286a2505",
+            "id": "chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248",
+            "source_pages": "[]",
+            "key": "f3230b2d94a1d459e57b27941bf5f0783d55b2f16d9e40c6f9e00cdb52b6a83d",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.786794900894165,
+          "chunk": {
+            "start_char": 0,
+            "chunk_index": 0,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_57350da2ae2ba5bcd5f21fc995fbdd3c01571d246bbc8d0dbe399628b0db737b",
+            "file_name": "data/pdf/year=1973/english/1974_2_787_802_EN.pdf",
+            "end_char": 1590,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_dff100c2e071c85c09330d4ce3ceeaf15617ae245e36e5aee1ef10ff2a6ad7cb",
+            "content": "A\n\nc\n\nD\n\nE\n\nG\n\nH\n\n787\n\nRAMA SUGAR INDUSTRIES LTD. v. STATE OF ANDHRA PRADESH & ORS. December 17, 1973 [A. N. RAY, CJ., H. R. KHANNA, K. K. MAmEW, A. ALAGJRISWMU AND P. N. BHAGWATI, ]J.]\n\nArullira Pradesh Sugarcane (Regulation of Supply and Purchase) Acl, l-951- Sec. 21(3)(b)-Gof'ernment.r discretion to grant exemption from payment of Purchase Tax.\n\nAdniinistrative discretion-Wllelher Government had fettered its discrerion by ·laying' down- a policy of confining tire benefit of ·exemption to Cooperative Su;:ar ·Factories.\n\nSection 20(3)(b) of the Act lays down that the Government may, by notifi· cation, exempt from the payment of tax any factory which in the opinion of the Government. has substantially expanded to the extent of such expansion for a period not exceeding two years from the date of completion of the expansion. The Andhrll Pradesh Government took a policy decision to grant exemption from payment of purchase tax to new and expanded supr factories in- the cooperative sector only due to present financial poo1tiOn of the Government. In pursuance of the said policy, the exemption was granted for one year from the ·payment of tax to the cooperati_ve societies of arowers of sugarcane. The benefit of the exemption wiu refused to the appellant and other joint stock companies running the sugar- factories. On behalf Of the appellant it was contended that the Govern ment could not by laying down a policy to exempt OD!y cooperative sugar factories fetter their hands from examiains the merits of each individual case. It was also contended that the policy beblnd oec.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792738402826,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "282fd7bdaef8090ae2cbc92f6ad6f1ae921102586c0d8507a0ca9fb85599cdc8",
+            "id": "chk_f246828c3c45576e5f9964dccfad7115df6aef8b723e876185ddbae1d3b2b32c",
+            "source_pages": "[]",
+            "key": "04439ea08f71bfaacfa02a921ea49e3ba7cd6d929264f23022c179c8e8a4bcda",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7797164916992188,
+          "chunk": {
+            "start_char": 0,
+            "chunk_index": 0,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_0f024b5d8e42123a23525991378a2ce97e92a67e95a852262d33d0df6f9cff46",
+            "file_name": "data/pdf/year=1973/regional/1973_3_477_491_PUN.pdf",
+            "end_char": 743,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_8865df2b201cd52e25ee11648a87f05215772053adee6d2a70dd2aebf0e8afd0",
+            "content": "ਰਾਮ ਨਰਾਇਣ\n\nਬਨਾਮ\n\nਰਾਜਸਥਾਨ ਰਾਜ\n\n31 ਜਨਵਰੀ 1973\n\n[ਏ. ਅਲਾਿਗਰੀਸਵਾਮੀ, ਆਈ.ਡੀ. ਦੁਆ ਅਤੇ ਸੀ.ਏ. ਵੈਿਦਆਿਲੰ ਗਮ, ਜੇ.ਜੇ.)\n\nਭਾਰਤੀ ਦੰਡ ◌ਾਵਲੀ - ਧਾਰਾ 467 ਅਤੇ 120 ਬੀ ਤਿਹਤ ਦੋ@ੀ ਠਿਹਰਾਏ ਗਏ ਦੋ@ੀ - ਸੀਆਰਪੀਸੀ ਦੀ ਧਾਰਾ\n\n561-ਏ ਤਿਹਤ ਅਰਜ਼ੀ 'ਤੇ ਿਵਚਾਰ ਨਹE ਕੀਤਾ ਿਗਆ - ਕੀ ਿਨਆਂ ਦੀ ਗੰਭੀਰ ਉਲੰ ਘਣਾ ਹੋਈ ਸੀ।\n\nੰ ਪੈਸੇ ਅਪੀਲਕਰਤਾ 'ਤੇ ਦੋ@ ਹੈ ਿਕ ਉਸ ਨJ ਿਪੰਡ ਖੰਡ ਗਵਾੜੀ 'ਚ ਿਰਹਾਇ@ੀ ਪਲਾਟ ਖਰੀਦਣ ਲਈ ਲੋਕN ਨੂ ੰ ਅੱਗੇ ਵਧਾਉਣ ੰ ਮਨਾਉਣ ਲਈ ਹੋਰਨN ਨਾਲ ਿਮਲ ਕੇ ਸਾਿਜ਼@ ਰਚੀ ਸੀ ਅਤੇ ਇਸ ਸਾਿਜ਼@ ਨੂ ਦੇਣ ਲਈ ਲੋਕN ਨੂ ਲਈ ਉਨQ N 'ਤੇ ਜਾਅਲੀ ਿਵਕਰੀ ਕਾਰਵਾਈ, ਪੱਟੇ ਅਤੇ ਅਿਜਹੇ ਪੱਿਟਆਂ ਅਤੇ ਿਵਕਰੀ ਦੀ ਕਾਰਵਾਈ 'ਤੇ ਹੋਰਨN\n\nਦੇ ਦਸਤਖਤ ਕਰਨ ਦਾ ਦੋ@ ਲਗਾਇਆ ਿਗਆ ਸੀ। ਅਪੀਲਕਰਤਾ ਨJ ਖੁਦ ਸਰਪੰਚ ਵਜR ਆਪਣੇ ਦਸਤਖਤ\n\nਕੀਤੇ ਅਤੇ ਜਾਅਲੀ ਦਸਤਾਵੇਜ਼N 'ਤੇ ਿਪੰਡ ਦੀ ਪੰਚਾਇਤ ਦੀ ਮੋਹਰ ਲਗਾ ਿਦੱਤੀ।\n\nਹੇਠਲੀ ਅਦਾਲਤ ਨJ ਅਪੀਲਕਰਤਾ ਨੂ\n\nੰ ਧਾਰਾ 120 ਬੀ ਤਿਹਤ ਸਾਿਜ਼@ ਦੇ ਅਪਰਾਧN ਦਾ ਦੋ@ੀ ਠਿਹਰਾਇਆ\n\nਅਤੇ ਉਸ ਨੂ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792699751614,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "adff78d3bbf6479c860a32e25a8096d87017ea670f2cae6ad4d917be3fba3c47",
+            "id": "chk_0bf5d1665b5ae994f6cf135e10de5973f04414c9e244208f0dc5b02d6cb90f25",
+            "source_pages": "[]",
+            "key": "b6777e990d46969d8d971299919800aec353033b37bd84a367ed1220c8872562",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7756855487823486,
+          "chunk": {
+            "start_char": 0,
+            "chunk_index": 0,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_54077d8a737df913084ccb0b25e914c0432a167b19913d9bc9dd12d168647d8b",
+            "file_name": "data/pdf/year=1973/regional/1973_3_548_553_HIN.pdf",
+            "end_char": 856,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_c6d74e3f8d6ceea5d09c8b78c5554896d18b2e3c4dd91c83ca919304c525a190",
+            "content": "1\n\nஇந்திய உச்ச நீதிமன்றம்\n\nதே(cid:15)தி: பிப்ரவரி 27, 1973\n\nமுன்னிலை(cid:30)\n\nம(cid:31)ண்புமிகு நீதியரசர் திரு.தே&.எஸ்.ஹெ+க்தே-\n\nம(cid:31)ண்புமிகு நீதியரசர் திரு. பி.ஹெ.&ன்தேம(cid:31)&ன் ஹெரட்டி\n\nமற்றும்\n\nம(cid:31)ண்புமிகு நீதியரசர் திரு. ஹெ+ச்.ஆர். &ண்ணா(cid:31)\n\nஉரிலைமயியல் தேமல்முலைறயீடு எண். 1391/1970\n\nஇறப்புவழி இறங்குரிலைம வரி\n\n&ட்டுப்பா(cid:31)ட்-(cid:31)ளர், ஹெசன்லை?\n\n...தேமல்முலைறயீட்-(cid:31)ளர்\n\nஎதிர் -\n\nசி.ஆர்.ர(cid:31)மச்சந்திர &வுண்-ர்\n\n...எதிர்தேமல்முலைறயீட்-(cid:31)ளர்\n\nஇறங்குரிலைம வரி சட்-ம் (34/1953), பிரிவு 10 – சட்-த்தின் அள(cid:31)வுலை&\n\nஎதிர்தேமல்முலைறயீட்-ளரின் (cid:15)&ப்பா?(cid:31)ர் ஒரு நிறுவ?த்தில் ஒரு கூட்-(cid:31)ளி ஆவ(cid:31)ர்.\n\nஅந்நிறுவ?ம் விருப்பா முடிவு வ(cid:31)-லை&(cid:15)(cid:31)ரர(cid:31)& சுவ(cid:31)தீ?த்தில் இருந்(cid:15) ஹெச(cid:31)த்திற்கு அவர்\n\nஉரிலைமய(cid:31)ளர்.\n\n1953 ல் அந்(cid:15) ஹெச(cid:31)த்திலை?",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792736491639,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "f29707c4cc8948dedf91999653f2e59930acd4afacbd8e832d5665391949b679",
+            "id": "chk_fa5d71ea8700c4875c2a2890af67e5a5a09519cc51a9c30e23023c6c1fcb0811",
+            "source_pages": "[]",
+            "key": "1e892b269dd2443a323adab7466a866ed190385e2e380c2bbc28ffde5cabc02e",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7743247747421265,
+          "chunk": {
+            "start_char": 10739,
+            "chunk_index": 7,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_b60f6eb37777f7b54013ffab871c36a44a38646a44094282b95f113b4ff09122",
+            "file_name": "data/pdf/year=1973/english/1973_3_510_514_EN.pdf",
+            "end_char": 12533,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b44187eacb934da9ac27dc0b6dfca1bd",
+            "content": "appellant was accordingly sentenced to rigorous imprisonment for three years and a fine of Rs. 200 under s. 120B and to rigorous imorisonment for two years and a fine of Rs. 200 under s. 467, I.P.C. In default of payment of fine the appellant was directed to undergo six months' further rigorous im1>risonment in each case. Both the substantive sentences were directed to be concurrent. The other accused persons Bakshi Gajpat Singh, Madan Mohan and l'ladri Prasad were acquitted.\n\nOn ao!>eal the Hie:h Court affirmed the a1>1>ellant's conviction on both these counts but reduced his sentence to rigorous imprison-\n\nA\n\nB\n\nc\n\nD\n\nF\n\nG\n\nH\n\n'\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAMNARAIN v. RAJASTHAN (Dua, /,)\n\nment for 15 months and a fine of Rs. 200 on each count. The sentences of imprisonment were directed to be concurrent. In de fault of payment of fine the appellant was directed to undergo further rigorous imprisonment for three months on each count.\n\nIn this Court Shri N uruddin Ahmad, the learned counsel for the appellant at the outset pointed out that in the High Court an application had been made on behalf of the appellant on April 7, 1970 to recall Gangaram (P.W. 1) for cross-examining him and also for examining Mukat Beharilal and M. L. Parekh Deputy Superintendent of Police in charge, as court witnesses, but although arguments were addressed on that application at some length the High Court did not care to deal with the matter or even to refer to it in its judgment. In this connection our attention was drawn to Annexure D to the petition for special leave in this Court. An nexure D is said to be a copy of the application filed in the High Court by Shri V. S. Dave, Advocate for the appellant, under s. 540, Cr. P.C. The material part of Annexure D reads :\n\nmined Ganga Ram P.W.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702631767,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "a375d4cb4b115ea6646e670e90e918a73bc40a45074636050638e2f9be5cec4b",
+            "id": "chk_dca309fb55eb60e774727f4e45b285e81e187228eb3fcebe4979545de2aa9e14",
+            "source_pages": "[]",
+            "key": "ad52117745fecd17b08c779e14f478d1d528908a93a0831b94d0a646ac0d657f",
+            "dimensions": 768
+          }
+        }
+      ]
+    },
+    {
+      "id": "semantic-paraphrase",
+      "query": "When can a judge rely on a specialist's assessment of who penned a disputed document, even though that kind of assessment can be mistaken?",
+      "expected_chunk_ids": [
+        "chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711"
+      ],
+      "passed": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.14285714285714285,
+      "lexical_baseline": {
+        "method": "BM25 k1=1.5 b=0.75 unicode-word-tokenization",
+        "ranked": [
+          {
+            "id": "chk_f85c3285d4b6d9452e2a6e004e0e184a6f980cfff45354a9d9f7b281221b1751",
+            "score": 25.567505951887863
+          },
+          {
+            "id": "chk_e7ae1bbadccda5d050e9d455bc365df7c481f0002d6aa4605dbef6c3c49786b9",
+            "score": 23.339983044569422
+          },
+          {
+            "id": "chk_cb13ab9ce73260380b9e7bc36e79060b1b03719e3f8d70a5bda4efbd975147d9",
+            "score": 23.234460105428255
+          },
+          {
+            "id": "chk_bf7c3bda173e47719a68145798ee7d7cade73227c27b07860aef0935da0e257d",
+            "score": 21.302476759059815
+          },
+          {
+            "id": "chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711",
+            "score": 21.233102203721945
+          },
+          {
+            "id": "chk_e713a7cceee25457e611eacdb0996c6519fc973818aba6b4c42d01c070e93390",
+            "score": 20.576766221033246
+          },
+          {
+            "id": "chk_2545e6715f94746bf513f26ea64b34db599a240b1236af2d5bb6f99469776838",
+            "score": 20.34467512690748
+          },
+          {
+            "id": "chk_805f9fe96c2f1e99648d2068d9ed88d8c140e0a5a7ed550fc2d1d74d9556c058",
+            "score": 20.13297448411546
+          }
+        ],
+        "expected_hits": 1
+      },
+      "control_note": null,
+      "ranked": [
+        {
+          "score": 0.7200229167938232,
+          "chunk": {
+            "start_char": 7578,
+            "chunk_index": 5,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 9328,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "w!Jich after referring to four of its earlier decisions in, (i) Ram Chandra v. State of U.P.(2 ) (iii) Shashi Kumar Banerjee v. Subodh Kumar Banerjee(') (iv) State of Gujarat v. Chhotalal Patni(') this Court rejected the contention that the Court dealing with the authorship of a writing could not observe for itself the similarity and differences between the admitted and the disputed hand-writings to verify whether or proper. not Then, after refernng to ss. 45, 47 and 73 of the Indian Evidence Act, this Court observed :-\n\n)\n\n) (ii) lshwari Prasad Misra v. Mohammad lsa( 3\n\nthe conclusi.ons of the hand-writing expert were\n\n\"Both under S. 45 and S. 4 7 the evidence is an opinion, in the former by a scientific comparison and in the latter on the basis of resulting from frequent observations and experience. In either case the Court must satisfy itself by such means as are open that the opinion m~y be acted upon. One such means open to the to the Court 1s to apply its own observation\n\nfamilliari1y\n\n(f) A. I. R. 1967 S. C. 1326. (3) A. l. R. 1963 S. C. 1728.\n\n(2) A. I. R. 1957 S. C. 381. (4) A. I. R. 1964 S. C. 529.\n\n(5) [1967]\n\nI S. C. R. 249\n\n914\n\nSUPREME COURT REPORTS\n\n(1973] 3 S.C.R.\n\nadmitted or proved writings and to compare them with the disputed one, not to become an handwritin~ expert but to verify the premises of the expert in the one case an to appraise the value of the opinion in the other case. This comparison depends on an analysis of the characteristics in the admitted or proved wd'tings and the finding cf the same characteristics in large measure In this way the opinion of the in the disputed writing. deponent whether expert or other is sub.iected to scrutiny and although relevant to start with becomes probative.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257105,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "ec790fee94e1c81b9550be15e237507da57f846502ee6365578228a7319694ed",
+            "id": "chk_2f2990e47fe5a71f3d1d8927ceddd5bd59de3201605cf2b87fcc9d746cd66be5",
+            "source_pages": "[]",
+            "key": "bd39279d417cc39b5ca4c86875898ff7f1ac3734726ee8fb722892614cd27b47",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7073237895965576,
+          "chunk": {
+            "start_char": 12115,
+            "chunk_index": 8,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 13912,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "but that too is not conclusive. It has also been held that the sole evidence of a handwriting expert is not normally sufficient for recording a definite fin.ding about the writing being of a certain person or not. It follows that it is not essential that the handwriting expert must be examined in a case to prove or disprove the disputed writing. It was therefore not right for the learned Judge to consider it unsafe to rely upon the evidence of the complainant in a case like this, i.e., in a case in which no handwriting expert had been examined in support · of his statement.\"\n\nthat according to this decision it is not safe to record a finding about a person's writing merely on the basis of comparison because the opinion of a hand-whiting expert is not conclusive and his evidence is normally insufficient for recording a definite finding about the writing being of a certain person or not. Indeed the l\\l'Pellant's contention was that in Fakhruddin's case (supra) though reference was made to this decision, its ratio was not properly appreciated and the decision in Fakhruddin (supra) is not in conformity with this earlier decision. We are uable to agree wth this submission. Reference was also made by the appellant's counsel to Shashi Kumar (supra) where it is observed that the expert evidence as to' hand-writing is opinion evidence and it can rarely, if ever, take the place of subl>tantive evidence and therefore before acting on it the courts usually look for corroboration either by direct or In Shashi Kumar (supra), it may be circumstantial evidence. pointed out, this Court found all the probabilities against the expert opinion and the direct testimony of two witnesses accepted by this Court also wholly inconsistent with that opinion.\n\nIt was emphasised by the appellant's",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288013,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "91458f3390d2da901010a0eab22588640f93accee6455e9997da39e569dd6b25",
+            "id": "chk_2545e6715f94746bf513f26ea64b34db599a240b1236af2d5bb6f99469776838",
+            "source_pages": "[]",
+            "key": "38221ee0e1033b5dff0b389617a14df623578668fae16489f2b6a821b32fa7f4",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7013649940490723,
+          "chunk": {
+            "start_char": 13504,
+            "chunk_index": 9,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_99b75eef53ba9d0c951e293dc1f52aaf939855a16635fff00d5479fae4fa30cb",
+            "file_name": "data/pdf/year=1973/english/1973_3_1016_1038_EN.pdf",
+            "end_char": 15164,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b42fbe972c824b31bf99ffd9c7bf02a2",
+            "content": "the Sales.tax Officer primarily on the basis of the returns submitted by the assessee. , In the proceedings relating to those assessments, the Sales-tax Officer relied on the books of account of the assessee. While making reassessments on the basis of the information gather red from the bill book seized, the Sales-tax Officer rejected the accounts maintained by the assessee as unreliable and assessed the assessee on the basis of his 'best judgment'. The distinction between a 'best judgment' assessment and assessment based on the accounts submitted by an assessee must be borne in mind. Sometime there may be in<Docent or trivial mistakes in the accounts maintained by the assessee. There may be even certain unintended or unimportant omissions in those accounts; but yet the accounts may be accepted as genuine and substantially correct. In such cases, the assessments are made on the basis of the accounts main tained even though the assessing officer may add back to the accounts price of items that might have been omitted to be included In such a case, the assessment made is not a in the accounts. · 'best-judgment' assessment. It is primarily made on the basis of the accounts maintained by the assessee. But when the assessing\n\n1010\n\nSUPREME· COURT REPORTS\n\n[1973] 3 S,C.R.\n\nofficer comes to the conclusion that no reliance can be placed on thC' accounts maintained biY the assessee, he proceeds to assess the 18801see on the basis of his 'best-judgment', In doing so. he may take such assistance as the assessee's accounts may afford, he may also. rely on other infonnation gathered by him as well as an the surrounding circumstances of the case.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702565212,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "ca27652641c46daa70ce5b5fd51f5f9992ad5b49bc8a1729729544ac73118959",
+            "id": "chk_f85c3285d4b6d9452e2a6e004e0e184a6f980cfff45354a9d9f7b281221b1751",
+            "source_pages": "[]",
+            "key": "8ddbf3c7c1591e3cdc8394cc96343405070f82d473d0e62cea5c0cdf68882665",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6996225118637085,
+          "chunk": {
+            "start_char": 9089,
+            "chunk_index": 6,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 10829,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "wd'tings and the finding cf the same characteristics in large measure In this way the opinion of the in the disputed writing. deponent whether expert or other is sub.iected to scrutiny and although relevant to start with becomes probative. Where an expert's opinion is giv.en, the Court must see for itself and with the assistance of the expert come to its own conclusion whether it can safely be held that the 1wo writings are by the same person. This is not to say that the Court must play the role of an expert but to say that the Court may accent the fact proved only when satisfied itself on its own observation that it it has is safe to accept the opinion whether of the expert or other witness.\n\nTherefore, to satisfy ourselves whether the testimony of the handwriting expert is acceptable or not, we sent for the record and compared the disput~d writings with two such some comparable material. There were writings which were claimed as standard. One was a in register maintained at the office of the Association which there was a signature in three places in Hindi (Exhibit which purported to be that of Fakhruddin P-56). The other was a writing which Fakhruddin made to the dictation of the Police Officer in Jail (Ex.P.61). These were, of course, not admitted by Fakhruddin and the question had to be first decided which of the two or bO'!h could be said to be approved that Ex. P-56 &tandard material. Mr. Kohli urged could not be so treated as there was no proof that the In this sub signatures were made by Fakhruddin. mission Mr. Kohli is right. The evidence of Tahir Ali, P.W.14 which has been relied upon is not definite on this point. He does not say that the signatures were of Fakhruddin who was the accused in the case.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257105,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "981118502531febcb6a90756511f7f2a407a73135af9763d810a3d187ededbd2",
+            "id": "chk_8430023a66b9008b1762d9d8aad7cea95581ddb4997a18e978c23050727f94f7",
+            "source_pages": "[]",
+            "key": "a837760775e0c91451b49336b1b2026e86c5d44d7a5aa0886f8d2b03eae8bf01",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6972870826721191,
+          "chunk": {
+            "start_char": 10622,
+            "chunk_index": 7,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 12328,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "mission Mr. Kohli is right. The evidence of Tahir Ali, P.W.14 which has been relied upon is not definite on this point. He does not say that the signatures were of Fakhruddin who was the accused in the case. He only says that the persons whose signatures were made in the register, signed it and this leaves the ma~t~r at large. There is, however, proof that the other wntmg was made r/y Fakhruddin the appellant. The Sub-Inspector, P.W. 33 took the precaution of having two \"'.itnesses P.Ws. Nos. 16 and 27. Of these P.W. 16 dtC~ not the writer but the other identify the appellant as\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAM NARAIN v. U.P. STATE (Dua, J.)\n\n915\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nP.W. 27 did. Exhibit P-61, therefore, necessary comparative material.\"\n\nfurnishes the\n\nAccording to the appellant's learned counsel, the High Court has not properly understood the principle of law laid down by this Court in its various decisions. Our avtention was invited to Chhota Lal Patni's case (supra) where it is observed :-\n\n\"A Court is competent to compare th\\: disputed writing of a person with others which are admitted or proved to be his writings. It may not be . safe for a Court to record a finding about a person's writing in a certain document merely on the basis of comparison, but a Court can itself compare the writings in order to appreciate properly the other evidence produced before rt in that regard. The opinion of a handwriting expert is also relevant in view of s. 45 of the Evidence Act, but that too is not conclusive. It has also been held that the sole evidence of a handwriting expert is not normally sufficient for recording a definite fin.ding about the writing being of a certain person or not.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257106,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "1a91eeb9dbb5db7c951ac28a8b7c5528957500112c4074834d1020f88f510e8b",
+            "id": "chk_633b91b6d74750efeb51ed782a4d8ca8fe3e1b473e4ab22d62e1450343845250",
+            "source_pages": "[]",
+            "key": "2a7f6e668133eeca3c1d16ef2b37f49620fec91736c31f1f727d9116aa0518d6",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6951498985290527,
+          "chunk": {
+            "start_char": 13662,
+            "chunk_index": 9,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 15458,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "circumstantial evidence. pointed out, this Court found all the probabilities against the expert opinion and the direct testimony of two witnesses accepted by this Court also wholly inconsistent with that opinion.\n\nIt was emphasised by the appellant's\n\nlearned counsel\n\n916\n\nSUPREME COURT REPORTS\n\n[1973] 3 S.C.R.\n\nIn our view, the legal position enunciated in Fakhruddin (supra) cannot be said to be inconsistent with the ratio of any one of 'the earlier decisions to which refrence has been made therein How it is no doubt true that the opinion of a hand-writing expert given . in evidence is no less fallible than any other expert opfrtion adduced in evidence with the result that such evidence has to be received with great caution. But this opinion evidence, which is relevant, may be worthy of acceptance if there is internal or external evidence relating to the document in question supportin.~ the view expressed lzy the expert. If after comparison of the disputed and the admitted writings by the Court itself, when the Presiding Officer is familiar with that language, it is considered the conclusion safe to accept the opinion of the expert so arrived at cannot be assailed on special leave on the mere ground that comparison hand-writing is generally considered as hazardous and inclusive and that the opinion of the hand-writing expert has to be received with considerable caution. The ques•tion in each case falls for determination on the appreciation of evidence and unless some serious infirmity or gave failure of justice i; shown, this Court would normally refrain from re-appraising the matter on appeal by special leave, Tiie Triaf Court in this case agreeing with the principle of law enunciated by this Court compared the relevant documents and arrived at the conclusion that",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288014,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "272d4872d638e9559c70c72699d153213ea691b367faaafff3146ca42b72f157",
+            "id": "chk_c15a12325714f84b79b81fee1c3913609efc63b0b684f43469d20a2543a15f2f",
+            "source_pages": "[]",
+            "key": "8e658793feb2b42d575feeec2050e0f3398e56b960f3d4be1c89f5c6ac35c526",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6943429112434387,
+          "chunk": {
+            "start_char": 1528,
+            "chunk_index": 1,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 3325,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "v. State of U. P., A.LR. 1957 S.C. 381, Ishwari Prasad Misra v. Mohammad Isa, A.LR. 1963 S.C. 1728 and Sha.lhi Kumar Banerjee, v. Subodh Kumar Banerjee, A.I.R. 1964 S.C. 529, re ferred to.\n\nlt is no douPt true that the opinion of a hand-writing expert givtti in evidence is no less fallible than any other expert opin'ion adduced in evidence with the result that such evidence has to be received with great caution. But this opinion evidepce wh'ich is relevant may be worthy the of acceptance if there is internal or external evidence relating document in question supporting the view expressed by the expert. If after comparison of the disputed and the admitted writings by the Court itself when the Presiding Officer is familiar with the language, is considered safe to accept the opinion of the expert, then the condusion so arrived at cannot be assa'iled on special leave on the mere ground that comparison of handwriting is genera11y considered as hazardous and inconclusive.\n\nto\n\nit\n\n111<18\" who h~ard the •ppeal and the ,High. ~our! themselve. co01pared the writing with the help of the experts opm1on and came to the conclusion that the disputed handwriting tallied with tho specime,n handwriting of the appellant. There was, therefore no ground for interference by this Court [9!6B] with the appellant's conviction.\n\nIn the present case the Trial Magistrate, the Sessions\n\nin determining the appropriate sentence the broad object of punishment\n\n(ii) Though a large number of factors fall for\n\nconsideration\n\n9ll\n\n912\n\nSUPREME COURT REPORTS\n\n[1973] 3 S.C.ll.\n\nof an accused found guilty in progressive civilized societies is to impress on the guHty party that commission of crime does not pay and that it is interest both against his individu-al interest and also against the larger of the",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257103,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "47500fc51a7f5b35a99741990ac0f2f8d8544aaa01380f182370c43997dd0b7e",
+            "id": "chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711",
+            "source_pages": "[]",
+            "key": "148382d2ccc9db7d7c3c02835beb0259449ec5b43fe5a54fba60fba70270172a",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6909530758857727,
+          "chunk": {
+            "start_char": 17967,
+            "chunk_index": 12,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_99b75eef53ba9d0c951e293dc1f52aaf939855a16635fff00d5479fae4fa30cb",
+            "file_name": "data/pdf/year=1973/english/1973_3_1016_1038_EN.pdf",
+            "end_char": 19692,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b42fbe972c824b31bf99ffd9c7bf02a2",
+            "content": "to 31-8-1960 and 20..9-1960 to 20-1 0-1960.· The task of the a$sessing authority ~finding out the escaped turnover was by no means.easy. In estimating any escaped turnover it is inevitable that there is some guess. work. The assess ing authority while making the 'best-judgment' as8essment: no doubt should arrive at its conclusion without any bias and on rational blasis. That authority should not be vindictive or capricious. If the . estimate made b~ the assessing authority is a bona fidt estimate and is based on a rational basis, 'the fact the.t there is no good proof m support of that estimate is immaterial. Prima 'facll, the IIIMI· mg authority is the best judge of tho situation. It is his •best-j\\ldg ment' and not of any-on~ else's. The High Court could· not substi tute its 'best-judgment' for that of the assessing authority. In the· case of 'best-judgment' assessments, the courts will have to first see whether the accounts maintained by the assessee were rightly rejected as unreliable. the conclusioo Chat they were rightly rejected, the next question that arises for consideration is whether the basis adop~ed in -estimating the turn over has a reasonable nexus with the estimate made. If the basis adopted is held to be a relevant basis even though the courts may think that it is not the most appropriate basis, the estimate made by the assessing authority can.not be disturbed. the present case, there is no dispute that the assessee's accounts were rightly discarded. We do not agree wi'th the High Court that it is the duty of the assessing authority to adduce proof in support of' its estimate. The b~is adoptOO by the Sales-tax Officer was a relevant one whether it was the most appropriate or not.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702604764,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "45e00ea5cfab028f1492ccb3a76208b85047b4feaa96c514f5e72c5cc8bf6b75",
+            "id": "chk_d3533fccafcf66c0e773538393c0a9ce2be58cfd11ee993324cb84758dec08cc",
+            "source_pages": "[]",
+            "key": "a2b9b6de7a33d6fb2076da70235983e25019ab3cdc146f066b5cb7b4a6e9ab69",
+            "dimensions": 768
+          }
+        }
+      ]
+    },
+    {
+      "id": "sentence-delay-paraphrase",
+      "query": "Why did the court spare Ram Narain a return to prison after he had spent years on bail?",
+      "expected_chunk_ids": [
+        "chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248"
+      ],
+      "passed": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "lexical_baseline": {
+        "method": "BM25 k1=1.5 b=0.75 unicode-word-tokenization",
+        "ranked": [
+          {
+            "id": "chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248",
+            "score": 27.549984440019884
+          },
+          {
+            "id": "chk_a894120cd4d1cacd8cdbbf45c249a129905b461ba1d977d96af114b1ed9a2bc4",
+            "score": 24.186365611097457
+          },
+          {
+            "id": "chk_7ced8891f3900fb3c7d352a4f230b1c60d0e8f082a28f3f6e4f2d97060f5eef1",
+            "score": 23.678118419784028
+          },
+          {
+            "id": "chk_15e1c1c91ae7c914320cae5f88976125edd6ae7a276c507a5adf07eb1c26df8b",
+            "score": 23.20936932083427
+          },
+          {
+            "id": "chk_06001f449e27298b424ae0de7ecb2708a51bed0f67a58bad32f6276ab9f38e6e",
+            "score": 23.10256843830182
+          },
+          {
+            "id": "chk_7ca9279e44c8eb5b5170589fb8fc9599d3e2c0300d7aca28e1824c159af8487f",
+            "score": 23.054750417419353
+          },
+          {
+            "id": "chk_fc06dc63ef3a07b8b26c46f3b2ffd30ea060deee6bb01263ccdcac413714a64a",
+            "score": 22.542174670180458
+          },
+          {
+            "id": "chk_55e55d9721fd69fd0162a84928b60f52496d074d5e5dde633d01f57766a68a06",
+            "score": 22.366848534619947
+          }
+        ],
+        "expected_hits": 1
+      },
+      "control_note": null,
+      "ranked": [
+        {
+          "score": 0.7890497446060181,
+          "chunk": {
+            "start_char": 16785,
+            "chunk_index": 11,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 18481,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "adjourn the hearing of th.is case to have the documents before us for our examination.\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nRAM NARAIN v. U.P. STATE (Dua, J.)\n\n917\n\nThe next question is one of sentence which is always a matter of some difficulty. It generally poses a complex problem which views requires a working compromise between the coQipetin.e; based on reformative, deterrent retributive theories of punishments. Though a large number of factors fall for consider ation in determining the appropriate sentence; the broad object of punishment. of an accused found guilty in progressive civilized societies is to impress on the guilty party that commission of crimes does not pay and that it is both against his individual interest and also against the larger interest ot the society to which he belongs. The. sentence to ~ appropriate should, therefore, In the case·in hand the be neither too harsh nor too lenient. imposition of rigorous imprisonment for one yea{ upheld by the appellate and the revisional courts may not have been considered by us in the nomal course to be too harsh calling for interference under Article 136 of the Constitution. The difficulty now posed is !hat the . appellant is on bail and he has serve.!l out only one month's sentence. He was originally sentenced by the trial Court on April 17, 1967 for the offence committed as far back as 1964. The proceeding against him have lasted fq_r more than 8 years. 'l'o send He was released on bail by this Court in January, 1970. him back to jail now after the lapse of so many years for serving out the remaining period of sentence seems to us on the facts and circumstances of this case to bj:l somewhat harsh.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288015,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "1f9cab4c2e93d9e124b70e9cbfe0cd17dbdc8fe4f76edd2ff8f98624286a2505",
+            "id": "chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248",
+            "source_pages": "[]",
+            "key": "f3230b2d94a1d459e57b27941bf5f0783d55b2f16d9e40c6f9e00cdb52b6a83d",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7764712572097778,
+          "chunk": {
+            "start_char": 10739,
+            "chunk_index": 7,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_b60f6eb37777f7b54013ffab871c36a44a38646a44094282b95f113b4ff09122",
+            "file_name": "data/pdf/year=1973/english/1973_3_510_514_EN.pdf",
+            "end_char": 12533,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_b44187eacb934da9ac27dc0b6dfca1bd",
+            "content": "appellant was accordingly sentenced to rigorous imprisonment for three years and a fine of Rs. 200 under s. 120B and to rigorous imorisonment for two years and a fine of Rs. 200 under s. 467, I.P.C. In default of payment of fine the appellant was directed to undergo six months' further rigorous im1>risonment in each case. Both the substantive sentences were directed to be concurrent. The other accused persons Bakshi Gajpat Singh, Madan Mohan and l'ladri Prasad were acquitted.\n\nOn ao!>eal the Hie:h Court affirmed the a1>1>ellant's conviction on both these counts but reduced his sentence to rigorous imprison-\n\nA\n\nB\n\nc\n\nD\n\nF\n\nG\n\nH\n\n'\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAMNARAIN v. RAJASTHAN (Dua, /,)\n\nment for 15 months and a fine of Rs. 200 on each count. The sentences of imprisonment were directed to be concurrent. In de fault of payment of fine the appellant was directed to undergo further rigorous imprisonment for three months on each count.\n\nIn this Court Shri N uruddin Ahmad, the learned counsel for the appellant at the outset pointed out that in the High Court an application had been made on behalf of the appellant on April 7, 1970 to recall Gangaram (P.W. 1) for cross-examining him and also for examining Mukat Beharilal and M. L. Parekh Deputy Superintendent of Police in charge, as court witnesses, but although arguments were addressed on that application at some length the High Court did not care to deal with the matter or even to refer to it in its judgment. In this connection our attention was drawn to Annexure D to the petition for special leave in this Court. An nexure D is said to be a copy of the application filed in the High Court by Shri V. S. Dave, Advocate for the appellant, under s. 540, Cr. P.C. The material part of Annexure D reads :\n\nmined Ganga Ram P.W.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792702631767,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "a375d4cb4b115ea6646e670e90e918a73bc40a45074636050638e2f9be5cec4b",
+            "id": "chk_dca309fb55eb60e774727f4e45b285e81e187228eb3fcebe4979545de2aa9e14",
+            "source_pages": "[]",
+            "key": "ad52117745fecd17b08c779e14f478d1d528908a93a0831b94d0a646ac0d657f",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7388919591903687,
+          "chunk": {
+            "start_char": 6187,
+            "chunk_index": 4,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 7755,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "had sent the two anonymous letters (Exts. Ka-1 and K-2) demanding ransom. All the three persons were prosecuted under ss. 363, 468 and 384/511, I.P.C. The trial court convicted Ganga Bux Singh and Chandrabusban Singh ·under s. 368, I.P.C.' and Ram Narain appellant under ss. 384/511, I.P.C. On appeals by the convicted persons, the learned II Temporary Sessions Judge, Kanpur, came to the conclusion that the offence under s. 368, I.P.C. had not ~en established beyond reasonable doubt with the result that Ganga Bux Singh and Chandrabushan were acquitted. The appellant, Ram Narain's conviction for an offence · under ss. 384/511, I.P.C. was, however, upheld. This conviction was solely based on the conclusion that the two anonymous letters had been written by him. The appellant having categorically denied bis authorship of those letters, Shri R. A. Gregory, a hand-writing expert was produced in support of the presecution case. Believing his testimony that the appallant was the writer of those two letters, all the three courts below have agreed in convicting the appellant.\n\nThe short question raised before us relates to the legality and .properiety of the appellant's conviction on the uncorroborated testimony of the hand-writting expert. The High Court relied in support of the appellant's conviction on the decision of this Court in Fakhruddin v. State of Madhya Pradesh ( 1 in w!Jich after referring to four of its earlier decisions in, (i) Ram Chandra v. State of U.P.(2 ) (iii) Shashi Kumar Banerjee v. Subodh Kumar Banerjee(') (iv) State of Gujarat v.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257104,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "f01ffeb7c5eb1e656c5266a0371e50821693b3f4604c9483b6df31f6941950b2",
+            "id": "chk_a69db231030bdf83561cbd38ed34ac646921ca0d19997774a2d230cd1829d669",
+            "source_pages": "[]",
+            "key": "4fbffbc035900212c553c6192ab114e054e27ef848b830d601b533dfd0f5e1ed",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7361748814582825,
+          "chunk": {
+            "start_char": 30371,
+            "chunk_index": 20,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_35f51ed71f81d68bc85d543253ebec2a8d0df916a0b739cb5bad0e7bc6b5542d",
+            "file_name": "data/pdf/year=1973/english/1974_1_621_635_EN.pdf",
+            "end_char": 31656,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_bfbbd2093e320e9872665a67d331a60ceb9cc2b3e118891b842fd599ffa70e25",
+            "content": "of the High Court has reduced the sentence of one year's imprisonment awarded by the Special Judge to one of six months on the ground that the appellant paid the bribe only in order to avoid harassment. Even if we actept this conclusion we do not consider that the imprisonment should be reduced below six months there was no to which he reduced it. But we are of opinion that harassment as the facts set out earlier would amply bear out. Nor can we agree with· the argument advanced on behalf of the appellant that Rao's evidence to the effect that the appellant asked him whether he \"\".ould be ready to aocept money after the consigrunent was· cleared shows that he had rec'Onsidered his decision of bribing Rao and wanted to turn over a new leaf. What appellant was trying to do was really to try to have the cake and eat it too. We do not consider that this is a case like the one in Ramjanam Singh v. Bihar State(') of a pers•Jn who had decided finallv and firmly not to bribe and where it could be said that he was deliberately tempted beyond the powers of his frail endurance and provoked into breaking the law by those who were the guardians and keepers of the law.\n\nThe appeal is dismissed.\n\nA,\n\nc\n\nD\n\nE\n\nF\n\nG\n\nP.B.R.\n\n~~~~~~~~\n\n(I) A. I. R. 1956 S. C. 643.\n\nAppeal dismissed:",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792735922532,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "aab0fb06373371f37fb4212385d555bc3c45ee028e24ed2a6432daa85c1d5ad2",
+            "id": "chk_86e49ef54c9cd7fc07566bb00620f17384bea1abe497cc60fb9e0bf32af5097a",
+            "source_pages": "[]",
+            "key": "3f9d5c91dc6bfda3b5b75c5114675721c4217d8bb52ea6f2fd2e7c1f402cfcb7",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.735661506652832,
+          "chunk": {
+            "start_char": 15236,
+            "chunk_index": 10,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 16954,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "refrain from re-appraising the matter on appeal by special leave, Tiie Triaf Court in this case agreeing with the principle of law enunciated by this Court compared the relevant documents and arrived at the conclusion that they have all been written in one hand. The learned II Temporary Sessions Judge on appeal, after referring to the compari son of the disputed and specimen writings by the Trial Magistrate. himself compared those writings with the help of the expert's opinion and his report and came to a definite conclusion \"that the In disputed hand-writings tally with the specimen hand-writing\". the High Court also the learned Single Judge, a.f'ter referring to the decision in FakhruddJn (supra), observed as follows :-\n\nthen\n\n\"I have myself made a comparison of the specimen writing of the applicant with the writing contained in the two letters. I have not the least doubt that the writing in the post-card and he writing in the admitted writing of the applicant are the same. Thus. I have no reason to differ from the finding recorded by the courts below.\" No serious attempt was made on behalf of ihe appellant to find fault with the approach of the three courts below. There is. therefore, no !!fOUnd made out for interference by this Court with the appellant's conviction. Unfortunately, the record i; not before us otherwise we would have also tried to examine for our selves the disputed and the soecimen hand-writings. How ever, in view of the concurrent decisions of the three courts beiow, we did not consider it necessary to adjourn the hearing of th.is case to have the documents before us for our examination.\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nRAM NARAIN v. U.P. STATE (Dua, J.)\n\n917",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288014,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "b28fe0b029ff862f022b57f2c9c71d59c7daa399490b0d89e98dd867864da298",
+            "id": "chk_780db355d673b158531190a2cdf5c79fdfc78b491d06888ca9c5ac8c889df90d",
+            "source_pages": "[]",
+            "key": "117b0183bc5ef68ac43f0db1a0b83991c852ee50e7bcd86c3619af85307724ca",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.729972779750824,
+          "chunk": {
+            "start_char": 19901,
+            "chunk_index": 13,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_598c47c5b205a68e6d3e986e8ad272a0eaa3df65c25d44e89cc79de339783de0",
+            "file_name": "data/pdf/year=1973/english/1974_1_247_252_EN.pdf",
+            "end_char": 21691,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_6a9ab9e690dfc1e631559628a38b9e9df940f8e19c08d332cb37103330b6c81f",
+            "content": "to assign special reasons which m.ist be recorded in writing. In considering the special teasons the judicial discretion of the Court is as wide as the demand of the cause of substan tial justice. Now the question of sentence is always a difficult question, requiring as it does, proper adjustment and balancing of various consi- d~rations which weigh with a judicial mind in determining its app1<}priate quantum in a given case. The main purpose of the sentence bw1dly Staled is that the accused must realise that he has committed an act whi.::h is not only harmful to the 'society of which he forms an integral part but is also harmful to his own future, both as an individual and as a member of the so:iety. Punishment is designed to protect society by deterring potential offenders as a!so by preventing the guilty party · from repeating the offence; it is also designed to reform the offender and re-claim him as a law abiding citizen for the good of the society as a whole. Reformatory, deterrent and punitive aspects of punish ment thus play their due part in judicial thinking while determining In modern civilized rocieties, however, this question. reformatory aspect· is being given somewhat greater importance. Too lenient as well as too harsh sentences both lose their efficaciousness. One docs not ··deter and the other may frustrate thereby making the offender a hardened criminal. In the present case, after weighing the considera tions already noticed by us and the fact that to send the appellant back to jail now after 7 years of the agnoy and harassment of these E proceedings when he is also going to lose his job and to- earn a living for himself and for his family members and for those dependent on him, we feel that it would meet the ends of justice if we reduce the",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792697565832,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "b7cb587abb528e63309ffb642e948cda2ccda85619acb4e86aa0a239b3379221",
+            "id": "chk_52d2dd2baed5fc26887761ded4fb83ea3f9eaf739938ff35fdb39f1cd95402bc",
+            "source_pages": "[]",
+            "key": "aa93c4c3be2545de68efcae775f9e4d9da365d058bce45c9fe3c622adde395a2",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7293022871017456,
+          "chunk": {
+            "start_char": 18284,
+            "chunk_index": 12,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 19068,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "January, 1970. him back to jail now after the lapse of so many years for serving out the remaining period of sentence seems to us on the facts and circumstances of this case to bj:l somewhat harsh. The offence of attempted exortion undoubtedly reflects to some extent anti-social deparvity of mind but the attempt did not succeed. We, therefore, consider that on the facts and circumstances of this case the ends of substantial justice would be amply met ii we now reduce the sentence of imprisonment to that already undergone but also impose fine of Rs. 700/- and in default of payment of fine direct that he undergoes rigorous imprisonment for a period of three months. We order accordingly. The appeal is thus accepted in part as just stated.\n\nand\n\nG.C.\n\nAppeal allowed in part.\n\n\\",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288015,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "70f2713d23d46419aefe2e0d17d03a8290627b82daa784077013e5403561d3c4",
+            "id": "chk_b1adc9ec21a022ee99e9a0cd3db10e33daf568beaa37b6a35b74b9323d6c6d7d",
+            "source_pages": "[]",
+            "key": "264574a3ee3f112be636e4d9a74fce9f67ceb171e423114d87456ad5e36a3a97",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.7229226231575012,
+          "chunk": {
+            "start_char": 4646,
+            "chunk_index": 3,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 6413,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "about 5 years old, was found missing from the house of the appellant's relation Shri Gajendra Natth (P.W. 19), an Excise residing in Mohalla Ashok Nagar, Kanpur within the jurisdiction of police station Sisamau the following day. A report was lodged at the also police station Sisamau about this fact and a notice was published in the newspapers and hand-bills were distributed announcing a reward of Rs. 501/- for anyone who furnished the clue of 1he missing child's whereabouts. ·A post-card (Ext. Ka-1) bearing post office seals dated 21-8-1964 and later an inland letter (Ext. Ka-2) bearing the date October 21, 1964 were received by Gajendra Nath demanding, letter a ransom of Rs. 1,000/-, and in the second a ransom of Rs. 5,000/- for the local return of the boy. I.T.I., Kanpur, Yashpal Singh by name, reading the announcement of the reward.. made attempts to trace the where abouts of the missing child. Having found a clue, he gave the necessary information to the father of the child regarding his whereabouts. Thereupon, on January 11, 1965 the child was recovered by Rahasbehari, the grand-father of the child, from\n\nInspector,\n\nin the first\n\nIn December, 1964, a trainee of. the\n\nafter\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAM NARAIN v. U.P, STATE (Dua,/,)\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nthe house of Ganga Bux Singh and Chandrabushan Singh in village Pandeypur District Kanpur. The investigation of the case revealed that the appellant, Ram Narain, was also responsible for kidnapping and wrongfully confining the said child and that it was be who had sent the two anonymous letters (Exts. Ka-1 and K-2) demanding ransom. All the three persons were prosecuted under ss. 363, 468 and 384/511, I.P.C. The trial court convicted Ganga Bux Singh and Chandrabusban Singh ·under s.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257104,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "e5d03a6f6dc398bef4ac028d856019c8cbd5d5ff4892b8aed890fce27907f76e",
+            "id": "chk_a894120cd4d1cacd8cdbbf45c249a129905b461ba1d977d96af114b1ed9a2bc4",
+            "source_pages": "[]",
+            "key": "62359263d0a0ac15cf2403e7a550c91c9d5a0bd25f8839a07adaf5012b38f816",
+            "dimensions": 768
+          }
+        }
+      ]
+    },
+    {
+      "id": "semantic-keyword-miss",
+      "query": "When is it acceptable to identify a note's writer from a specialist's analysis, and what independent checks are needed?",
+      "expected_chunk_ids": [
+        "chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711"
+      ],
+      "passed": false,
+      "recall_at_k": 0.0,
+      "reciprocal_rank": null,
+      "lexical_baseline": {
+        "method": "BM25 k1=1.5 b=0.75 unicode-word-tokenization",
+        "ranked": [
+          {
+            "id": "chk_d396b26a0c4f71afd36b94ff9291d71707ce0b0ff0087c5bd4a9e7155c9589c3",
+            "score": 23.04046525997934
+          },
+          {
+            "id": "chk_9b83a453dd5e030c30a61f008b48590788a1461abf1e58690704e065759fbc71",
+            "score": 21.63355284922894
+          },
+          {
+            "id": "chk_1ba8a003b8a090efe92cb4965ba12e70877fdfadf19db15824240eb866d9c6ed",
+            "score": 21.198203881304465
+          },
+          {
+            "id": "chk_d54da35662d8f6ca99442ab56735df21d44f4406c581d87e3f0c435e7b33a1a9",
+            "score": 19.565109327218135
+          },
+          {
+            "id": "chk_917023cd06a63d79adb10d7d26b3bd008d81cd5933a2caebe25132f2c3f62a8c",
+            "score": 19.517891564768057
+          },
+          {
+            "id": "chk_858880bc3fa5dfec934fc9803167246319f3256f05cbf1d85a9c0eb396a03fb1",
+            "score": 19.49153412388128
+          },
+          {
+            "id": "chk_a3004ded3351e8a9e9de760928ec49e1a8729e3c00e205d492801b63a8d45cd8",
+            "score": 18.922603595227365
+          },
+          {
+            "id": "chk_ec975402b3fd25ac7e734e965ce066e52200c8267674a7edbb45d692a9c01ddf",
+            "score": 18.80940845349529
+          }
+        ],
+        "expected_hits": 0
+      },
+      "control_note": null,
+      "ranked": [
+        {
+          "score": 0.6739873290061951,
+          "chunk": {
+            "start_char": 7578,
+            "chunk_index": 5,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 9328,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "w!Jich after referring to four of its earlier decisions in, (i) Ram Chandra v. State of U.P.(2 ) (iii) Shashi Kumar Banerjee v. Subodh Kumar Banerjee(') (iv) State of Gujarat v. Chhotalal Patni(') this Court rejected the contention that the Court dealing with the authorship of a writing could not observe for itself the similarity and differences between the admitted and the disputed hand-writings to verify whether or proper. not Then, after refernng to ss. 45, 47 and 73 of the Indian Evidence Act, this Court observed :-\n\n)\n\n) (ii) lshwari Prasad Misra v. Mohammad lsa( 3\n\nthe conclusi.ons of the hand-writing expert were\n\n\"Both under S. 45 and S. 4 7 the evidence is an opinion, in the former by a scientific comparison and in the latter on the basis of resulting from frequent observations and experience. In either case the Court must satisfy itself by such means as are open that the opinion m~y be acted upon. One such means open to the to the Court 1s to apply its own observation\n\nfamilliari1y\n\n(f) A. I. R. 1967 S. C. 1326. (3) A. l. R. 1963 S. C. 1728.\n\n(2) A. I. R. 1957 S. C. 381. (4) A. I. R. 1964 S. C. 529.\n\n(5) [1967]\n\nI S. C. R. 249\n\n914\n\nSUPREME COURT REPORTS\n\n(1973] 3 S.C.R.\n\nadmitted or proved writings and to compare them with the disputed one, not to become an handwritin~ expert but to verify the premises of the expert in the one case an to appraise the value of the opinion in the other case. This comparison depends on an analysis of the characteristics in the admitted or proved wd'tings and the finding cf the same characteristics in large measure In this way the opinion of the in the disputed writing. deponent whether expert or other is sub.iected to scrutiny and although relevant to start with becomes probative.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257105,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "ec790fee94e1c81b9550be15e237507da57f846502ee6365578228a7319694ed",
+            "id": "chk_2f2990e47fe5a71f3d1d8927ceddd5bd59de3201605cf2b87fcc9d746cd66be5",
+            "source_pages": "[]",
+            "key": "bd39279d417cc39b5ca4c86875898ff7f1ac3734726ee8fb722892614cd27b47",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6720249652862549,
+          "chunk": {
+            "start_char": 10622,
+            "chunk_index": 7,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 12328,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "mission Mr. Kohli is right. The evidence of Tahir Ali, P.W.14 which has been relied upon is not definite on this point. He does not say that the signatures were of Fakhruddin who was the accused in the case. He only says that the persons whose signatures were made in the register, signed it and this leaves the ma~t~r at large. There is, however, proof that the other wntmg was made r/y Fakhruddin the appellant. The Sub-Inspector, P.W. 33 took the precaution of having two \"'.itnesses P.Ws. Nos. 16 and 27. Of these P.W. 16 dtC~ not the writer but the other identify the appellant as\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAM NARAIN v. U.P. STATE (Dua, J.)\n\n915\n\nA\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nP.W. 27 did. Exhibit P-61, therefore, necessary comparative material.\"\n\nfurnishes the\n\nAccording to the appellant's learned counsel, the High Court has not properly understood the principle of law laid down by this Court in its various decisions. Our avtention was invited to Chhota Lal Patni's case (supra) where it is observed :-\n\n\"A Court is competent to compare th\\: disputed writing of a person with others which are admitted or proved to be his writings. It may not be . safe for a Court to record a finding about a person's writing in a certain document merely on the basis of comparison, but a Court can itself compare the writings in order to appreciate properly the other evidence produced before rt in that regard. The opinion of a handwriting expert is also relevant in view of s. 45 of the Evidence Act, but that too is not conclusive. It has also been held that the sole evidence of a handwriting expert is not normally sufficient for recording a definite fin.ding about the writing being of a certain person or not.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257106,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "1a91eeb9dbb5db7c951ac28a8b7c5528957500112c4074834d1020f88f510e8b",
+            "id": "chk_633b91b6d74750efeb51ed782a4d8ca8fe3e1b473e4ab22d62e1450343845250",
+            "source_pages": "[]",
+            "key": "2a7f6e668133eeca3c1d16ef2b37f49620fec91736c31f1f727d9116aa0518d6",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6707383990287781,
+          "chunk": {
+            "start_char": 9089,
+            "chunk_index": 6,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 10829,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "wd'tings and the finding cf the same characteristics in large measure In this way the opinion of the in the disputed writing. deponent whether expert or other is sub.iected to scrutiny and although relevant to start with becomes probative. Where an expert's opinion is giv.en, the Court must see for itself and with the assistance of the expert come to its own conclusion whether it can safely be held that the 1wo writings are by the same person. This is not to say that the Court must play the role of an expert but to say that the Court may accent the fact proved only when satisfied itself on its own observation that it it has is safe to accept the opinion whether of the expert or other witness.\n\nTherefore, to satisfy ourselves whether the testimony of the handwriting expert is acceptable or not, we sent for the record and compared the disput~d writings with two such some comparable material. There were writings which were claimed as standard. One was a in register maintained at the office of the Association which there was a signature in three places in Hindi (Exhibit which purported to be that of Fakhruddin P-56). The other was a writing which Fakhruddin made to the dictation of the Police Officer in Jail (Ex.P.61). These were, of course, not admitted by Fakhruddin and the question had to be first decided which of the two or bO'!h could be said to be approved that Ex. P-56 &tandard material. Mr. Kohli urged could not be so treated as there was no proof that the In this sub signatures were made by Fakhruddin. mission Mr. Kohli is right. The evidence of Tahir Ali, P.W.14 which has been relied upon is not definite on this point. He does not say that the signatures were of Fakhruddin who was the accused in the case.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622257105,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "981118502531febcb6a90756511f7f2a407a73135af9763d810a3d187ededbd2",
+            "id": "chk_8430023a66b9008b1762d9d8aad7cea95581ddb4997a18e978c23050727f94f7",
+            "source_pages": "[]",
+            "key": "a837760775e0c91451b49336b1b2026e86c5d44d7a5aa0886f8d2b03eae8bf01",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.667617678642273,
+          "chunk": {
+            "start_char": 12115,
+            "chunk_index": 8,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+            "file_name": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+            "end_char": 13912,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+            "content": "but that too is not conclusive. It has also been held that the sole evidence of a handwriting expert is not normally sufficient for recording a definite fin.ding about the writing being of a certain person or not. It follows that it is not essential that the handwriting expert must be examined in a case to prove or disprove the disputed writing. It was therefore not right for the learned Judge to consider it unsafe to rely upon the evidence of the complainant in a case like this, i.e., in a case in which no handwriting expert had been examined in support · of his statement.\"\n\nthat according to this decision it is not safe to record a finding about a person's writing merely on the basis of comparison because the opinion of a hand-whiting expert is not conclusive and his evidence is normally insufficient for recording a definite finding about the writing being of a certain person or not. Indeed the l\\l'Pellant's contention was that in Fakhruddin's case (supra) though reference was made to this decision, its ratio was not properly appreciated and the decision in Fakhruddin (supra) is not in conformity with this earlier decision. We are uable to agree wth this submission. Reference was also made by the appellant's counsel to Shashi Kumar (supra) where it is observed that the expert evidence as to' hand-writing is opinion evidence and it can rarely, if ever, take the place of subl>tantive evidence and therefore before acting on it the courts usually look for corroboration either by direct or In Shashi Kumar (supra), it may be circumstantial evidence. pointed out, this Court found all the probabilities against the expert opinion and the direct testimony of two witnesses accepted by this Court also wholly inconsistent with that opinion.\n\nIt was emphasised by the appellant's",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622288013,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "91458f3390d2da901010a0eab22588640f93accee6455e9997da39e569dd6b25",
+            "id": "chk_2545e6715f94746bf513f26ea64b34db599a240b1236af2d5bb6f99469776838",
+            "source_pages": "[]",
+            "key": "38221ee0e1033b5dff0b389617a14df623578668fae16489f2b6a821b32fa7f4",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6664949059486389,
+          "chunk": {
+            "start_char": 26038,
+            "chunk_index": 42,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_e168f49b2b7e269018a684e99b29b1606dae1072777e0cb1acebfd756320878e",
+            "file_name": "data/pdf/year=1973/regional/1973_3_587_623_MAL.pdf",
+            "end_char": 26731,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_c188df3dda5c9160ec64dd2c3d8b18374090df18cf967eee653b3d1ea660de2e",
+            "content": "ਦੀਆਂ ਅਪੀਲਾਂ ਨਾਲ ਨਿਜੱਠਦੇ ਸਮx ਅਪਣਾਈ ਜਾਣ ਵਾਲੀ ਪਹੁ\n\nੰਚ ਦੀ ਬੁਿਨਆਦੀ ਲਾਈਨ ਨੂ\n\nੰ ਦਰਸਾWਦਾ\n\nਹੈ। ਇਹ ਿਦ?ਸ਼ਟੀਕੋਣ ਿਸ਼ਓ ਸਵਰੂਪ (ਉeਪਰ ਿਦੱਤੇ ਗਏ) ਿਵੱਚ ਿਪ?ਵੀ ਕjਸਲ ਦੇ ਬੁਿਨਆਦੀ ਫੈਸਲੇ ਤS ਲੈ ਕੇ ਹੁਣ\n\nਤੱਕ ਿਨਰੰਤਰ ਅਤੇ ਇਕਸਾਰਤਾ ਨਾਲ ਿਲਆ ਿਗਆ ਹੈ, ਿਜਸ ਿਵੱਚ ਹਾਈ ਕੋਰਟਾਂ ਦੁਆਰਾ ਅਪਣਾਏ ਜਾਣ ਵਾਲੇ\n\nਿਦ?ਸ਼ਟੀਕੋਣ ਦੇ ਿਵਆਪਕ ਿਦਸ਼ਾ ਿਨਰਦੇਸ਼ ਿਦੱਤੇ ਗਏ ਹਨ। ਹਾਲਾਂਿਕ, ਅਸM ਇਹ ਕਿਹਣਾ ਚਾਹੁ\n\nੰਦੇ ਹਾਂ ਿਕ ਇਹ\n\nਅਦਾਲਤ ਬਰੀ ਕਰਨ ਦੇ ਆਦੇਸ਼ਾਂ ਨੂ\n\nੰ ਰੱਦ ਕਰਨ ਤS ਬਾਅਦ ਸਜ਼ਾ ਦੇ ਫੈਸਿਲਆਂ ਤS ਅਪੀਲ 'ਤੇ ਿਸਰਫ ਇਹ ਦੇਖਣ\n\nਲਈ ਸਬੂਤ ਦੀ ਜਾਂਚ ਕਰੇਗੀ ਿਕ ਹਾਈ ਕੋਰਟ ਨੇ ਪ?ਸ਼ਨ ਪੱਖ ਨਾਲ ਸੰਪਰਕ ਕੀਤਾ ਹੈ ਅਤੇ ਿਸਧਾਂਤਾਂ ਨੂ\n\nੰ ਸਹੀ ਢੰਗ\n\nਨਾਲ ਲਾਗੂ ਕੀਤਾ ਹੈ। ਇੱਕ ਵਾਰ ਜਦS ਇਹ ਪਾਇਆ ਜਾਂਦਾ ਹੈ ਿਕ ਹਾਈ ਕੋਰਟ ਨੇ ਬਰੀ ਕੀਤੇ ਜਾਣ ਦੇ ਿਵਰੁ\n\nੱਧ\n\nਅਪੀਲ ਨਾਲ ਨਿਜੱਠਣ ਿਵੱਚ ਸਹੀ ਿਸਧਾਂਤਾਂ ਨੂ\n\nੰ ਲਾਗੂ ਕੀਤਾ ਹੈ ਤਾਂ ਇਹ ਅਦਾਲਤ ਆਮ ਤੌਰ 'ਤੇ ਸਬੂਤ ਿਵੱਚ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792736226836,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "3ded0a79085b05b5c602d9744c4b5a1b2dd42e6891337332b198847d652bc819",
+            "id": "chk_346bf71450eae0edc3dd1842e39c3c1efecf7f9b78c5bc76a156f82a2ecb5973",
+            "source_pages": "[]",
+            "key": "80c3745c4b53ea94e0ce11004ffd88a72369a3db71795e241d59a10e295daf62",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6618764996528625,
+          "chunk": {
+            "start_char": 14435,
+            "chunk_index": 23,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_0f024b5d8e42123a23525991378a2ce97e92a67e95a852262d33d0df6f9cff46",
+            "file_name": "data/pdf/year=1973/regional/1973_3_477_491_PUN.pdf",
+            "end_char": 15010,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_8865df2b201cd52e25ee11648a87f05215772053adee6d2a70dd2aebf0e8afd0",
+            "content": "ਸਬੂਤN ਦੇ ਆਧਾਰ 'ਤੇ ਅਪੀਲਕਰਤਾ ਨੂ\n\nਠਿਹਰਾਉਣਾ ਿਨਆਂ ਦਾ ਮਜ਼ਾਕ ਹੋਵੇਗਾ। ਸਾਨੂ\n\nਸੰਬੰਿਧਤ ਿਰਕਾਰਡ ਰਾਹE ਿਲਜਾਇਆ ਿਗਆ ਸੀ।\n\nੰ ਕੇਸ ਦੇ ਇਸ ਿਹੱਸੇ 'ਤੇ ਦੋਵN ਿਧਰN ਦੇ ਵਕੀਲN ਦੁਆਰਾ ਸਬੂਤN ਦੇ\n\nਹੁਣ ਿਜੱਥR ਤੱਕ ਪਿਹਲੀ ਿ@ਕਾਇਤ ਦਾ ਸਵਾਲ ਹੈ, ਅਪੀਲਕਰਤਾ ਦੀ ਦਲੀਲ ਨੂ ਕੀਤਾ ਜਾ ਸਕਦਾ ਿਕ[ਿਕ ਸਾਨੂ\n\nੰ ਸੰਖੇਪ ਰੂਪ ਿਵੱਚ ਰੱਦ ਨਹE ੰ ਲੱ ਗਦਾ ਹੈ ਿਕ ਇਸ ਮਾਮਲੇ ਦੀ ਅਗਲੇਰੀ ਜNਚ ਦੀ ਮੰਗ ਕਰਨ ਵਾਲੀ ਪਿਹਲੀ\n\nਨਜ਼ਰ ਿਵੱਚ ਸਮੱਗਰੀ ਹੈ। ਪਰ ਿਜਵ` ਿਕ ਸਾਡੇ ਿਵਚਾਰ ਿਵੱਚ ਭਾਵ` ਪਿਹਲੀ ਦਲੀਲ ਪSਬਲ ਹੋਣੀ ਸੀ, ਅਪੀਲਕਰਤਾ ਵੱਲR ਬੇਨਤੀ ਕੀਤੇ ਅਨੁਸਾਰ ਵਾਧੂ ਸਬੂਤ ਦਰਜ ਕਰਨ ਦੇ ਸਵਾਲ 'ਤੇ ਿਵਚਾਰ ਕਰਨਾ ਪਵੇਗਾ, ੰ ਦੂਜੇ ਿਬੰਦੂ 'ਤੇ ਇਜਾਜ਼ਤ ਿਦੱਤੀ ਜਾਣੀ ਚਾਹੀਦੀ ਹੈ, ਇਸ ਲਈ ਅਸE ਅਤੇ ਿਕ[ਿਕ, ਸਾਡੀ ਰਾਏ ਿਵੱਚ, ਅਪੀਲ ਨੂ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792699790795,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "73b015091a398097dc16d240bdc364e9e1c42b428ed04b8bbc09459be2fb146f",
+            "id": "chk_56647594b68f89876af6f301822176a25d1160fb23b903d747c5f006338cb0d1",
+            "source_pages": "[]",
+            "key": "d29860375efc6fb8cca395e5b586a2471136c23fc2eddca1654c8596e2e2a380",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6605979204177856,
+          "chunk": {
+            "start_char": 18663,
+            "chunk_index": 30,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_0f024b5d8e42123a23525991378a2ce97e92a67e95a852262d33d0df6f9cff46",
+            "file_name": "data/pdf/year=1973/regional/1973_3_477_491_PUN.pdf",
+            "end_char": 19348,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_8865df2b201cd52e25ee11648a87f05215772053adee6d2a70dd2aebf0e8afd0",
+            "content": "ਪVਦਾ ਹੈ ਿਕ ਉਸ ਦੀ ਅਪੁ@ਟ ਗਵਾਹੀ ਨੂ ੰ ਸੁਰੱਿਖਅਤ ਤੌਰ 'ਤੇ ਹੈ, ਹੋਰ ਸੰਬੰਿਧਤ ਸਮੱਗਰੀ ਅਤੇ ਹਾਜ਼ਰ ਹਾਲਾਤN ਨੂ\n\nੱਚ ਪਛਤਾਵਾ ਕਰਦਾ ਹੈ ਅਤੇ ਸੱਚਮੁ\n\nੰ ਵੇਖ ਕੇ ਿਜਸ ਦੇ ਅਧਾਰ 'ਤੇ ਦੋ@ੀ ਨੂ\n\nਦੋ@ੀ ਠਿਹਰਾਇਆ ਜਾ ਸਕਦਾ ਹੈ। ਉਪਰੋਕਤ ਿਵਚਾਰ-ਵਟNਦਰੇ ਅਤੇ ਿਨਆਂਇਕ ਫੈਸਿਲਆਂ ਤR ਜੋ ਿਨਯਮ ਉਭਰਦਾ ਜਾਪਦਾ ਹੈ, ਉਹ ਇਹ ਹੈ ਿਕ ਸਮਝਦਾਰੀ ਦੇ ਮਾਮਲੇ ਵਜR ਪੁ@ਟੀ ਕਰਨ ਦੀ ਜ਼ਰੂਰਤ, ਿਸਵਾਏ ਜਦR ਇਸ ਤਰQN ਦੀ ਪੁ@ਟੀ ਕਰਨਾ ਸੁਰੱਿਖਅਤ ਹੋਵੇ, ਜੱਜ ਦੇ ਿਦਮਾਗ ਿਵੱਚ ਸਪੱ@ਟ ਤੌਰ ਤੇ ਮੌਜੂਦ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ.\n\nਇਹ ਇਸ ਿਪਛੋਕੜ ਿਵੱਚ ਹੈ ਿਕ ਅਦਾਲਤ ਨੂ\n\nੰ ਦੋ@ੀ ਦੀ ਸਜ਼ਾ ਨੂ\n\nੰ ਕਾਇਮ ਰੱਖਣ ਲਈ ਿਕਸੇ ਿਦੱਤੇ ਗਏ ਕੇਸ ਿਵੱਚ\n\nਲੋੜEਦੇ ਸਰਕਾਰੀ ਗਵਾਹ ਦੇ ਸਬੂਤN ਦੀ ਪSਿਕਰਤੀ ਅਤੇ ਪੁ@ਟੀ ਦੀ ਹੱਦ ਿਨਰਧਾਰਤ ਕਰਨ ਦੀ ਲੋੜ ਹੁ\n\nੰਦੀ ਹੈ।\n\nਮੋਟੇ ਤੌਰ 'ਤੇ ਦੱਸੇ ਗਏ ਸਬੂਤN ਨੂ ਇਹ ਇਸ ਲਈ ਹੈ ਿਕ[ਿਕ ਸਰਕਾਰੀ ਗਵਾਹ ਿਕਸੇ ਿਨਰਦੋ@ ਿਵਅਕਤੀ ਜN ਿਵਅਕਤੀਆਂ ਨੂ\n\nੰ ਦੋ@ੀ ਨੂ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792699822059,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "9533cc6bb83e0dc47de5c40d3985fface5f2f518a215c56862eba2906051f037",
+            "id": "chk_027b6013115037ea429792a434b9ba91f07ef847fd774b5354a74e2d458a14cd",
+            "source_pages": "[]",
+            "key": "1223297533874bfbdff820b16d0e4d858e94a86225db6267df14d80094a179a6",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6566653251647949,
+          "chunk": {
+            "start_char": 18032,
+            "chunk_index": 29,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_0f024b5d8e42123a23525991378a2ce97e92a67e95a852262d33d0df6f9cff46",
+            "file_name": "data/pdf/year=1973/regional/1973_3_477_491_PUN.pdf",
+            "end_char": 18755,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_8865df2b201cd52e25ee11648a87f05215772053adee6d2a70dd2aebf0e8afd0",
+            "content": "ਿਨਰਦੋ@ ਿਵਅਕਤੀ ਨੂ\n\nੰ ਵੀ ਗਲਤ ਤਰੀਕੇ ਨਾਲ @ਾਮਲ ਕਰ\n\nਸਕਦਾ ਹੈ। ਇਸ ਤਰQN ਉਸ ਦੇ ਕਹਾਣੀ ਨੂ\n\nੰ ਆਮ ਰੂਪ ਰੇਖਾ ਿਵੱਚ ਸੱਚ ਦੱਸਣ ਦਾ ਅਸਲ ਖਤਰਾ ਹੈ ਪਰ ਇਸ\n\nੰ ਉਹ ਆਸਾਨੀ ਨਾਲ ਕਹਾਣੀ ਿਵੱਚ ਕੰਮ ਕਰ ਸਕਦਾ ਹੈ। ਇਹੀ ਕਾਰਨ ਹੈ ਿਕ ਿਵੱਚ ਕੁਝ ਝੂਠ ਹੈ ਿਜਸ ਨੂ ੰ ਸੰਤੁ@ਟ ਕਰਨ ਲਈ ਬੇਸਬਰੀ ਅਦਾਲਤN, ਸਮਝਦਾਰੀ ਅਤੇ ਸਾਵਧਾਨੀ ਦੇ ਮਾਮਲੇ ਵਜR, ਆਪਣੀ ਜ਼ਮੀਰ ਨੂ ਨਾਲ ਕੁਝ ਪੁ@ਟੀ ਕਰਨ ਦੀ ਭਾਲ ਕਰਦੀਆਂ ਹਨ ਿਕ ਸਰਕਾਰੀ ਗਵਾਹ ਦੀ ਗਵਾਹੀ, ਜੋ ਸਪੱ@ਟ ਤੌਰ 'ਤੇ ਸਵੀਕਾਰਯੋਗ ਹੈ, ਵੀ ਿਵ@ਵਾਸ ਦੇ ਯੋਗ ਹੈ. ਬੇ@ਕ ਕੋਈ ਵੀ ਅਿਜਹੇ ਸਾਥੀ ਦੀ ਕਲਪਨਾ ਕਰ ਸਕਦਾ ਹੈ ਜੋ ੱਚ ਸਜ਼ਾ ਦੇ ਜ਼ਰੀਏ ਪੂਰੇ ਮਾਮਲੇ ਦੀ ਸਾਫ਼ ਛਾਤੀ ਆਪਣੇ ਜੁਰਮ ਲਈ ਸੱਚਮੁ ੰ ਿਨਆਂਇਕ ਤੌਰ 'ਤੇ ਇਹ ਬਣਾਉਣ ਦੀ ਇੱਛਾ ਰੱਖਦਾ ਹੈ. ਪਰ ਅਿਜਹੇ ਮਾਮਿਲਆਂ ਿਵੱਚ ਵੀ, ਅਦਾਲਤ ਨੂ ੰ ਿਕਸ ਹੱਦ ਤੱਕ ਭਰੋਸੇਯੋਗ ਮੰਿਨਆ ਜਾ ਸਕਦਾ ਿਨਰਧਾਰਤ ਕਰਨਾ ਪVਦਾ ਹੈ ਿਕ ਉਸ ਦੀ ਅਪੁ@ਟ ਗਵਾਹੀ ਨੂ ੰ ਸੁਰੱਿਖਅਤ ਤੌਰ 'ਤੇ ਹੈ, ਹੋਰ ਸੰਬੰਿਧਤ ਸਮੱਗਰੀ ਅਤੇ ਹਾਜ਼ਰ ਹਾਲਾਤN ਨੂ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792699822059,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "e06da4f47dbe5436e86098d6c30f928905b2042029726f076aaf7dc7a32e5fb2",
+            "id": "chk_97b87158f20bbe6a52c892a20bac479d8e69a42ebc812dbd86cea63297505e54",
+            "source_pages": "[]",
+            "key": "7baf914fe3a7a5bd9d00f87f7aaf555a33afc2684cad71fdf3303ec6ba4d9634",
+            "dimensions": 768
+          }
+        }
+      ]
+    },
+    {
+      "id": "unanswerable-control",
+      "query": "What did the Supreme Court decide about licensing quantum teleportation on Mars in 2026?",
+      "expected_chunk_ids": [],
+      "passed": true,
+      "recall_at_k": null,
+      "reciprocal_rank": null,
+      "lexical_baseline": {
+        "method": "BM25 k1=1.5 b=0.75 unicode-word-tokenization",
+        "ranked": [
+          {
+            "id": "chk_8d1868c7ba947bfaac8735b1dacb44ff03e697edffc8bb3033067ed80e3e2cfa",
+            "score": 20.149417121551398
+          },
+          {
+            "id": "chk_7c0dd6a5fc3334465881ada00067f5eff405fc9bc635f160a430bfee1b3b7428",
+            "score": 16.73915902321127
+          },
+          {
+            "id": "chk_407c1e21e3d27b7069ed75d2a191a35ddcc53e765c25a61bdfad0ff8638ac8b2",
+            "score": 16.48424765678992
+          },
+          {
+            "id": "chk_0c386439482b58f683286869fedb4dfe53123c7ea1cefbd2ec51e74b3766e32e",
+            "score": 15.785276906882984
+          },
+          {
+            "id": "chk_431c52e23b9d879726c7683ffbe0a9657ed44285ff813fc10f61ad5c8fafb7f8",
+            "score": 15.645379958405696
+          },
+          {
+            "id": "chk_d08c1fd4665c5453979b9d2bb64b64966509aca502b08196522afdceaab06d83",
+            "score": 15.12937480478838
+          },
+          {
+            "id": "chk_abbbc32b4d29739edbb4034f69582f38fe24e64871a368beeaf73130dbe05b1b",
+            "score": 14.871602461102727
+          },
+          {
+            "id": "chk_b4c0d65552f82cdd61b3572aac066da891fc545fc3672fc78075426140086687",
+            "score": 14.608680300131429
+          }
+        ],
+        "expected_hits": 0
+      },
+      "control_note": "Nearest neighbors are candidates only; no answer generated. Abstention is Stage E.",
+      "ranked": [
+        {
+          "score": 0.6575390696525574,
+          "chunk": {
+            "start_char": 1554,
+            "chunk_index": 1,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_7cdd938bd5eadbfbd06f582ae0b6267689d4220ac67ccd2f9baed2c5623d206b",
+            "file_name": "data/pdf/year=1973/english/1974_2_572_578_EN.pdf",
+            "end_char": 3349,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_74b41ecf952752ae1e043d20b1e6752421b5b0c3055637be117eea4f215434d1",
+            "content": "in1porters were not free to sell the metals impor ted by them against their quota licences even to D.G.S.& D. The petitioner in order to effect supplies to D.G.S. & D. had to obtain additional import licenc~.\n\nThe petitioner Obtained quota licences for import of non-ferrous metals for tr~\n\nlicensing periods upto April 1964, March 1965; but the imports were to be dis tributed only under\n\nthe directions of the Controller. ,\n\nOn Sept. 14, 1965, the Govt. of India promulgated the Scarce Industrial Materi als Control Order 1965, under the Defence of India Rules. Stacks of non-ferrous metals including incoming imports were thus frozen. The Non·ferrous Metals Control Order 1958 and the Scarce Industrial Materials Control Order 196~ were both repealed. The Government of India in placing orders with the petitioner used to grant import licences in tenns of the contract.\n\nThe petitioner had been importing and. supplying non~ferrous metals to res~ pendents 1,2 and 3 during the last 19 years. Respondent No. 2 had agreed to pay and was paying the Central Sales Tax. and/or West BengaJ Sales Tax, whichever was applicable to the petitioners in terms of the contract.\n\nIn 1966, the Supreme Court held in K. G. Khos/a and Co. v. Deputy Con11nissiolier of Commercial tax [1966] 3 S.C.R. 352 that the sale by Khosla & Co. to DGS & D in India of axle-box bodies manufactured in Belgium by their principal, occasioned the movement of goods in the course of import and sales tax was not exigible on the transaction in view of Sec. 5(2) of the Central Sales Tax Act 1956, and Art. 286 of the Constitution.\n\nThereafler, respondent No. 2 issued an order to respondent]No. 4 that Sales Tax. should not be allowed in respect of supply of stores which had been specificallf\n\nI\n\n\\\n\n620\n\nSUPREME COURT REPORTS",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792698358432,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "2493950463c9d6c155014850fb3cc4d5ce71dfd7196578182d097286429f98cb",
+            "id": "chk_5c20a5d7d351e65d1098229bc269cccdf86cd0b3872e2941f852c41ef47a0671",
+            "source_pages": "[]",
+            "key": "1bfec8b2c4693c4c7fe5943de71adf87e0ffd1228068a943772f328b1a6a7588",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6561679840087891,
+          "chunk": {
+            "start_char": 2518,
+            "chunk_index": 4,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_2ae37a7bc86ebde40a8a0ea19eb56e716aabde533eb00e571fbb2b9592e26f8f",
+            "file_name": "data/pdf/year=1973/regional/1973_3_497_502_PUN.pdf",
+            "end_char": 3238,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_928aed19d9738f28f6e3df35a8e8cfca1a3c2e084321196fc06e2fbf07d9f342",
+            "content": "ਅਸਫਲ ਮਰਹਾ, [5O1H]\n\nਇਹ ਮਸ਼ਕਾਇਤ ਮਕ ਮਟਿਮਬਊਨਲ ਨੇ ਮਬਨਾਂ ਮਕਸੇ ਚੰਗੇ ਕਾਰਨਾਂ ਦੇ ਖਾਤਾ ਮਕਤਾਬਾਂ ਦੀਆਂ ਫੋਟੋਸਟੇਟ\n\nਕਾਪੀਆਂ ਨੂ\n\nੰ ਨਜ਼ਰਅੰਦਾਜ਼ ਕਰ ਮਦੱਤਾ, ਧਾਰਾ 66 (1) ਤਮਹਤ ਮਨਰਧਾਰਕ ਦ ਆਰਾ ਦਾਇਰ ਅਰਜ਼ੀ\n\nਮਵੱਚ ਨਹੀਂ ਕੀਤੀ ਗਈ ਜਾਪਦੀ, ਮਟਿਮਬਊਨਲ ਦ ਆਰਾ ਪੇਸ਼ ਕੀਤੇ ਗਏ ਮਬਆਨ ਮਵੱਚ ਉਸ ਤੱਥ ਦਾ\n\nਹਵਾਲਾ ਨਹੀਂ ਮਦੱਤਾ ਮਗਆ ਹੈ। ਮੰਮਨਆ ਜਾਂਦਾ ਹੈ ਮਕ ਮ ਲਾਂਕਣਕਰਤਾ ਨੇ ਇਨਹ ਾਂ ਦਸਤਾਵੇਜ਼ਾਂ ਬਾਰੇ ਕੋਈ\n\nਸਵਾਲ ਨਹੀਂ ਚ\n\nੱਮਕਆ। ਇਸ ਲਈ ਹਾਈ ਕੋਰਟ ਨੇ ਉਨਹ ਾਂ ਦਸਤਾਵੇਜ਼ਾਂ 'ਤੇ ਮਵਚਾਰ ਨਾ ਕਰਨਾ ਪੂਰੀ ਤਰਹਾਂ\n\nਜਾਇਜ਼ ਸੀ। [502A-D]\n\nਮਸਵਲ ਅਪੀਲ ਅਮਧਕਾਰ ਖੇਤਰ; ਮਸਵਲ ਅਪੀਲ ਨੰ ਬਰ 491/1970।\n\nਇਨਕਮ ਟੈਕਸ ਰੈਫਰੈਂਸ ਨੰ ਬਰ 72/1966 ਮਵੱਚ ਕਲਕੱਤਾ ਹਾਈ ਕੋਰਟ ਦੇ 3 ਜੂਨ, 1961 ਦੇ ਫੈਸਲੇ\n\nਅਤੇ ਆਦੇਸ਼ ਤੋਂ ਸਰਟੀਮਫਕੇਟ ਦ ਆਰਾ ਅਪੀਲ।\n\nਅਪੀਲਕਰਤਾ ਵੱਲੋਂ ਐਨ ਐਨ ਗੋਸਵਾਮੀ ਅਤੇ ਐਸ ਐਨ ਮ ਖਰਜੀ, ਉੱਤਰਦਾਤਾ ਵੱਲੋਂ ਐਸਪੀ ਨਈਅਰ,\n\nਜੇ ਰਾਮਮੂਰਤੀ ਅਤੇ ਆਰ ਐਨ ਸਚੇ ਨੇ ਜਵਾਬ ਮਦੱਤਾ।",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792700703780,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "cb40b40276e2ad15af37758025bee0a6b818ce808bdc6ca24ead6e3c6bd06752",
+            "id": "chk_033adff87b9bde399745bffef5ab9887466a85026f6e46e92ed6d768efb7d65e",
+            "source_pages": "[]",
+            "key": "70bd62df21a518333d9d6fa57dbca0f085d365b01029f1603f3cc59d2a3c15e4",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6485731601715088,
+          "chunk": {
+            "start_char": 61589,
+            "chunk_index": 98,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_9012d5896c679e6ea874f0b10917d98e5f9cb7ce1b3ac8d5863ba48be3d385f3",
+            "file_name": "data/pdf/year=1973/regional/1973_3_571_586_PUN.pdf",
+            "end_char": 62305,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_07d4cef82897c1ae554e7a1431d8187fd019e1be643a00181cc8b7acf07cde1e",
+            "content": "എടു8ോന്‍ ഉക\\ശിക്കുന്ന നി9പോടിചെനക്കുറിച്ച്\n\nതീരുമോനിക8ണ്ടത് മോകനജ്ചെമന്റിചെന്റ (cid:7)ോര്യമോണ്. നിയമത്തിന് മുന്നില്‍ സ്വതന്ത്രമോയ ചെതളിവു(cid:7)ളും\n\nസമർ(cid:13)ിച്ച് അതിചെന്റ ഉത്തരവ് നി9നിർത്തു(cid:7) എന്നത് മോകനജ്ചെമന്റിചെന്റ അവ(cid:7)ോശമോചെണന്ന്\n\nഊന്നി(cid:13)റയോം. ~ിബ്യൂണല്‍ ഇത് മോകനജ്ചെമന്റിന് നല്‍(cid:7)ചെ(cid:13)ട്ട അവ(cid:7)ോശമോണ്, ഈ അവസരം\n\nപ്രകയോജനചെ(cid:13)ടുകത്തണ്ടത് മോകനജ്ചെമന്റോണ്.\n\nഈ ക(cid:7)ോടതിയുചെടയും !ില്ലി ക¿ോത്ത് ആന്‍ഡ് ജനറല്‍ മില്‍സ് (cid:7)മ്പനി 9ിമിറ്റഡ് വിരുദ്ധമോയി ലുധ് ബുധ്\n\nസിങ് എന്ന ക(cid:7)സിചെ9 ഏറ്റവും പുതിയ വിധിയില്‍, മുമ്പചെത്ത വിധി(cid:7)ളിചെ9 നിയമപ്രമോണങ്ങൾ\n\nപരികശോധിച്ച് അവയുചെട മൂ9്യനിർണയം നടത്തിയിട്ടുണ്ട്.ഈ ക(cid:7)സില്‍ ചെതോഴിലുടമ അകന്വഷണം ഒന്നും\n\nനടത്തോത്ത സോഹ*ര്യത്തിലും,",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792622568912,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "5caabf76a24ee6b7b2150a976b6f142fe9217e3e27cf606edd60fabe05b00fec",
+            "id": "chk_05c671f2f1c1fa2a80c134606a5e1b02fd9e740e52150349d1db42ea0421c770",
+            "source_pages": "[]",
+            "key": "872f7716d8bb47387dd35ac4b43db50e89c600695c3fe543bdea5947dfd50ce9",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6461063027381897,
+          "chunk": {
+            "start_char": 57602,
+            "chunk_index": 87,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_a84cfda8451e7f95a9aeecc018a418a59286cc0e5fd3d8d914b2d9665577760d",
+            "file_name": "data/pdf/year=1973/regional/1973_3_285_302_MAL.pdf",
+            "end_char": 58307,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_0e52bd606c668abfce50edce84f2e6a07a0d7e2bff2430dacb1871fbe2904c87",
+            "content": "ക(cid:31)ോ(cid:22)്യം ചെ(cid:31)യ്തു.\n\nവിധിന്യോയത്തില്‍ നിന്ന് (cid:7)ോണുന്നതുകപോചെ.,\n\nചെവvി(cid:13)ിചെനക്കുറിച്ച്\n\nപിരിച്ചുവിടല്‍ ഉത്തരവ് പുറചെ(cid:13)ടുവിക്കുന്നതിന് ആറുമോസം മുമ്പുള്ള (cid:7)ോ.യളവിനുള്ളില്‍ മോത്രമോണ്\n\nതങ്ങൾ-് അറിവ് .ഭിച്ചചെതന്ന് സ്ഥോപി-ോന്‍ മോകനജ്ചെമ(ിചെന അനുവ(cid:22)ിച്ചുചെ(cid:7)ോണ്ട് വകു(cid:13)് 16(3)\n\nഉ(cid:22)ോരമോയി വ്യോഖ്യോനി-ണചെമന്നത് മോത്രമോയിരുന്നു ഹൈഹക-ോടതിയുചെട മു(cid:157)ോചെ(cid:7) ഉന്നയി-ചെ(cid:13)v\n\nവോ(cid:22)ം. നിയമം വ്യക്തമോചെണന്നും സ്വന്തം നിഷ്ക്രിയത്വം പ്രതികരോധമോയി ഉന്നയി-ോന്‍ ചെതോഴിലുടമചെയ\n\nഅനുവ(cid:22)ി-ോന്‍ (cid:7)ഴിയിചെല്ലന്നും പറഞ്ഞ് ഹൈഹക-ോടതി ഈ വോ(cid:22)ം തള്ളി.\n\nകുറ്റ-ോരനോയ\n\nജീവന-ോരചെ( കസവനം ശിക്ഷോനടപടിയോയി തീരുമോനിക്കുന്നതിന് നിയമം ഒരു (cid:7)ോ.ോവധി",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792692365449,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "3c2cbb31061b7d92cdca2615495708ef73611c8262d4df53dca045d4851a1906",
+            "id": "chk_cd1d3dab42eba9c7c8125060a57d02da9708715abf0799fe2f5016ba3277d0b8",
+            "source_pages": "[]",
+            "key": "1376c6365b4eaf8dca881697b99c53773f4c0f9bfa60e5ee532d62b379ba0e55",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6459630727767944,
+          "chunk": {
+            "start_char": 7713,
+            "chunk_index": 12,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_c0a6c7246c73356148245271883a093e22c46f095efe33d255ba244a732e7ada",
+            "file_name": "data/pdf/year=1973/regional/1973_3_206_210_HIN.pdf",
+            "end_char": 8417,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_4f7422f42e91ceab0ec9e53368cad3eb6c384a54caec4caa318e47c88811013c",
+            "content": "ਐਕਟ ਦੀ ਧਾਰਾ 23 ਏ ਦੇ ਅਰਥ ਦੇ ਅੰਦਰ ਜਨਤਾ ਦੇ ਹੋਰ ਮ.ਬਰ। ਕਲਕੱਤਾ ਹਾਈ ਕੋਰਟ ਦੇ ਉਲਟ\n\nਇੱਕ ਿਦX3ਟੀਕੋਣ ਮਦਰਾਸ ਹਾਈ ਕੋਰਟ ਦੁਆਰਾ ਈਸਟ ਇੰਡੀਆ ਕਾਰਪੋਰੇ3ਨ ਿਲਮਿਟਡ ਿਵੱਚ\n\nਿਲਆ ਿਗਆ ਸੀ। ਆਮਦਨ ਕਿਮ3ਨਰ-ਟੈਕਸ (2) ਅਤੇ ਰਘੂਵੰ3ੀ ਿਮੱਲਜ਼ ਿਲਮਿਟਡ ਿਵੱਚ ਬੰਬਈ\n\nਹਾਈ ਕੋਰਟ ਸੀ. ਆਮਦਨ ਕਿਮ3ਨਰ-ਟੈਕਸ (3)। ਇਸ ਅਦਾਲਤ ਨZ 3Xੀ ਿਕX3ਨ ਏਜੰਸੀ ਿਲਮਿਟਡ\n\nੰ (ਉਪਰੋਕਤ) ਦੇ ਮਾਮਲੇ ਿਵੱਚ ਮਦਰਾਸ ਅਤੇ ਬੰਬਈ ਹਾਈ ਕੋਰਟQ ਦੁਆਰਾ ਲਏ ਗਏ ਿਵਚਾਰ ਨੂ\n\nਮਨਜ਼ੂਰੀ ਿਦੱਤੀ। ਇਸ ਅਦਾਲਤ ਨZ ਉਸ ਮਾਮਲੇ ਿਵੱਚ ਮੁਲQਕਣ ਕਰਨ ਵਾਲੀ ਕੰਪਨੀ ਦੇ\n\nਆਰਟੀਕਲਜ਼ ਆਫ਼ ਐਸੋਸੀਏ3ਨ ਦੇ ਆਰਟੀਕਲ 37 ਨਾਲ ਨਿਜੱਿਠਆ ਜੋ ਇੱਕ ਜਨਤਕ ਕੰਪਨੀ ਸੀ\n\nਅਤੇ ਿਜਸ ਿਵੱਚ ਇਹ ਿਵਵਸਥਾ ਕੀਤੀ ਗਈ ਸੀ ਿਕ ਡਾਇਰੈਕਟਰ ਿਕਸੇ ਵੀ ਸਮ9 ਆਪਣੇ ਿਨਰੰਤਰ\n\nਅਤੇ ਬੇਕਾਬੂ ਿਵਵੇਕ ਨਾਲ ਅਤੇ ਕੋਈ ਵੀ ਿਨਰਧਾਰਤ ਕੀਤੇ ਿਬਨQ ਕਰ ਸਕਦੇ ਹਨ। 3ੇਅਰQ ਦੇ ਿਕਸੇ\n\nਵੀ ਪXਸਤਾਿਵਤ ਤਬਾਦਲੇ ਨੂ\n\nੰ ਰਿਜਸਟਰ ਕਰਨ ਤ] ਇਨਕਾਰ ਕਰਨ ਦਾ ਕਾਰਨ ਸੀ। ਇਹ ਮੰਿਨਆ",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792695888574,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "5e05d9320b7978493d073b7b8d30d23a7f959c509fe60636f150f0d03b9407f6",
+            "id": "chk_a18a1702e4d456fa0cad4db0f5481bdbd3322c291ea9c6122601796f5712cc43",
+            "source_pages": "[]",
+            "key": "dae9b8fab198f55075f970fafcdb82c33edf9cd8a787638363d1281459c5c665",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6456674337387085,
+          "chunk": {
+            "start_char": 7027,
+            "chunk_index": 10,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_a84cfda8451e7f95a9aeecc018a418a59286cc0e5fd3d8d914b2d9665577760d",
+            "file_name": "data/pdf/year=1973/regional/1973_3_285_302_MAL.pdf",
+            "end_char": 7826,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_0e52bd606c668abfce50edce84f2e6a07a0d7e2bff2430dacb1871fbe2904c87",
+            "content": "കവണ്ടി എസ്. വി. ഗുചെപ്ത, എസ്. [ി. നോയി(cid:7)്, ചെ(cid:7). രോകജന്ദ്ര (cid:31)ൗധരി\n\nഎന്നിവരും ഹോജരോയി.\n\nക(cid:7)ോടതിയുചെട വിധിന്യോയം പ്രസ്തോവിച്ചത്.\n\nജസ്റ്റിസ് ഹൈവ(cid:22)്യ.ിംഗം:\n\nഈ രണ്ട് പ്രകത്യ(cid:7) അനുമതി അ(cid:13)ീലു(cid:7)ളില്‍,\n\nപരിഗണനയ്ക്ക്\n\nഉയർന്നുവരുന്ന ചെപോതുവോയ ക(cid:31)ോ(cid:22)്യം 1946-ചെ. ക[ോംചെ[ ഇന്‍ഡസ്ട്രിയല്‍ റിക.ഷന്‍സ് നിയമത്തിചെ.\n\n(1947-ചെ. ക[ോംചെ[ നിയമം ന(cid:157)ർ XI) വകു(cid:13)് 78(1)(D)-യ്ക്ക് നല്‍ക(cid:7)ണ്ട ശരിയോയ വ്യോഖ്യോനമോണ്, ഇനി\n\nമുതല്‍ ഈ നിയമചെത്ത 'നിയമം' എന്ന് പരോമർശിക്കും.\n\nരണ്ട് അ(cid:13)ീലു(cid:7)ളിചെ.യും അ(cid:13)ീല്‍വോ(cid:22)ി, കZറ്റർ ക[ോംചെ[ മുനിസി(cid:13)ല്‍ ക(cid:7)ോർ(cid:13)കറഷന്‍, 1888-ചെ.\n\nക[ോംചെ[ മുനിസി(cid:13)ല്‍ ക(cid:7)ോർ(cid:13)കറഷന്‍ നിയമം പ്ര(cid:7)ോരം രൂപീ(cid:7)രി-ചെ(cid:13)v ഒരു ക[ോഡി ക(cid:7)ോർ(cid:13)കററ്റ്\n\nആണ്. ക[ോംചെ[ നഗരത്തിചെ.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792692223415,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "35bc541fa4d3edd5642fe84ae2209715e72ee2c79a0974ec89e65c2eb0766aa4",
+            "id": "chk_e9cafb3d2d788dbbcc4757578089c8655cc95b554bc5c44cbb07aab7ae74da07",
+            "source_pages": "[]",
+            "key": "b156cc855a8c7dc094f8c023f68cbdc5ff420b7b51fd5fdc6309deec44d990a4",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.643155038356781,
+          "chunk": {
+            "start_char": 17675,
+            "chunk_index": 26,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_a84cfda8451e7f95a9aeecc018a418a59286cc0e5fd3d8d914b2d9665577760d",
+            "file_name": "data/pdf/year=1973/regional/1973_3_285_302_MAL.pdf",
+            "end_char": 18364,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_0e52bd606c668abfce50edce84f2e6a07a0d7e2bff2430dacb1871fbe2904c87",
+            "content": "റോയ്പൂർ ക(cid:7)ോ-ഓ(cid:13)കററ്റീവ് ചെസന്‍ട്രല്‍ [ോങ്ക് .ിമിറ്റഡും മചെറ്റോരോളും v. കസ്റ്ററ്റ് ഇന്‍ഡസ്ട്രിയല്‍ ക(cid:7)ോടതി, ഇന്‍കഡോർ & മറ്റുള്ളവർ1 -ചെ. മധ്യപ്രക(cid:22)ശ് ഹൈഹക-ോടതിയുചെട ഡിവിഷന്‍ ചെ[ഞ്ച് വിധിയില്‍ ഈ അഭിപ്രോയത്തിന്നുള്ള പിന്തുണ ക.[ർ ക(cid:7)ോടതി\n\n(cid:7)ചെണ്ടത്തി.\n\nപിരിച്ചുവിടല്‍ ഉത്തരവു(cid:7)ൾ പോസോക്കുന്നതിചെ. (cid:7)ോ.തോമസം\n\n[ന്ധചെ(cid:13)v\n\nചെതോഴി.ോളി(cid:7)ളുചെട കരോഗം (cid:7)ോരണകമോ മറ്റ് (cid:7)ോരണങ്ങളോക.ോ ചെതോഴി.ോളി(cid:7)ൾ-് ഹോജരോ(cid:7)ോന്‍\n\n(cid:7)ഴിയോതിരുന്നതിനോല്‍ യൂണിയന് നല്‍(cid:7)ിയ മോറ്റിവയ്ക്കലു(cid:7)ൾ മൂ.മോചെണന്ന് അ(cid:13)ീല്‍വോ(cid:22)ി ക.[ർ\n\nക(cid:7)ോടതിയില്‍ വോ(cid:22)ിച്ചു. കമോഷണക്കുറ്റം അകന്വഷിച്ച സ[് ഇന്‍ചെ|ക്ടർ-് അകന്വഷണ ഉക(cid:22)്യോഗസ്ഥന്",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792692251383,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "e78c698475fae932a80b572af348635075b1243e8d26bab85086f92b0a78054b",
+            "id": "chk_7b090581c9ca8d251444b996b236bc9fe3b0ec51859c225c3eb4665bd18501c1",
+            "source_pages": "[]",
+            "key": "60345cdeb262787769dd510b88123924f704636d4700d8623c864caf2b4f2c75",
+            "dimensions": 768
+          }
+        },
+        {
+          "score": 0.6416522860527039,
+          "chunk": {
+            "start_char": 7376,
+            "chunk_index": 12,
+            "model_revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "generation_id": "gen_2d4be94e5090128e16a9e577030b28ad48cf72c8f30f29f5af7dfbb6f04ddde9",
+            "file_name": "data/pdf/year=1973/english/1974_3_20_30_EN.pdf",
+            "end_char": 8137,
+            "chunker_version": "words-v2:350:40:utf8-1800",
+            "embedding_provider": "ollama",
+            "document_id": "doc_3f9f01caa8edbeaa488905df8f7c23c73c1d350f60326f61d2ccf18111744e64",
+            "content": "നടത്തോന്‍ കയോഗ്യതയിചെല്ലന്ന വോ\"ം ഒരു പുതിയ നിരസിച്ചു. ശരിയോയി ഹൈഹക8ോടതി വി9യിരുത്ത9ല്ലോചെത മചെറ്റോന്നുമല്ല. {1014 ബി] (iii) ചെസയില്‍സ് ടോ(cid:6)് സ് ഓഫീസർ തന്‍്ചെറ മി(cid:6)ച്ച വിധിനിർണയത്തില്‍ നടത്തിയ സംസ്ഥോന വിറ്റുവരവിന്‍്ചെറ എസ്റ്റികമറ്റ് നിയമപരവും ന്യോയയുക്തവുമോയതിനോല്‍, നിയമപ്ര(cid:6)ോരം അക]ഹം ചുമത്തിയ പിഴയും നിയമത്തിന് അനുസൃതമോയി (cid:6)ണ8ോ8ണം.\n\nപുനർമൂ9്യനിർണയം\n\nകസ്റ്ററ്റ് ഓഫ് ആന്ധ്രോപ്രക\"ശ് കവഴ് സസ് ബോവുരി വി. നരസിംഹന്‍, 16 S. T. C. 54, ആശ്രയിച്ചു,\n\nസിവില്‍ അ(cid:13)ീല്‍ അധി(cid:6)ോരിത : 1970 ചെ9 സിവില്‍ അ(cid:13)ീല്‍ ന(cid:127)ർ 1068 & 1069.\n\n1968-ചെ9 മിക´നിയസ് സി. ക(cid:6)സ് ന(cid:127)ർ 84-ല്‍ മദ്ധ്യപ്രക\"ശ് ഹൈഹക8ോടതിയുചെട 1968 ഡിസംബർ 2-ചെ9 വിധിന്യോയത്തില്‍ നിന്നും ഉത്തരവില്‍ നിന്നുമുള്ള പ്രകത്യ(cid:6) അനുമതികയോചെടയുള്ള അ(cid:13)ീലു(cid:6)ള്‍.",
+            "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+            "indexed_at": 1792694622201,
+            "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+            "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+            "model": "embeddinggemma:latest",
+            "content_hash": "41973628b2d9437776f1cc2306c0a0db4ef15b5b108760b5dda3692fc2fbcc56",
+            "id": "chk_98ef8a6a158830c1187decfbe03274ac64939316159f6cb9ae158f6839f05d85",
+            "source_pages": "[]",
+            "key": "29fb561f0b074b804b4ffe384463092961357f6d024d709915cdcb1157d72e64",
+            "dimensions": 768
+          }
+        }
+      ]
+    }
+  ],
+  "passed": false
+}
