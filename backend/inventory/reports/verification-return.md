@@ -46,11 +46,14 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
 - [ ] Verify configured graph integrity, truthful partial/readiness reporting,
   publication/withdrawal and rollback before recording Stage D acceptance.
 
-## E — Grounded query API and citations: OPEN / implementation in progress
+## E — Grounded query API and citations: implementation verified; live acceptance OPEN
 
-- [ ] Finish and run meaningful isolated tests for mode dispatch, hybrid fusion,
+- [x] Finish and run meaningful isolated tests for mode dispatch, hybrid fusion,
   evidence budgets, provider timeouts/fallback diagnostics, generation validation,
   citations, source resolution and conversation/project/org/user isolation.
+  Evidence: `stage-e-implementation.md`; current formatted code passes **180/180**
+  with all C/D/E disposable-service opt-ins enabled. Controlled model fixtures do
+  not close the actual-corpus answer-quality checks below.
 - [ ] After C/D pass, run the reviewed actual-source set separately through vector,
   graph and hybrid API modes with the configured real generation provider.
 - [ ] Record actual retrieval paths, ranked/context-selected evidence, measured
@@ -72,7 +75,9 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
   `backend/evaluation/stage-c-v3.json`; original fixtures/failures remain preserved.
 - D implementation and disposable-Neo4j storage/traversal verification:
   `backend/inventory/reports/stage-d-parallel.md`.
-- E isolated/live results: **pending**; populate after checks actually run.
+- E implementation/isolated service results: `backend/inventory/reports/stage-e-implementation.md`.
+  Configured source GET/unpublished-index refusal passed; real generated-answer
+  correctness, actual graph/hybrid evidence and browser integration remain pending.
 
 Keep this file in the next handoff. Preserve unchecked items until their own
 tests/reviews pass; never convert deferred live checks into an inferred pass.

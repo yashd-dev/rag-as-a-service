@@ -147,8 +147,9 @@ answer generation or citation faithfulness is inferred from vector acceptance.
 ## Stage D — LLM enrichment and evidence-backed graph retrieval
 
 The independent Stage D implementation can be developed/tested while C indexes.
-Live enrichment requires **complete, published Stage C vectors**. The current
-corpus has not yet passed that gate; no live extraction job has been started.
+Live enrichment requires **complete, published Stage C vectors**. The advertised
+333-document vector corpus has passed that gate. Actual-model graph enrichment
+still needs a bounded first batch and source review before full-corpus processing.
 
 `GraphExtractor` calls the existing configured Ollama graph model with a strict
 JSON schema. Entity names and assertion quotations must occur verbatim in the
@@ -239,6 +240,37 @@ STAGE_D_TEST_NEO4J_PASSWORD="$DISPOSABLE_PASSWORD" \
 Stage D live acceptance is pending: configured-model extraction, reviewed actual
 cross-document evidence, failures/coverage, and independent graph retrieval.
 Stage E owns answer dispatch/hybrid fusion; Stage F owns frontend integration.
+
+## Stage E — grounded query and source API
+
+The backend query/source implementation and isolated C/D/E service fixtures pass;
+real generated-answer/citation quality remains an open live acceptance gate.
+See `inventory/reports/stage-e-implementation.md` and the mandatory
+`inventory/reports/verification-return.md` checklist.
+
+- `POST /api/projects/<project_id>/query` accepts `{message, mode?, conversation_id?}`.
+  Message limit: 1024 UTF-8 bytes. Modes execute their actual retrieval paths;
+  graph/hybrid require published graph evidence and never silently become vector-only.
+- Response includes `status` (`answered` or `insufficient_evidence`), `answer`,
+  `query_run_id`, cited `sources`, distinct context `citation_candidates`, stable
+  `used_citation_ids`, actual provider/model/fallback and retrieval diagnostics.
+  Inline `[S1]` labels map to stable citation IDs in the source objects.
+- `GET /api/projects/<project_id>/passages/<chunk_id>` resolves exact authorized
+  canonical text with source hash/spans/pages and `is_current_generation`.
+  Historical citations are labeled; flattened OCR receives no invented page numbers.
+- Both routes require configured `BACKEND_INTERNAL_SECRET` and the existing trusted
+  forwarded secret/user/org headers. Use a trusted server integration; these routes
+  return 503 if that backend authentication is unconfigured. Responses are no-store.
+- Invalid payloads return 400; unavailable modes/stale generations 409; foreign
+  projects/conversations/sources 404; provider, generation or source-integrity
+  failures return safe 503 diagnostics. Failed/insufficient work is never recorded
+  as a successful completed answer.
+
+Platform generation uses existing `PLATFORM_LLM_*` configuration, with existing
+`OLLAMA_BASE_URL` / `FALLBACK_LLM_MODEL` fallback. Provider/model/fallback are reported;
+the selected-credential/BYOK path is not advertised as implemented. Evidence is
+untrusted JSON under a whole-passage budget, not instructions to the model. Known
+source-reference validation does not substitute for human claim/citation review.
 
 The three marked ceilings are full-source replay, a 60-second text-only lease,
 and full text-integrity validation on readiness reads. Before long model jobs or
