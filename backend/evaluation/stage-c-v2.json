@@ -1,0 +1,89 @@
+{
+  "revision": 2,
+  "supersedes": "stage-c.json",
+  "revision_reason": "User-approved correction: sentence-delay relevance points to the actual judgment reasoning, not exclusively its duplicate headnote. It is no longer a BM25-miss claim. A separate semantic-only question is frozen before its first evaluation. Original fixture and failed reports remain unchanged.",
+  "scope": {
+    "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+    "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+    "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+    "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+    "model": "embeddinggemma:latest",
+    "revision": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+    "dimensions": 768,
+    "chunker_version": "words-v2:350:40:utf8-1800",
+    "top_k": 8,
+    "answer_generation": false
+  },
+  "review": {
+    "reviewer": "Project user in this conversation",
+    "date": "2026-10-23",
+    "decision": "approved_expected_passages",
+    "preparation": "User explicitly selected Approve versioned correction after reviewing the actual sentence reasoning span and the new semantic question against the previously reviewed handwriting passage. New semantic-only query is approved before any retrieval evaluation of that query. No passing result is assumed."
+  },
+  "cases": [
+    {
+      "id": "exact-case",
+      "query": "RAM NARAIN v. STATE OF UTTAR PRADESH April 5, 1973",
+      "expected_chunk_ids": ["chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa"],
+      "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+      "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+      "source_path": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+      "start_char": 0,
+      "end_char": 1716,
+      "content_hash": "b1fc81122317ce91c3516bb8025038361db1d06060864fffb8306d8087c5b507",
+      "excerpt": "RAM NARAIN v. STATE OF UTTAR PRADESH April 5, 1973",
+      "relevance": "Exact judgment heading and date; unchanged from the original fixture.",
+      "pass_criterion": "Expected chunk appears in top 8."
+    },
+    {
+      "id": "semantic-paraphrase",
+      "query": "When can a judge rely on a specialist's assessment of who penned a disputed document, even though that kind of assessment can be mistaken?",
+      "expected_chunk_ids": ["chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711"],
+      "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+      "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+      "source_path": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+      "start_char": 1528,
+      "end_char": 3325,
+      "content_hash": "47500fc51a7f5b35a99741990ac0f2f8d8544aaa01380f182370c43997dd0b7e",
+      "excerpt": "If after comparison of the disputed and the admitted writings by the Court itself when the Presiding Officer is familiar with the language, is considered safe to accept the opinion of the expert, then the condusion so arrived at cannot be assa'iled on special leave on the mere ground that comparison of handwriting is genera11y considered as hazardous and inconclusive.",
+      "relevance": "Cautious acceptance of handwriting opinion with supporting evidence and the court's own comparison; original query and label unchanged.",
+      "pass_criterion": "Expected chunk appears in top 8. No keyword-miss claim for this case."
+    },
+    {
+      "id": "sentence-delay-paraphrase",
+      "query": "Why did the court spare Ram Narain a return to prison after he had spent years on bail?",
+      "expected_chunk_ids": ["chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248"],
+      "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+      "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+      "source_path": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+      "start_char": 16785,
+      "end_char": 18481,
+      "content_hash": "1f9cab4c2e93d9e124b70e9cbfe0cd17dbdc8fe4f76edd2ff8f98624286a2505",
+      "excerpt": "He was released on bail by this Court in January, 1970.",
+      "relevance": "Actual judgment reasoning describes the eight-year proceedings, bail history and harshness of returning the appellant to prison. Both vector and BM25 can recover it; this is not a semantic-only advantage claim.",
+      "pass_criterion": "Expected actual-reasoning chunk appears in top 8."
+    },
+    {
+      "id": "semantic-keyword-miss",
+      "require_lexical_miss": true,
+      "query": "When is it acceptable to identify a note's writer from a specialist's analysis, and what independent checks are needed?",
+      "expected_chunk_ids": ["chk_2f36d63df949a8d0ff9d6122be1fc38b0a438c861390358c0a01ae395e34e711"],
+      "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+      "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+      "source_path": "data/pdf/year=1973/english/1973_3_911_917_EN.pdf",
+      "start_char": 1528,
+      "end_char": 3325,
+      "content_hash": "47500fc51a7f5b35a99741990ac0f2f8d8544aaa01380f182370c43997dd0b7e",
+      "excerpt": "If after comparison of the disputed and the admitted writings by the Court itself when the Presiding Officer is familiar with the language, is considered safe to accept the opinion of the expert, then the condusion so arrived at cannot be assa'iled on special leave on the mere ground that comparison of handwriting is genera11y considered as hazardous and inconclusive.",
+      "relevance": "Independently phrased authorship/identification question against the already-reviewed corroboration and judicial comparison passage. This hypothesis is frozen before its first measurement; success is not assumed.",
+      "pass_criterion": "Expected chunk appears in vector top 8 and is absent from independently measured BM25 top 8."
+    },
+    {
+      "id": "unanswerable-control",
+      "query": "What did the Supreme Court decide about licensing quantum teleportation on Mars in 2026?",
+      "expected_chunk_ids": [],
+      "relevance": "No expected supporting passage in this corpus; nearest neighbors alone are not an answer.",
+      "pass_criterion": "No answer generated. Actual grounded abstention remains a separate Stage E gate."
+    }
+  ]
+}
