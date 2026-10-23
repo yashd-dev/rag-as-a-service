@@ -43,6 +43,12 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
   and smoke artifacts 03–05: clean toy success on Qwen does not overcome the real OCR
   failures. A newer small local model trial is authorized, with no active model/code
   change, graph writes or hosted judgment-text requests.
+  User-approved opt-in integration is now implemented/tested: `stage-d-optin-integration.md`
+  records 195 checks passing, then a bounded **2-chunk / 2-case-reference / 1-CITES**
+  live batch with 3 verified spans, cached replay/0 extra model calls and refused
+  partial publication. Default settings remain unchanged. The read-only coverage
+  plan has 78 exact-pattern chunks / 41 documents and 11 eligible verifier decisions;
+  this limited coverage and one declined positive window still require review.
 - [ ] Resolve unsuitable model/output/context behavior before processing the full
   advertised corpus; record the effective extractor model digest and recipe.
 - [ ] Complete extraction coverage and investigate empty, failed, timed-out,
@@ -59,8 +65,9 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
 - [x] Finish and run meaningful isolated tests for mode dispatch, hybrid fusion,
   evidence budgets, provider timeouts/fallback diagnostics, generation validation,
   citations, source resolution and conversation/project/org/user isolation.
-  Evidence: `stage-e-implementation.md`; current formatted code passes **180/180**
-  with all C/D/E disposable-service opt-ins enabled. Controlled model fixtures do
+  Evidence: `stage-e-implementation.md`; E.3 passed **180/180**, and the latest
+  opt-in citation implementation passes **195/195** with all disposable-service
+  checks enabled. Controlled model fixtures do
   not close the actual-corpus answer-quality checks below.
 - [ ] After C/D pass, run the reviewed actual-source set separately through vector,
   graph and hybrid API modes with the configured real generation provider.
@@ -74,6 +81,9 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
   become successful completed answers or leak foreign evidence.
 - [ ] Exercise authenticated Flask-to-client query and passage-resolution flows;
   record remaining frontend integration separately rather than assuming a working UI.
+- [ ] Resolve/verify real-corpus status/query latency before production serving:
+  final single full-readiness check returned correct capabilities but took **80.29s**;
+  an overbroad combined proof check exceeded 180s. Full-scan proof shortcuts remain.
 - [ ] Fix failing required cases and rerun affected checks; add final C/D/E evidence
   links and explicit acceptance decisions here and in `spec.md` before closing stages.
 

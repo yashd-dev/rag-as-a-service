@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-10-23T19:21:58.994751+00:00",
+  "operation": "read_only_citation_strategy_coverage_plan",
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "expected_chunks": 10417,
+  "counts": {
+    "processable_chunks": 10417,
+    "citation_bearing_chunks": 78,
+    "empty_pattern_chunks": 10339,
+    "verifier_chunks": 9,
+    "planned_verifier_decisions": 11,
+    "literal_citation_names": 90
+  },
+  "documents_with_exact_supported_pattern": 41,
+  "unique_normalized_case_references": 59,
+  "references_shared_across_documents": 4,
+  "plan_failures": [],
+  "neo4j_writes": false,
+  "model_inference_calls": 0,
+  "coverage_note": "Exact supported AIR/SC forms and current English affirmative cues only; these counts do not measure all legal citations or semantic correctness."
+}

@@ -1,0 +1,123 @@
+{
+  "expected_chunks": 10417,
+  "valid_extractions": 2,
+  "empty_extractions": 0,
+  "entities": 2,
+  "assertions": 1,
+  "evidence_spans": 3,
+  "entity_types": {
+    "Case": 2
+  },
+  "relation_types": {
+    "CITES": 1
+  },
+  "provenance": {
+    "verified_spans": 3,
+    "total_spans": 3,
+    "dangling_spans": 0
+  },
+  "assertion_samples": [
+    {
+      "graph_key": "3a999c237fe79f1dae20240509db76ded52568b2ccc69aaf427da00ed1a1e68a",
+      "vector_partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+      "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+      "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+      "key": "3d2d37b9a0a48e8e38ebfe7634a1f7a76fdbacead7337eb59a9052a832ee4b85",
+      "source": "76addea61eba8f0945021092d9f76728e49672e0475e98b4f0e928d11795062e",
+      "target": "849933a75055a4e3360b041c776a64e2ab77bf9ec4cc1e9f9930980e39aec3c3",
+      "relation": "CITES",
+      "id": "3d2d37b9a0a48e8e38ebfe7634a1f7a76fdbacead7337eb59a9052a832ee4b85",
+      "evidence": [
+        {
+          "graph_key": "3a999c237fe79f1dae20240509db76ded52568b2ccc69aaf427da00ed1a1e68a",
+          "vector_partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+          "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+          "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+          "chunk_id": "chk_360d2d84553113a23ebbea5ef8e11075e349c3807003e971f7964fa4ba2a08ac",
+          "document_id": "doc_1037872795ec3dea8492fb0fb704c693239e41071c6fa66711bdbf464d920b8c",
+          "generation_id": "gen_1f888922e7327f625b9825e8b72de52e49f6455d1ebbe4e0a82d53f761a55f60",
+          "start_char": 4426,
+          "end_char": 4459,
+          "quote": "A.I.R. 1973 S.C. 303, referred to",
+          "key": "aa4592c637b0bcf48b9944aacace242d54adcf0b186d9f8b1f41be4c02eba6c2",
+          "id": "aa4592c637b0bcf48b9944aacace242d54adcf0b186d9f8b1f41be4c02eba6c2",
+          "kind": "assertion",
+          "target_key": "3d2d37b9a0a48e8e38ebfe7634a1f7a76fdbacead7337eb59a9052a832ee4b85",
+          "content_hash": "3b4503f424b3f11c04d0acf391e64527f49e2e0db7c2fdd3aa6d6745b4eaf7d5",
+          "method": "citation_pattern_llm_verification"
+        }
+      ]
+    }
+  ],
+  "graph_key": "3a999c237fe79f1dae20240509db76ded52568b2ccc69aaf427da00ed1a1e68a",
+  "state": "graph_partial",
+  "recorded_at": "2026-10-23T19:18:26.476905+00:00",
+  "operation": "bounded_optin_live_citation_integration",
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "extractor": {
+    "version": "case-citation-candidates-v1",
+    "strategy": "citation_candidates",
+    "provider": "ollama",
+    "model": "qwen3:1.7b",
+    "revision": "8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7",
+    "options": {
+      "temperature": 0,
+      "num_predict": 64,
+      "num_ctx": 4096
+    },
+    "think": false,
+    "transport": "ollama_api_chat",
+    "schema_hash": "7dcff6e8cd42a815d39344a392169469206c3630131bebbf4e4c188cebe20c52",
+    "prompt_hash": "f0e285f060af2b7cd9ed51320ee18eb8b150b5a55f1195b467acf63a106e6d92",
+    "pattern_hash": "469fb3e333f40a9340a569f70aaf29e5621a81714ac40f0122204770ef6d131d",
+    "cue_hash": "51f1300a71ff9f1af977f061f98688ceb73c5e62bebb41b8e9ddd536173dd043",
+    "validator_version": "quoted-legal-v2",
+    "window_chars": 450,
+    "entity_scope": [
+      "Case"
+    ],
+    "relation_scope": [
+      "CITES"
+    ]
+  },
+  "request_timeout_seconds": 120,
+  "selected_chunk_ids": [
+    "chk_566ba87dfdbf41ede87b64e486b921830c1d8f05d4c7387c1f2f86a86cd6e8a9",
+    "chk_360d2d84553113a23ebbea5ef8e11075e349c3807003e971f7964fa4ba2a08ac"
+  ],
+  "planned_verifier_budget": 2,
+  "actual_verifier_calls": 2,
+  "outcomes": [
+    {
+      "chunk_id": "chk_566ba87dfdbf41ede87b64e486b921830c1d8f05d4c7387c1f2f86a86cd6e8a9",
+      "state": "extracted",
+      "entities": 1,
+      "assertions": 0,
+      "candidate_decisions": 1
+    },
+    {
+      "chunk_id": "chk_360d2d84553113a23ebbea5ef8e11075e349c3807003e971f7964fa4ba2a08ac",
+      "state": "extracted",
+      "entities": 1,
+      "assertions": 1,
+      "candidate_decisions": 1
+    }
+  ],
+  "failure_summary": {
+    "pending": 10415
+  },
+  "nonpending_failures": [],
+  "pending_ids_omitted": true,
+  "cached_chunks_replayed": 2,
+  "additional_verifier_calls_on_replay": 0,
+  "incomplete_publication_refused": true,
+  "graph_published": false,
+  "active_settings_changed": false,
+  "active_capabilities": {
+    "text": true,
+    "vector": true,
+    "graph": false
+  },
+  "verified_vectors_retained": 10417,
+  "elapsed_seconds": 276.79
+}
