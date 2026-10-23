@@ -39,6 +39,10 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
   4 attempts, 0 accepted (2 length-truncated JSON, 1 invalid endpoint, 1 invalid
   evidence). Full enrichment/publication is stopped; model/budget suitability and
   review of valid real assertions remain outstanding.
+  Additional standalone local outputs are retained in `stage-d-local-smoke-summary.md`
+  and smoke artifacts 03–05: clean toy success on Qwen does not overcome the real OCR
+  failures. A newer small local model trial is authorized, with no active model/code
+  change, graph writes or hosted judgment-text requests.
 - [ ] Resolve unsuitable model/output/context behavior before processing the full
   advertised corpus; record the effective extractor model digest and recipe.
 - [ ] Complete extraction coverage and investigate empty, failed, timed-out,

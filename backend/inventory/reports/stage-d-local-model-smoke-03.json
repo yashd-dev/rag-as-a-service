@@ -1,0 +1,58 @@
+{
+  "recorded_at": "2026-10-23T16:59:34.449766+00:00",
+  "operation": "standalone_local_smoke_no_storage",
+  "model": {
+    "version": "quoted-legal-v2",
+    "provider": "ollama",
+    "model": "hf.co/zai-org/glm-edge-1.5b-chat-gguf:Q4_K_M",
+    "revision": "ecab014058c4e70499ad6638f69ad5d18fa7fbc40aac9780a3f2e947d6bf3693",
+    "options": {
+      "temperature": 0,
+      "num_predict": 682,
+      "num_ctx": 2048
+    },
+    "schema_hash": "dda06fe4af699445bc77df783c4c193db6f8325fd3ad537c2d5344f41e4c4461"
+  },
+  "advertised_context": {
+    "chatglm.context_length": 2048
+  },
+  "requested_context": 2048,
+  "production_minimum_context_met": false,
+  "request_timeout_seconds": 120,
+  "neo4j_writes": false,
+  "persisted_configuration_changed": false,
+  "hosted_text_requests": 0,
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "cases": [
+    {
+      "kind": "synthetic_clean",
+      "chunk_id": "temporary_toy_chunk",
+      "canonical_content_hash": "3bc64837e251ac8cc183dd2e4c1fcda0a0fbc65aab17d61af255c225a5a08c49",
+      "input_text": "This judgment cited AIR 1967 SC 1326.",
+      "manual_legal_review": "not_completed",
+      "indexed": false,
+      "source_rule_validation": "failed",
+      "error_code": "invalid_endpoints",
+      "expected_toy_match": false,
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"AIR\",\n      \"type\": \"Judge\"\n    },\n    {\n      \"name\": \"SC\",\n      \"type\": \"Statute\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"CITES\",\n      \"quote\": \"This judgment cited AIR 1967 SC 1326.\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 1,\n      \"relation\": \"INTERPRETS\",\n      \"quote\": \"This judgment cited AIR 1967 SC 1326.\"\n    }\n  ]\n}"
+    },
+    {
+      "kind": "canonical_ocr",
+      "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+      "canonical_content_hash": "ccb1fb58315696fa9531695e5daf81caf7e908b84e8f083eb75a76dc392be79a",
+      "input_text": "A\n\nll\n\nc\n\n0\n\nE\n\nF\n\nG\n\nH\n\n87\n\nR. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS. April 25, 1973\n\n(A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM, JJ.]\n\nlnduslrial Dispute-Sen·ices of en1ployees of State U11dcrtakings transferred to ~orporolion-Condirions of transfer, interpretation of-Whether employees emztled lo get Dearness Allowance at same rate and on same basis as paid by State Gover11me11t to its employees.\n\nThree industrial undertakings owned and managed by the Madhya Pradesh Government were transferred to the Madhya Pradesh State Industries Corpora. lion with effect from April I, 1963. By letter dated February 16, 1963 the State Government offered to transfer the services of the employees of the three under .. takings to the Corporation on two conditions. The first one was that their exist ing pay and scale and other conditions of service and benefits to which they the were entitled would not be affected by the transfer. The second was that transfer of services would not be treated as an interruption in service. In other words, .it was said, the employees would be entitled to leave and other benefits on the same basis as if their services under the State Corporation were a continua ... tion of their total uninter_rupted services under the said undertakings. This offer was accepted by the employees. However, relying on the second condition men .. tioned in the aforesaid letter the employees raised an industrial dispute in 1968, claiming from the Corporation, dearness allowance on the same scale and on the same basis as it was subsequently being paid by the State Government to its employees. The Labour Court rejected the contention.",
+      "manual_legal_review": "not_completed",
+      "indexed": false,
+      "source_rule_validation": "failed",
+      "error_code": "invalid_evidence",
+      "expected_toy_match": null,
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"A.N. GROVER\",\n      \"type\": \"Person\"\n    },\n    {\n      \"name\": \"A.K. MUKHERJEA\",\n      \"type\": \"Person\"\n    },\n    {\n      \"name\": \"C.A. VAIDIALINGAM\",\n      \"type\": \"Person\"\n    },\n    {\n      \"name\": \"R.C. SHARMA\",\n      \"type\": \"Person\"\n    },\n    {\n      \"name\": \"THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\",\n      \"type\": \"Organization\"\n    },\n    {\n      \"name\": \"Industrial Dispute\",\n      \"type\": \"Judge\"\n    },\n    {\n      \"name\": \"Sen·ices of en1ployees of State U11dcrkings transferred to ~orporolion-Condirions of transfer, interpretation of-Whether employees emztled lo get Dearness Allowance at same rate and on same basis as paid by State Gover11me11t to its employees.\",\n      \"type\": \"Judge\"\n    },\n    {\n      \"name\": \"Madhya Pradesh Government\",\n      \"type\": \"Organization\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"CITES\",\n      \"quote\": \"By letter dated February 16, 1963 the State Government offered to transfer the services of the employees of the three under...\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 1,\n      \"relation\": \"CITES\",\n      \"quote\": \"The first one was that their existing pay and scale and other conditions of service and benefits to which they were entitled would not be affected by the transfer.\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 2,\n      \"relation\": \"CITES\",\n      \"quote\": \"However, relying on the second condition mentioned in the aforesaid letter...\"\n    },\n    {\n      \"source\": -1,\n      \"target\": 3,\n      \"relation\": \"CITES\",\n      \"quote\": \"...the employees raised an industrial dispute in 1968...\"\n    }\n  ]\n}"
+    }
+  ],
+  "model_progress_log": [
+    "ollama_generate start model=hf.co/zai-org/glm-edge-1.5b-chat-gguf:Q4_K_M json_mode=True prompt_chars=893 timeout=120 options={'temperature': 0, 'num_predict': 682, 'num_ctx': 2048}",
+    "ollama_generate done model=hf.co/zai-org/glm-edge-1.5b-chat-gguf:Q4_K_M response_chars=429 eval_count=161 done_reason=stop total_duration=17929743287",
+    "ollama_generate start model=hf.co/zai-org/glm-edge-1.5b-chat-gguf:Q4_K_M json_mode=True prompt_chars=2581 timeout=120 options={'temperature': 0, 'num_predict': 682, 'num_ctx': 2048}",
+    "ollama_generate done model=hf.co/zai-org/glm-edge-1.5b-chat-gguf:Q4_K_M response_chars=1698 eval_count=512 done_reason=stop total_duration=47457316954"
+  ]
+}

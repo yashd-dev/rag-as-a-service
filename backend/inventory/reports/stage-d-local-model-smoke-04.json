@@ -1,0 +1,93 @@
+{
+  "recorded_at": "2026-10-23T17:09:05.696992+00:00",
+  "operation": "standalone_temporary_explicit_prompt_smoke",
+  "underlying_extractor_profile": {
+    "version": "quoted-legal-v2",
+    "provider": "ollama",
+    "model": "qwen2.5:3b",
+    "revision": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+    "options": {
+      "temperature": 0,
+      "num_predict": 1000,
+      "num_ctx": 4096
+    },
+    "schema_hash": "dda06fe4af699445bc77df783c4c193db6f8325fd3ad537c2d5344f41e4c4461"
+  },
+  "temporary_prompt_prefix": "Task rules: copy entity names and quotations EXACTLY, preserving OCR, case, punctuation and spaces. Omit an entity if you cannot copy its exact mention. Ignore page/column letters, numbers and document references: they are not judges or people. A complete law-report citation is one Case, not a Judge or Statute. CITES/OVERRULES/DISTINGUISHES target Case; INTERPRETS targets Statute or Provision; DECIDED_BY targets Court or Judge. Never turn a petition dismissal, rejected contention or employee transfer into one of these legal relations. Without an explicit supported predicate return relations=[]. Use at most 3 entities and 2 relations. Source=-1 is the current document; target is a valid zero-based entity index. Never invent or shorten quotes with ellipses. Example only, do not copy it unless its names occur in the actual source:\nINPUT: This court cited Example Case v. State.\nOUTPUT: {\"entities\": [{\"name\": \"Example Case v. State.\", \"type\": \"Case\"}], \"relations\": [{\"source\": -1, \"target\": 0, \"relation\": \"CITES\", \"quote\": \"This court cited Example Case v. State.\"}]}\nSCHEMA: {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"entities\", \"relations\"], \"properties\": {\"entities\": {\"type\": \"array\", \"maxItems\": 8, \"items\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"name\", \"type\"], \"properties\": {\"name\": {\"type\": \"string\", \"minLength\": 2, \"maxLength\": 300}, \"type\": {\"type\": \"string\", \"enum\": [\"Case\", \"Statute\", \"Provision\", \"Court\", \"Judge\", \"Person\", \"Organization\", \"LegalConcept\"]}}}}, \"relations\": {\"type\": \"array\", \"maxItems\": 8, \"items\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"source\", \"target\", \"relation\", \"quote\"], \"properties\": {\"source\": {\"type\": \"integer\", \"minimum\": -1, \"maximum\": 7}, \"target\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 7}, \"relation\": {\"type\": \"string\", \"enum\": [\"CITES\", \"INTERPRETS\", \"OVERRULES\", \"DISTINGUISHES\", \"DECIDED_BY\"]}, \"quote\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 1800}}}}}}\nACTUAL TASK:\n",
+  "temporary_prompt_hash": "fbb3af72441f71ef84b4255d1d096f8a7e0c906f5d3f9645176f8820e74b4b9b",
+  "advertised_context": {
+    "qwen2.context_length": 32768
+  },
+  "request_timeout_seconds": 120,
+  "neo4j_writes": false,
+  "persisted_configuration_changed": false,
+  "production_code_changed": false,
+  "hosted_text_requests": 0,
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "cases": [
+    {
+      "kind": "synthetic_clean",
+      "chunk_id": "temporary_toy_chunk",
+      "canonical_content_hash": "3bc64837e251ac8cc183dd2e4c1fcda0a0fbc65aab17d61af255c225a5a08c49",
+      "input_text": "This judgment cited AIR 1967 SC 1326.",
+      "manual_legal_review": "not_completed",
+      "indexed": false,
+      "source_rule_validation": "passed",
+      "entities": [
+        {
+          "name": "AIR 1967 SC 1326",
+          "type": "Case",
+          "key": "a7b5a5853fe5441db77bf39c5f5d95129e78217e7d9855575567daa2a69f079d",
+          "mentions": [
+            {
+              "chunk_id": "temporary_toy_chunk",
+              "document_id": "temporary_toy_document",
+              "generation_id": "temporary_toy_generation",
+              "start_char": 20,
+              "end_char": 36,
+              "quote": "AIR 1967 SC 1326"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "key": "d5146447e220814339905d8aca5b3ceb8e4605f6392d4e1a1e1eb5675bd2520b",
+          "source": "58fc7d5bfb97d9ba8da31a7d87e9532ca0f92b7edd327a10573a1b4592773b05",
+          "target": "a7b5a5853fe5441db77bf39c5f5d95129e78217e7d9855575567daa2a69f079d",
+          "relation": "CITES",
+          "evidence": [
+            {
+              "chunk_id": "temporary_toy_chunk",
+              "document_id": "temporary_toy_document",
+              "generation_id": "temporary_toy_generation",
+              "start_char": 0,
+              "end_char": 37,
+              "quote": "This judgment cited AIR 1967 SC 1326."
+            }
+          ]
+        }
+      ],
+      "expected_toy_match": true,
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"AIR 1967 SC 1326\",\n      \"type\": \"Case\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"CITES\",\n      \"quote\": \"This judgment cited AIR 1967 SC 1326.\"\n    }\n  ]\n}"
+    },
+    {
+      "kind": "canonical_ocr",
+      "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+      "canonical_content_hash": "ccb1fb58315696fa9531695e5daf81caf7e908b84e8f083eb75a76dc392be79a",
+      "input_text": "A\n\nll\n\nc\n\n0\n\nE\n\nF\n\nG\n\nH\n\n87\n\nR. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS. April 25, 1973\n\n(A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM, JJ.]\n\nlnduslrial Dispute-Sen·ices of en1ployees of State U11dcrtakings transferred to ~orporolion-Condirions of transfer, interpretation of-Whether employees emztled lo get Dearness Allowance at same rate and on same basis as paid by State Gover11me11t to its employees.\n\nThree industrial undertakings owned and managed by the Madhya Pradesh Government were transferred to the Madhya Pradesh State Industries Corpora. lion with effect from April I, 1963. By letter dated February 16, 1963 the State Government offered to transfer the services of the employees of the three under .. takings to the Corporation on two conditions. The first one was that their exist ing pay and scale and other conditions of service and benefits to which they the were entitled would not be affected by the transfer. The second was that transfer of services would not be treated as an interruption in service. In other words, .it was said, the employees would be entitled to leave and other benefits on the same basis as if their services under the State Corporation were a continua ... tion of their total uninter_rupted services under the said undertakings. This offer was accepted by the employees. However, relying on the second condition men .. tioned in the aforesaid letter the employees raised an industrial dispute in 1968, claiming from the Corporation, dearness allowance on the same scale and on the same basis as it was subsequently being paid by the State Government to its employees. The Labour Court rejected the contention.",
+      "manual_legal_review": "not_completed",
+      "indexed": false,
+      "source_rule_validation": "failed",
+      "error_code": "unsupported_relation",
+      "expected_toy_match": null,
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"R. C. SHARMA\",\n      \"type\": \"Judge\"\n    },\n    {\n      \"name\": \"THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\",\n      \"type\": \"Person\"\n    }\n  ],\n  \"relations\": [\n    {\n      \"source\": -1,\n      \"target\": 0,\n      \"relation\": \"DECIDED_BY\",\n      \"quote\": \"R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\"\n    }\n  ]\n}"
+    }
+  ],
+  "model_progress_log": [
+    "ollama_generate start model=qwen2.5:3b json_mode=True prompt_chars=2912 timeout=120 options={'temperature': 0, 'num_predict': 1000, 'num_ctx': 4096}",
+    "ollama_generate done model=qwen2.5:3b response_chars=245 eval_count=93 done_reason=stop total_duration=64639168065",
+    "ollama_generate start model=qwen2.5:3b json_mode=True prompt_chars=4600 timeout=120 options={'temperature': 0, 'num_predict': 1000, 'num_ctx': 4096}",
+    "ollama_generate done model=qwen2.5:3b response_chars=408 eval_count=151 done_reason=stop total_duration=46196026781"
+  ]
+}
