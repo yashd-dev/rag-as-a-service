@@ -11,19 +11,24 @@ The user explicitly requested this durable reminder while authorizing independen
 Stage E development alongside C's indexing. This supplements `spec.md`; it does
 not waive any of its data-preservation, model-provenance or retrieval-quality gates.
 
-## C — Neo4j vectors and semantic retrieval: OPEN
+## C — Neo4j vectors and semantic retrieval: COMPLETE for the advertised vector scope
 
-- [ ] Finish the entire current **10,417-chunk / 333-document** vector generation;
+- [x] Finish the entire current **10,417-chunk / 333-document** vector generation;
   reconcile expected/valid/missing/failed counts and verify the index is ONLINE.
-- [ ] Recheck served embedding digest, dimensions, finite vectors, content hashes,
+- [x] Recheck served embedding digest, dimensions, finite vectors, content hashes,
   current canonical manifest, source/document links and project/tenant isolation.
-- [ ] Repeat the build and demonstrate idempotent reuse of all matching valid
+- [x] Repeat the build and demonstrate idempotent reuse of all matching valid
   vectors; record retry/repair outcomes and retained prior generations.
-- [ ] Run `backend/scripts/evaluate_vectors.py` against the user-approved frozen
-  `backend/evaluation/stage-c.json`. Save ranked evidence/scores, vector Recall@k/MRR,
+- [x] Run `backend/scripts/evaluate_vectors.py` against the user-approved versioned
+  `backend/evaluation/stage-c-v3.json`. Save ranked evidence/scores, vector Recall@k/MRR,
   the required BM25-miss comparison and the unanswerable control. Fix required misses.
-- [ ] Validate configured publication/withdrawal/rollback behavior and readiness
+- [x] Validate configured publication/withdrawal/rollback behavior and readiness
   invalidation; retain backup/legacy data and record final Stage C evidence.
+
+Evidence: `stage-c-complete.md`, `stage-c-vector-evaluation-v3-01.json` and the
+preserved failed v1/v2 reports/review history. The original headnote-only evaluations
+are not relabeled as passing. This is a reviewed vector smoke set, not held-out
+answer-quality evidence. Reopen affected C checks when corpus/model/index changes.
 
 ## D — Actual LLM enrichment and graph retrieval: OPEN
 
@@ -63,8 +68,8 @@ not waive any of its data-preservation, model-provenance or retrieval-quality ga
 
 ## Evidence already available — does not close the gates above
 
-- C implementation, staging and approved expected source labels:
-  `spec.md` C.1–C.3a and `backend/evaluation/stage-c.json`.
+- C completion: `backend/inventory/reports/stage-c-complete.md` and the source-reviewed
+  `backend/evaluation/stage-c-v3.json`; original fixtures/failures remain preserved.
 - D implementation and disposable-Neo4j storage/traversal verification:
   `backend/inventory/reports/stage-d-parallel.md`.
 - E isolated/live results: **pending**; populate after checks actually run.

@@ -138,7 +138,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", type=Path, default=Path("backend/.env"))
     parser.add_argument(
-        "--fixture", type=Path, default=Path("backend/evaluation/stage-c.json")
+        "--fixture", type=Path, default=Path("backend/evaluation/stage-c-v3.json")
     )
     parser.add_argument(
         "--output",

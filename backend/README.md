@@ -1,10 +1,11 @@
 # Backend — canonical indexing and Neo4j vectors
 
-Stage B owns canonical text, identity and processing state. Stage C adds real,
-model-versioned Neo4j vectors and semantic retrieval through an explicit CLI.
-The live corpus build and acceptance record are tracked in `spec.md`. Grounded
-graph retrieval and answer dispatch retain their D/E gates. The answer API still
-returns **409** with readiness details.
+Stage B owns canonical text, identity and processing state. Stage C is verified
+and published for **333 canonical documents / 10,417 real Neo4j vectors**. Its
+reviewed vector smoke set, integrity, reuse and availability rollback passed;
+see `inventory/reports/stage-c-complete.md`. Query/source API implementation is
+present. Graph enrichment and real grounded-answer quality retain their D/E
+acceptance gates; unavailable graph/hybrid modes return **409**, not vector fallback.
 
 ## Run from the repository root
 
@@ -108,7 +109,7 @@ recipe before building its vector generation.
 
 # Frozen user-reviewed source labels; output must be a NEW evidence filename.
 .venv/bin/python -m backend.scripts.evaluate_vectors --env-file backend/.env \
-  --fixture backend/evaluation/stage-c.json \
+  --fixture backend/evaluation/stage-c-v3.json \
   --output backend/inventory/reports/stage-c-vector-evaluation-new.json
 
 # Only after scoped integrity, actual retrieval review and rollback checks pass.
