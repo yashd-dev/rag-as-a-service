@@ -1,0 +1,77 @@
+{
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "expected_chunks": 10417,
+  "documents": 333,
+  "excluded_document_ids": [],
+  "valid_extractions": 0,
+  "empty_extractions": 0,
+  "entities": 0,
+  "assertions": 0,
+  "evidence_spans": 0,
+  "entity_types": {},
+  "relation_types": {},
+  "provenance": {
+    "verified_spans": 0,
+    "total_spans": 0,
+    "dangling_spans": 0
+  },
+  "assertion_samples": [],
+  "graph_key": "6ff5b096f68b53fa971c9b2afd3ab099da17e1040eed9fc92fb6f12f44cffc11",
+  "state": "graph_partial",
+  "attempted": 4,
+  "reused": 0,
+  "extractor": {
+    "version": "quoted-legal-v2",
+    "provider": "ollama",
+    "model": "smollm2:135m",
+    "revision": "9077fe9d2ae1a4a41a868836b56b8163731a8fe16621397028c2c76f838c6907",
+    "options": {
+      "temperature": 0,
+      "num_predict": 700,
+      "num_ctx": 4096
+    },
+    "schema_hash": "dda06fe4af699445bc77df783c4c193db6f8325fd3ad537c2d5344f41e4c4461"
+  },
+  "recorded_at": "2026-10-23T16:16:51.570123+00:00",
+  "operation": "bounded_initial_graph_extraction",
+  "failure_summary": {
+    "parse_error": 2,
+    "invalid_endpoints": 1,
+    "invalid_evidence": 1,
+    "pending": 10413
+  },
+  "attempted_failures": [
+    {
+      "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+      "code": "parse_error"
+    },
+    {
+      "chunk_id": "chk_f424e1616c03f190cf8f8b9671278e661fd25a3a5ed371e94b66e18224c36f4b",
+      "code": "invalid_endpoints"
+    },
+    {
+      "chunk_id": "chk_b7a7f5205ca9ea29b1a942ac2e759e5d5bc4553cdf14a85b1b661eb38cefce7d",
+      "code": "parse_error"
+    },
+    {
+      "chunk_id": "chk_22af697f4d8c53a10d298fe826f399b679869c941ce959ea8193c6fe1d645cfc",
+      "code": "invalid_evidence"
+    }
+  ],
+  "pending_chunk_ids_omitted": true,
+  "model_progress_log": [
+    "ollama_generate start model=smollm2:135m json_mode=True prompt_chars=2581 timeout=60.0 options={'temperature': 0, 'num_predict': 700, 'num_ctx': 4096}",
+    "ollama_generate done model=smollm2:135m response_chars=1126 eval_count=700 done_reason=length total_duration=30745484622",
+    "ollama_generate start model=smollm2:135m json_mode=True prompt_chars=2654 timeout=60.0 options={'temperature': 0, 'num_predict': 700, 'num_ctx': 4096}",
+    "ollama_generate done model=smollm2:135m response_chars=1344 eval_count=408 done_reason=stop total_duration=18521488757",
+    "ollama_generate start model=smollm2:135m json_mode=True prompt_chars=2572 timeout=60.0 options={'temperature': 0, 'num_predict': 700, 'num_ctx': 4096}",
+    "ollama_generate done model=smollm2:135m response_chars=1723 eval_count=700 done_reason=length total_duration=26273609146",
+    "ollama_generate start model=smollm2:135m json_mode=True prompt_chars=2657 timeout=60.0 options={'temperature': 0, 'num_predict': 700, 'num_ctx': 4096}",
+    "ollama_generate done model=smollm2:135m response_chars=1774 eval_count=621 done_reason=stop total_duration=23324407019"
+  ],
+  "capabilities_after": {
+    "text": true,
+    "vector": true,
+    "graph": false
+  }
+}

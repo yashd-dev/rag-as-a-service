@@ -35,6 +35,10 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
 - [ ] After C's gate passes, run a small real-model extraction batch and review
   actual typed entities/assertions against their exact original OCR quotations.
   Model tag availability and controlled test responses do not establish legal accuracy.
+  Actual first probe is recorded in `stage-d-live-batch-01.json` / `stage-d-live-probe.md`:
+  4 attempts, 0 accepted (2 length-truncated JSON, 1 invalid endpoint, 1 invalid
+  evidence). Full enrichment/publication is stopped; model/budget suitability and
+  review of valid real assertions remain outstanding.
 - [ ] Resolve unsuitable model/output/context behavior before processing the full
   advertised corpus; record the effective extractor model digest and recipe.
 - [ ] Complete extraction coverage and investigate empty, failed, timed-out,
