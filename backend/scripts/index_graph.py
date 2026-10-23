@@ -10,8 +10,7 @@ from dotenv import dotenv_values
 
 from backend.app.services.embedding_service import EmbeddingGemmaProvider
 from backend.app.services.evidence_graph import EvidenceGraph
-from backend.app.services.graph_extraction import GraphExtractor
-from backend.app.services.llm_client import graph_extraction_llm
+from backend.app.services.graph_extraction import graph_extractor_for_project
 from backend.app.services.neo4j_vectors import Neo4jVectorStore, canonical_snapshot
 
 
@@ -27,6 +26,10 @@ def execute(args):
     config.setdefault("OLLAMA_BASE_URL", "http://localhost:11434")
     config.setdefault("GRAPH_LLM_MODEL", "smollm2:135m")
     config.setdefault("GRAPH_LLM_NUM_PREDICT", 700)
+    if getattr(args, "strategy", None) is not None:
+        config["GRAPH_EXTRACTION_STRATEGY"] = args.strategy
+    if getattr(args, "model", None) is not None:
+        config["GRAPH_LLM_MODEL"] = args.model
     snapshot = canonical_snapshot(
         config, {"id": args.project_id, "organization_id": args.organization_id}
     )
@@ -35,6 +38,8 @@ def execute(args):
         "expected_chunks": len(snapshot["rows"]),
         "documents": len({row["document_id"] for row in snapshot["rows"]}),
         "excluded_document_ids": snapshot["excluded_document_ids"],
+        "strategy": config.get("GRAPH_EXTRACTION_STRATEGY", "full_legal"),
+        "requested_model": config["GRAPH_LLM_MODEL"],
     }
     if not any((args.apply, args.query, args.status, args.publish, args.withdraw)):
         return summary | {
@@ -48,7 +53,7 @@ def execute(args):
     )
     vectors = Neo4jVectorStore(config, snapshot, provider.revision())
     try:
-        extractor = GraphExtractor(graph_extraction_llm(config), vectors.key)
+        extractor = graph_extractor_for_project(config, vectors.key)
         graph = EvidenceGraph(vectors, extractor.profile)
         graph.require_vectors()
         if args.apply:
@@ -75,6 +80,8 @@ def execute(args):
             != snapshot
         ):
             raise ValueError("Canonical generation changed during graph operation")
+        if hasattr(extractor, "inference_calls"):
+            result["citation_verifier_calls"] = extractor.inference_calls
         return summary | result | {"extractor": extractor.profile}
     finally:
         vectors.close()
@@ -85,6 +92,15 @@ def main(argv=None):
     parser.add_argument("--env-file", type=Path, default=Path("backend/.env"))
     parser.add_argument("--organization-id", required=True)
     parser.add_argument("--project-id", required=True)
+    parser.add_argument(
+        "--strategy",
+        choices=["full_legal", "citation_candidates"],
+        help="Process-local opt-in; default/config remains full_legal",
+    )
+    parser.add_argument(
+        "--model",
+        help="Process-local local graph model override; does not edit application settings",
+    )
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument("--apply", action="store_true")
     operation.add_argument(

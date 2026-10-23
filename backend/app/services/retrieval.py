@@ -11,8 +11,7 @@ from neo4j.exceptions import DriverError, Neo4jError
 from backend.app.db.indexing import IndexRepository
 from backend.app.services.embedding_service import embedding_provider_for_project
 from backend.app.services.evidence_graph import EvidenceGraph
-from backend.app.services.graph_extraction import GraphExtractor
-from backend.app.services.llm_client import graph_extraction_llm
+from backend.app.services.graph_extraction import graph_extractor_for_project
 from backend.app.services.neo4j_vectors import Neo4jVectorStore, canonical_snapshot
 
 MODES = {"vector", "graph", "hybrid"}
@@ -188,7 +187,7 @@ class RetrievalService:
 
     def graph(self, vectors):
         try:
-            extractor = GraphExtractor(graph_extraction_llm(self.config), vectors.key)
+            extractor = graph_extractor_for_project(self.config, vectors.key)
             graph = EvidenceGraph(vectors, extractor.profile)
         except (ValueError, httpx.HTTPError):
             raise RetrievalUnavailable("graph_not_ready") from None
@@ -253,6 +252,11 @@ class RetrievalService:
                     "context_count": len(context),
                     "evidence_byte_budget": MAX_EVIDENCE_BYTES,
                     "graph_added": graph_result["graph_added"] if graph_result else 0,
+                    "graph_strategy": (
+                        getattr(graph, "profile", {}).get("strategy", "full_legal")
+                        if graph
+                        else None
+                    ),
                     "retrieval_ms": round((time.perf_counter() - started) * 1000, 2),
                 },
             }
@@ -282,6 +286,7 @@ class RetrievalService:
                         "graphrag_ready",
                         graph.key,
                     )
+                    base["graph_extractor"] = getattr(graph, "profile", {})
                 except RetrievalUnavailable as exc:
                     base["failures"] = [
                         {"stage": "graph", "code": exc.code, "retryable": True}
@@ -309,6 +314,7 @@ class RetrievalService:
             base["state"] = "text_ready"
             base.pop("vector_generation", None)
             base.pop("graph_generation", None)
+            base.pop("graph_extractor", None)
             base["failures"] = [
                 {"stage": "vector", "code": exc.code, "retryable": True}
             ]

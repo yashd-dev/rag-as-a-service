@@ -25,7 +25,7 @@ def test_graph_cli_default_plan_cannot_call_models_or_neo4j(
         pytest.fail("Graph plan must not call a model or Neo4j")
 
     monkeypatch.setattr(index_graph, "Neo4jVectorStore", forbidden)
-    monkeypatch.setattr(index_graph, "GraphExtractor", forbidden)
+    monkeypatch.setattr(index_graph, "graph_extractor_for_project", forbidden)
     before = path.read_bytes()
     assert (
         index_graph.main(

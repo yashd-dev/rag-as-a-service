@@ -72,7 +72,7 @@ def test_actual_vector_graph_hybrid_flask_wiring_with_canonical_sources(
             lambda *args: provider,
         )
         monkeypatch.setattr(
-            "backend.app.services.retrieval.graph_extraction_llm", lambda *args: llm
+            "backend.app.services.llm_client.graph_extraction_llm", lambda *args: llm
         )
 
         def generate(config, messages):

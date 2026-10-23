@@ -9,6 +9,7 @@ import httpx
 from backend.app.services.rag import fingerprint
 
 EXTRACTOR_VERSION = "quoted-legal-v2"
+AIR_SC_PATTERN = r"a\.?\s*i\.?\s*r\.?\s+([12]\d{3})\s+s\.?\s*c\.?\s+(\d{1,6})"
 ENTITY_TYPES = (
     "Case",
     "Statute",
@@ -86,9 +87,7 @@ def occurrences(text, quote, row):
 
 def entity_identity(entity, row, graph_key):
     name = " ".join(unicodedata.normalize("NFKC", entity["name"]).casefold().split())
-    citation = re.fullmatch(
-        r"a\.?\s*i\.?\s*r\.?\s+([12]\d{3})\s+s\.?\s*c\.?\s+(\d{1,6})", name
-    )
+    citation = re.fullmatch(AIR_SC_PATTERN, name)
     # Exact reporter/year/court/page identity is shared; a person's/case's similar name is not.
     identity = (
         ["air-sc", *citation.groups()]
@@ -98,7 +97,13 @@ def entity_identity(entity, row, graph_key):
     return fingerprint([graph_key, identity])
 
 
-def validate_extraction(payload, row, graph_key):
+def validate_extraction(payload, row, graph_key, method="llm_explicit_quote"):
+    if method not in {
+        "llm_explicit_quote",
+        "citation_pattern",
+        "citation_pattern_llm_verification",
+    }:
+        raise ExtractionError("invalid_extraction_method")
     if not isinstance(payload, dict) or set(payload) != {"entities", "relations"}:
         raise ExtractionError("parse_error")
     for collection in ("entities", "relations"):
@@ -249,7 +254,7 @@ def validate_extraction(payload, row, graph_key):
         "assertions": assertions,
         "chunk_id": row["id"],
         "content_hash": row["content_hash"],
-        "method": "llm_explicit_quote",
+        "method": method,
         "extractor_version": EXTRACTOR_VERSION,
         "payload": payload,
     }
@@ -303,3 +308,16 @@ class GraphExtractor:
         except (ValueError, TypeError):
             raise ExtractionError("parse_error") from None
         return validate_extraction(payload, row, self.key)
+
+
+def graph_extractor_for_project(config, vector_partition):
+    strategy = config.get("GRAPH_EXTRACTION_STRATEGY", "full_legal")
+    if strategy == "full_legal":
+        from backend.app.services.llm_client import graph_extraction_llm
+
+        return GraphExtractor(graph_extraction_llm(config), vector_partition)
+    if strategy == "citation_candidates":
+        from backend.app.services.citation_extraction import CitationCandidateExtractor
+
+        return CitationCandidateExtractor(config, vector_partition)
+    raise ValueError("Unsupported graph extraction strategy")

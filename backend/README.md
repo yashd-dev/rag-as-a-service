@@ -35,7 +35,8 @@ Required existing settings: `TURSO_DATABASE_URL` (or `TURSO_CONNECTION_URL`) and
 `BACKEND_INTERNAL_SECRET`. `OLLAMA_EMBEDDING_MODEL` records the intended recipe;
 the served digest/dimensions are verified before vector builds and queries. Existing
 `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` support graph reads and explicit vector builds.
-No new dependency or application environment variable was introduced.
+No new package dependency is required. Optional `GRAPH_EXTRACTION_STRATEGY`
+selects an opt-in graph extractor; its default remains `full_legal`.
 
 ## Preview and stage an existing OCR source
 
@@ -240,6 +241,47 @@ STAGE_D_TEST_NEO4J_PASSWORD="$DISPOSABLE_PASSWORD" \
 Stage D live acceptance is pending: configured-model extraction, reviewed actual
 cross-document evidence, failures/coverage, and independent graph retrieval.
 Stage E owns answer dispatch/hybrid fusion; Stage F owns frontend integration.
+
+### Opt-in small local citation verifier
+
+`citation_candidates` is an additive, citation-focused strategy. The existing
+`full_legal` extractor and active model settings remain the default. This mode
+recognizes exact AIR/year/SC/page reference strings from canonical text; it keeps
+all matching mention spans, and asks the local model only whether a bounded,
+source-validated affirmative `CITES` candidate is supported. Names and quotations
+come from source text, not model generation. Thinking is off and each verifier
+response is capped at 64 tokens. Chunks without eligible candidates make no text
+generation calls; `citation_verifier_calls` reports actual verifier attempts.
+
+```bash
+# Read-only process-local plan; does not edit backend/.env or load a model.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" \
+  --strategy citation_candidates --model qwen3:1.7b
+
+# Bounded integration only; first source chunks may have no eligible citations.
+.venv/bin/python -m backend.scripts.index_graph --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" \
+  --strategy citation_candidates --model qwen3:1.7b --apply --max-chunks 4
+```
+
+Persistent opt-in, only after source/coverage review, uses the new optional
+`GRAPH_EXTRACTION_STRATEGY=citation_candidates` plus existing
+`GRAPH_LLM_MODEL=qwen3:1.7b`. CLI overrides take precedence for that process and
+leave the settings file intact. The public query/source API contract is unchanged;
+published graph readiness/diagnostics identify its strategy/profile.
+
+Citation generations record strategy, model digest, pattern/cue/prompt/schema
+hashes and validator version. Cache replay rederives the exact source plan;
+unexpected entities, quotations or relations fail validation. Exceeding eight
+distinct candidates is an explicit retry/coverage error, not silent truncation.
+
+Coverage is intentionally limited to these exact citation forms and affirmative
+English cues. Citation mentions alone do not claim a legal stance. This mode does
+not fix broader judge/statute/concept NER, OCR variants or general graph quality.
+The initial narrow local diagnostic classified two actual reference windows and
+a negated control correctly; full corpus coverage, source review and graph/hybrid
+retrieval acceptance remain required in `inventory/reports/verification-return.md`.
 
 ## Stage E — grounded query and source API
 

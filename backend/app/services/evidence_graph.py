@@ -27,6 +27,15 @@ class EvidenceGraph:
         }
         self.rows = {row["id"]: row for row in vectors.snapshot["rows"]}
 
+    def validate_payload(self, payload, row):
+        if self.profile.get("strategy") == "citation_candidates":
+            from backend.app.services.citation_extraction import (
+                validate_candidate_payload,
+            )
+
+            return validate_candidate_payload(payload, row, self.key)
+        return validate_extraction(payload, row, self.key)
+
     def prepare(self):
         for label in (
             "RAGEndpoint",
@@ -97,9 +106,7 @@ class EvidenceGraph:
         ):
             return None
         try:
-            result = validate_extraction(
-                json.loads(record["result_json"]), row, self.key
-            )
+            result = self.validate_payload(json.loads(record["result_json"]), row)
             if record.get("state") in {"extracted", "empty"} and (
                 record["state"] == "empty"
             ) != (not result["entities"]):
@@ -126,8 +133,8 @@ class EvidenceGraph:
         )
 
     def write_chunk(self, row, result):
-        if self.rows.get(row["id"]) != row or result != validate_extraction(
-            result["payload"], row, self.key
+        if self.rows.get(row["id"]) != row or result != self.validate_payload(
+            result["payload"], row
         ):
             raise ValueError("Extraction outside canonical graph generation")
         evidence = self.evidence(row, result)

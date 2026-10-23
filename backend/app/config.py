@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -23,6 +23,7 @@ class Config:
     PLATFORM_LLM_MODEL = os.getenv("PLATFORM_LLM_MODEL", "gemini-2.5-flash")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GRAPH_LLM_MODEL = os.getenv("GRAPH_LLM_MODEL", "smollm2:135m")
+    GRAPH_EXTRACTION_STRATEGY = os.getenv("GRAPH_EXTRACTION_STRATEGY", "full_legal")
     GRAPH_LLM_TIMEOUT_SECONDS = os.getenv("GRAPH_LLM_TIMEOUT_SECONDS", "60")
     GRAPH_LLM_NUM_PREDICT = int(os.getenv("GRAPH_LLM_NUM_PREDICT", "700"))
     GRAPH_LLM_NUM_CTX = int(os.getenv("GRAPH_LLM_NUM_CTX", "4096"))
