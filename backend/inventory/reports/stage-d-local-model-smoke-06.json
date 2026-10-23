@@ -1,0 +1,160 @@
+{
+  "recorded_at": "2026-10-23T18:04:29.756719+00:00",
+  "operation": "standalone_authorized_qwen3_trial",
+  "transport": "ollama_api_chat",
+  "model": {
+    "model": "qwen3:1.7b",
+    "revision": "8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7"
+  },
+  "download_bytes": 1359293444,
+  "options": {
+    "temperature": 0,
+    "num_predict": 1000,
+    "num_ctx": 4096
+  },
+  "think": false,
+  "validator_version": "quoted-legal-v2",
+  "temporary_system_prompt": "Extract only named legal entities and explicit legal relations. Copy all names/quotes verbatim, including OCR errors, case and spacing; omit uncertain items. Ignore isolated page/column letters and numbers. Names before/after v. in case captions are parties, not judges. Extract the full case caption as Case. Judges are named people identified in a bench list with J./JJ.; case parties and legal topics are never Judge. Labour Court and High Court are Court, not Organization. A complete AIR/year/SC/page citation is one Case. CITES/OVERRULES/DISTINGUISHES target Case; INTERPRETS targets Statute/Provision; DECIDED_BY targets Court/Judge. A header listing judges is not an explicit DECIDED_BY statement under this task: omit that relation. Dismissals, rejected contentions and employment transfers are not DISTINGUISHES or CITES. A relation requires a minimal verbatim quote with its exact target name and the explicit legal predicate. Use source=-1 for this document; target is a valid zero-based entity index. Do not invent/correct/shorten quotes. Use at most 6 entities and 2 relations. Each entity names one individual item; split judge lists into individual verbatim names, never combine several people into one entity. Return empty relations when unsupported. The examples teach format; do not copy example names into the actual result. Return only the schema JSON.\nEXAMPLES=[{\"input\": \"This court cited Example Case v. State.\", \"output\": {\"entities\": [{\"name\": \"Example Case v. State.\", \"type\": \"Case\"}], \"relations\": [{\"source\": -1, \"target\": 0, \"relation\": \"CITES\", \"quote\": \"This court cited Example Case v. State.\"}]}}, {\"input\": \"ALPHA v. STATE [BETA, J.]\", \"output\": {\"entities\": [{\"name\": \"ALPHA v. STATE\", \"type\": \"Case\"}, {\"name\": \"BETA\", \"type\": \"Judge\"}], \"relations\": []}}]\nSCHEMA={\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"entities\", \"relations\"], \"properties\": {\"entities\": {\"type\": \"array\", \"maxItems\": 8, \"items\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"name\", \"type\"], \"properties\": {\"name\": {\"type\": \"string\", \"minLength\": 2, \"maxLength\": 300}, \"type\": {\"type\": \"string\", \"enum\": [\"Case\", \"Statute\", \"Provision\", \"Court\", \"Judge\", \"Person\", \"Organization\", \"LegalConcept\"]}}}}, \"relations\": {\"type\": \"array\", \"maxItems\": 8, \"items\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"source\", \"target\", \"relation\", \"quote\"], \"properties\": {\"source\": {\"type\": \"integer\", \"minimum\": -1, \"maximum\": 7}, \"target\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 7}, \"relation\": {\"type\": \"string\", \"enum\": [\"CITES\", \"INTERPRETS\", \"OVERRULES\", \"DISTINGUISHES\", \"DECIDED_BY\"]}, \"quote\": {\"type\": \"string\", \"minLength\": 1, \"maxLength\": 1800}}}}}}",
+  "temporary_prompt_hash": "c8506e773e4add6e2033fef7aecad8b329eaad6e5eb9cd66ecb0ba9d69030f9d",
+  "neo4j_writes": false,
+  "persisted_configuration_changed": false,
+  "production_code_changed": false,
+  "hosted_text_requests": 0,
+  "cases": [
+    {
+      "kind": "synthetic_clean",
+      "chunk_id": "temporary_toy_chunk",
+      "canonical_content_hash": "3bc64837e251ac8cc183dd2e4c1fcda0a0fbc65aab17d61af255c225a5a08c49",
+      "input_text": "This judgment cited AIR 1967 SC 1326.",
+      "indexed": false,
+      "manual_legal_review": "not_completed",
+      "unvalidated_raw_model_output": "{\"entities\": [{\"name\": \"AIR 1967 SC 1326\", \"type\": \"Case\"}], \"relations\": []}",
+      "actual_response_model": "qwen3:1.7b",
+      "thinking_chars": 0,
+      "eval_count": 33,
+      "prompt_eval_count": 761,
+      "done_reason": "stop",
+      "total_duration": 27357533422,
+      "source_rule_validation": "passed",
+      "entities": [
+        {
+          "name": "AIR 1967 SC 1326",
+          "type": "Case",
+          "key": "765aca0f868987d11cce79ed622d15e9fc40d12d84d02a3ce880ce65875af549",
+          "mentions": [
+            {
+              "chunk_id": "temporary_toy_chunk",
+              "document_id": "temporary_toy_document",
+              "generation_id": "temporary_toy_generation",
+              "start_char": 20,
+              "end_char": 36,
+              "quote": "AIR 1967 SC 1326"
+            }
+          ]
+        }
+      ],
+      "assertions": [],
+      "expected_toy_match": false
+    },
+    {
+      "kind": "canonical_ocr_caption",
+      "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+      "canonical_content_hash": "ccb1fb58315696fa9531695e5daf81caf7e908b84e8f083eb75a76dc392be79a",
+      "input_text": "A\n\nll\n\nc\n\n0\n\nE\n\nF\n\nG\n\nH\n\n87\n\nR. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS. April 25, 1973\n\n(A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM, JJ.]\n\nlnduslrial Dispute-Sen·ices of en1ployees of State U11dcrtakings transferred to ~orporolion-Condirions of transfer, interpretation of-Whether employees emztled lo get Dearness Allowance at same rate and on same basis as paid by State Gover11me11t to its employees.\n\nThree industrial undertakings owned and managed by the Madhya Pradesh Government were transferred to the Madhya Pradesh State Industries Corpora. lion with effect from April I, 1963. By letter dated February 16, 1963 the State Government offered to transfer the services of the employees of the three under .. takings to the Corporation on two conditions. The first one was that their exist ing pay and scale and other conditions of service and benefits to which they the were entitled would not be affected by the transfer. The second was that transfer of services would not be treated as an interruption in service. In other words, .it was said, the employees would be entitled to leave and other benefits on the same basis as if their services under the State Corporation were a continua ... tion of their total uninter_rupted services under the said undertakings. This offer was accepted by the employees. However, relying on the second condition men .. tioned in the aforesaid letter the employees raised an industrial dispute in 1968, claiming from the Corporation, dearness allowance on the same scale and on the same basis as it was subsequently being paid by the State Government to its employees. The Labour Court rejected the contention.",
+      "indexed": false,
+      "manual_legal_review": "not_completed",
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.\",\n      \"type\": \"Case\"\n    },\n    {\n      \"name\": \"A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM\",\n      \"type\": \"Judge\"\n    }\n  ],\n  \"relations\": []\n}",
+      "actual_response_model": "qwen3:1.7b",
+      "thinking_chars": 0,
+      "eval_count": 110,
+      "prompt_eval_count": 1183,
+      "done_reason": "stop",
+      "total_duration": 23073007718,
+      "source_rule_validation": "passed",
+      "entities": [
+        {
+          "name": "R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS.",
+          "type": "Case",
+          "key": "2d941ca8e24e194b4e31a3c2f4d3e76d5712b2dd8970d393ab1ed704b85899d1",
+          "mentions": [
+            {
+              "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+              "document_id": "doc_0250553a53c308e6f3faca6bd850b99ad2b44bc5423ad914a122952a16135b01",
+              "generation_id": "gen_d9fd10f90e63a10a2b00a25927ef9cfd7f4db2dcebe4aeade0b96f6da7bb52d7",
+              "start_char": 29,
+              "end_char": 109,
+              "quote": "R. C. SHARMA v. THE CHIEF SECRETARY, GOVERNMENT OF MADHYA PRADESH, BHOPAL & ORS."
+            }
+          ]
+        },
+        {
+          "name": "A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM",
+          "type": "Judge",
+          "key": "272f8cf99ea30a0b1d20e116c814a493eff46bf54909116f53833726e92f18f4",
+          "mentions": [
+            {
+              "chunk_id": "chk_2d0791979c54a331ebf0f079346e5be5927c8c184f7ade732349da0c6b4f9a6e",
+              "document_id": "doc_0250553a53c308e6f3faca6bd850b99ad2b44bc5423ad914a122952a16135b01",
+              "generation_id": "gen_d9fd10f90e63a10a2b00a25927ef9cfd7f4db2dcebe4aeade0b96f6da7bb52d7",
+              "start_char": 127,
+              "end_char": 179,
+              "quote": "A. N. GROVER, A. K. MUKHERJEA AND C. A. VAIDIALINGAM"
+            }
+          ]
+        }
+      ],
+      "assertions": [],
+      "expected_toy_match": null
+    },
+    {
+      "kind": "canonical_citation",
+      "chunk_id": "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa",
+      "canonical_content_hash": "b1fc81122317ce91c3516bb8025038361db1d06060864fffb8306d8087c5b507",
+      "input_text": "A\n\nB\n\nc\n\nD\n\nE\n\nF\n\nG\n\nH\n\nRAM NARAIN v. STATE OF UTTAR PRADESH April 5, 1973 [K. K. MATHEW AND I. D. DuA, JJ,]\n\nIndian Evidence Act, 1872, s. 45-Han_dwriting Expert-Sole testi mony for conviction--Courts below comparing handwriting for theniselves and c.greeing with Expert-No illegality in conviction--Sente,nce-Lapse of tin1e-Sentence reduced to period already undergone.\n\nThe appellant was convicted of an offence under s. 384 read with the s. 511 Indian Penal Code. The conviotion was solely based <>.ti the conclusion that the two anonymous letters dema:nding ransom for kidn•pped boy had been written by him. The appellant having categori cally denied his authorship of those letters a handwriting expert was produced in support of t~ prosecution case, and believing the expert testimony the three cpurts below agreed in co!t?Victing appellant. In this Court the sole question for consideration was as to the legality and propriety of the appeUant's conviction on the uncorroborated testi It was urged by the appellant Iha: it mony of the handwriting expert. was not safe to record a findi$lg about a person's hand~riting merely on the basis of comparison because the opinion of the handwriting expert is not conclusive.\n\nthe\n\nDismissing the appeal. HELD : (i) The legal position enundiated in Fakhruddin's case the\n\ncannot be said to be inconsistent with the earlier decisions to which reference has been made therein.\n\nratio of\n\nftnyone of [916A]\n\nFakhruddin v. State of Madh,va Pradesh, A.LR. 1967 S.C. 1326, Ram Chandra v. State of U. P., A.LR. 1957 S.C. 381, Ishwari Prasad Misra v. Mohammad Isa, A.LR. 1963 S.C. 1728 and Sha.lhi Kumar Banerjee, v. Subodh Kumar Banerjee, A.I.R. 1964 S.C. 529, re ferred to.",
+      "indexed": false,
+      "manual_legal_review": "not_completed",
+      "unvalidated_raw_model_output": "{\n  \"entities\": [\n    {\n      \"name\": \"RAM NARAIN v. STATE OF UTTAR PRADESH\",\n      \"type\": \"Case\"\n    },\n    {\n      \"name\": \"K. K. MATHEW AND I. D. DuA, JJ\",\n      \"type\": \"Judge\"\n    }\n  ],\n  \"relations\": []\n}",
+      "actual_response_model": "qwen3:1.7b",
+      "thinking_chars": 0,
+      "eval_count": 80,
+      "prompt_eval_count": 1278,
+      "done_reason": "stop",
+      "total_duration": 27410268752,
+      "source_rule_validation": "passed",
+      "entities": [
+        {
+          "name": "RAM NARAIN v. STATE OF UTTAR PRADESH",
+          "type": "Case",
+          "key": "d1b1009eadaa613724f4599463cdc03008fdc8b635744ad81bc9589cf5371b74",
+          "mentions": [
+            {
+              "chunk_id": "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa",
+              "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+              "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+              "start_char": 24,
+              "end_char": 60,
+              "quote": "RAM NARAIN v. STATE OF UTTAR PRADESH"
+            }
+          ]
+        },
+        {
+          "name": "K. K. MATHEW AND I. D. DuA, JJ",
+          "type": "Judge",
+          "key": "7b52f7df29ce7adfc684fff8ec8defaf22e9d5e93d3be627221cb253e49862ad",
+          "mentions": [
+            {
+              "chunk_id": "chk_bdb5ae8e023923836103e3fdfbd12f7bdfc459361ba80c2366177971e4805ffa",
+              "document_id": "doc_052e9d2002414127b7e055f274ab62ad",
+              "generation_id": "gen_ded0010c3b4ad85f1b34d501217036585852cde51c7061c9a9b3c16b06ef06ea",
+              "start_char": 76,
+              "end_char": 106,
+              "quote": "K. K. MATHEW AND I. D. DuA, JJ"
+            }
+          ]
+        }
+      ],
+      "assertions": [],
+      "expected_toy_match": null
+    }
+  ]
+}

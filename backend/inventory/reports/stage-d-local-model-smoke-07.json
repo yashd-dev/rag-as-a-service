@@ -1,0 +1,137 @@
+{
+  "recorded_at": "2026-10-23T18:22:38.995454+00:00",
+  "operation": "standalone_candidate_first_relation_probe",
+  "model": {
+    "model": "qwen3:1.7b",
+    "revision": "8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7"
+  },
+  "options": {
+    "temperature": 0,
+    "num_predict": 64,
+    "num_ctx": 4096
+  },
+  "think": false,
+  "temporary_system_prompt": "Decide whether SOURCE affirmatively cites or refers to the supplied case citation. CITES means reference only, not agreement with its legal reasoning. The citation is already identified; do not extract names, types, indices or quotes. If the citation is absent, negated or uncertain, supported=false. A citation followed by referred to is a positive reference. Return only JSON with boolean supported.",
+  "decision_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "supported"
+    ],
+    "properties": {
+      "supported": {
+        "type": "boolean"
+      }
+    }
+  },
+  "validator_version": "quoted-legal-v2",
+  "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+  "neo4j_writes": false,
+  "production_code_changed": false,
+  "persisted_configuration_changed": false,
+  "hosted_text_requests": 0,
+  "cases": [
+    {
+      "kind": "canonical_positive",
+      "chunk_id": "chk_566ba87dfdbf41ede87b64e486b921830c1d8f05d4c7387c1f2f86a86cd6e8a9",
+      "document_id": "doc_0fc561396eff426180c0da2d264c07e8",
+      "canonical_content_hash": "cb62dd6a97d665c82e18f9fa20c4c8dab353aad6ae0f6f7e8e689f38d05888f8",
+      "file_name": "data/pdf/year=1973/english/1973_3_943_951_EN.pdf",
+      "candidate": "A.I.R. 1961 S.C. 4",
+      "verbatim_source_window": "A.I.R. 1961 S.C. 4, Municipal Corporation of Delhi v. Bir/a Cotton and Spinning and WeavinH Mills, A.LR. 1968 S.C. 1232 Kruse v. Johnson [1898] 2 Q.B. 91 and D. Ramaraju v. State of A.P .. A.J.R. 1972 S.C. 828. referred to",
+      "expected_supported": true,
+      "entity_origin": "exact citation pattern",
+      "quote_origin": "verbatim canonical source window",
+      "relation_decision_origin": "local LLM",
+      "indexed": false,
+      "raw_model_output": "{\"supported\": true}",
+      "model_supported": true,
+      "classification_matches_expected": true,
+      "eval_count": 6,
+      "prompt_eval_count": 225,
+      "total_duration": 46072186102,
+      "thinking_chars": 0,
+      "source_validated_assertions": [
+        {
+          "key": "53a681a093c6156a804802c4999eff644716791e1518b52a399da7763451f3a6",
+          "source": "aae608b82c6e784c20c290d3f7bbe27b99c13169cb2fcfa2192f2d803412a8ed",
+          "target": "03b95c846c3e37849b319c82eabb7fb83640e5efec22cada3a5a624dc21337bc",
+          "relation": "CITES",
+          "evidence": [
+            {
+              "chunk_id": "chk_566ba87dfdbf41ede87b64e486b921830c1d8f05d4c7387c1f2f86a86cd6e8a9",
+              "document_id": "doc_0fc561396eff426180c0da2d264c07e8",
+              "generation_id": "gen_ba1646a787607252392c30b828ff53dd5990b2c6202192265b65826d9f8228e4",
+              "start_char": 2737,
+              "end_char": 2959,
+              "quote": "A.I.R. 1961 S.C. 4, Municipal Corporation of Delhi v. Bir/a Cotton and Spinning and WeavinH Mills, A.LR. 1968 S.C. 1232 Kruse v. Johnson [1898] 2 Q.B. 91 and D. Ramaraju v. State of A.P .. A.J.R. 1972 S.C. 828. referred to"
+            }
+          ]
+        }
+      ],
+      "backend_accepted": true
+    },
+    {
+      "kind": "canonical_positive",
+      "chunk_id": "chk_360d2d84553113a23ebbea5ef8e11075e349c3807003e971f7964fa4ba2a08ac",
+      "document_id": "doc_1037872795ec3dea8492fb0fb704c693239e41071c6fa66711bdbf464d920b8c",
+      "canonical_content_hash": "3b4503f424b3f11c04d0acf391e64527f49e2e0db7c2fdd3aa6d6745b4eaf7d5",
+      "file_name": "data/pdf/year=1973/english/1974_2_195_198_EN.pdf",
+      "candidate": "A.I.R. 1973 S.C. 303",
+      "verbatim_source_window": "A.I.R. 1973 S.C. 303, referred to",
+      "expected_supported": true,
+      "entity_origin": "exact citation pattern",
+      "quote_origin": "verbatim canonical source window",
+      "relation_decision_origin": "local LLM",
+      "indexed": false,
+      "raw_model_output": "{\"supported\": true}",
+      "model_supported": true,
+      "classification_matches_expected": true,
+      "eval_count": 6,
+      "prompt_eval_count": 145,
+      "total_duration": 2218593344,
+      "thinking_chars": 0,
+      "source_validated_assertions": [
+        {
+          "key": "c3542191c22f6656d75456d4606502700065b6add6c71ddeac4c60b2deaf0719",
+          "source": "72586c70161c2e0f63e22805c2dba016a4d58a9286faa884285ead5c7576777d",
+          "target": "538a25cc909d9ecedc27b7c7b27c050645c077b942d8ee381c5097ae4a06bc4c",
+          "relation": "CITES",
+          "evidence": [
+            {
+              "chunk_id": "chk_360d2d84553113a23ebbea5ef8e11075e349c3807003e971f7964fa4ba2a08ac",
+              "document_id": "doc_1037872795ec3dea8492fb0fb704c693239e41071c6fa66711bdbf464d920b8c",
+              "generation_id": "gen_1f888922e7327f625b9825e8b72de52e49f6455d1ebbe4e0a82d53f761a55f60",
+              "start_char": 4426,
+              "end_char": 4459,
+              "quote": "A.I.R. 1973 S.C. 303, referred to"
+            }
+          ]
+        }
+      ],
+      "backend_accepted": true
+    },
+    {
+      "kind": "synthetic_negated_control",
+      "chunk_id": "temporary_negative_chunk",
+      "document_id": "temporary_negative_document",
+      "canonical_content_hash": "1a7a2d6008945a4970cbda7d4de55cd1ef964205f698ca0fbbc9211fad313050",
+      "file_name": null,
+      "candidate": "AIR 1967 SC 1326",
+      "verbatim_source_window": "The judgment did not cite AIR 1967 SC 1326.",
+      "expected_supported": false,
+      "entity_origin": "exact citation pattern",
+      "quote_origin": "verbatim canonical source window",
+      "relation_decision_origin": "local LLM",
+      "indexed": false,
+      "raw_model_output": "{\"supported\": false}",
+      "model_supported": false,
+      "classification_matches_expected": true,
+      "eval_count": 6,
+      "prompt_eval_count": 140,
+      "total_duration": 3579012550,
+      "thinking_chars": 0,
+      "backend_accepted": false
+    }
+  ]
+}
