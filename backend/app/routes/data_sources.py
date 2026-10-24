@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, jsonify, request
 
-from backend.app.db.repository import ProjectRepository, SimpleRepository
-from backend.app.routes.projects import auth_or_error
+from backend.app.db.repository import SimpleRepository
+from backend.app.routes.projects import auth_or_error, corpus_or_error
 from backend.app.services.crypto import SecretBox
 from backend.app.services.data_source_service import DataSourceService
 from backend.app.services.project_service import ValidationError
@@ -28,19 +28,17 @@ def create_data_source():
         return error
     try:
         payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            raise ValidationError("JSON object is required")
         print(
             f"data_source create requested type={payload.get('source_type')} project_id={payload.get('project_id')} "
             f"has_turso_url={bool(str(payload.get('turso_database_url') or '').strip())}",
             flush=True,
         )
-        project = None
-        if payload.get("source_type") == "turso_ocr" and payload.get("project_id"):
-            project = ProjectRepository(
-                current_app.config["TURSO_DATABASE_URL"],
-                current_app.config["TURSO_AUTH_TOKEN"],
-            ).get(str(payload["project_id"]), auth.organization_id)
-            if not project:
-                return jsonify({"error": "Project not found"}), 404
+        if payload.get("project_id"):
+            _, _, error = corpus_or_error(str(payload["project_id"]), write=True)
+            if error:
+                return error
         row = service().create(auth, payload)
         print(
             f"data_source created id={row['id']} type={row.get('source_type')} project_id={payload.get('project_id')}",

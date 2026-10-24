@@ -17,7 +17,9 @@ class AuthError(Exception):
 def current_auth_context() -> AuthContext:
     expected_secret = current_app.config.get("BACKEND_INTERNAL_SECRET")
     actual_secret = request.headers.get("X-Internal-Secret")
-    if expected_secret and actual_secret != expected_secret:
+    if not expected_secret:
+        raise AuthError("Trusted backend authentication is not configured")
+    if actual_secret != expected_secret:
         raise AuthError("Invalid internal secret")
 
     user_id = request.headers.get("X-User-Id")

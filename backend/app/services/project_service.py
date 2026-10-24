@@ -20,20 +20,23 @@ class ProjectService:
     def __init__(self, repository: ProjectRepository):
         self.repository = repository
 
-    def create_project(self, auth: AuthContext, payload: dict) -> dict:
+    def create_project(
+        self, auth: AuthContext, payload: dict, *, shared_corpus_id=None
+    ) -> dict:
         name = str(payload.get("name", "")).strip()
         if not name:
             raise ValidationError("Project name is required")
 
         data = ProjectCreate(
+            shared_corpus_id=shared_corpus_id,
             organization_id=auth.organization_id,
             owner_user_id=auth.user_id,
             name=name,
             slug=slugify(str(payload.get("slug") or name)),
             description=payload.get("description"),
-            default_query_mode=payload.get("default_query_mode") or "hybrid",
-            # The UI may display alternatives, but Turso vectors always use one
-            # model so a project never mixes incompatible vector dimensions.
+            default_query_mode=payload.get("default_query_mode")
+            or ("vector" if shared_corpus_id else "hybrid"),
+            # Answer-model selection must not change embedding provenance.
             embedding_provider="huggingface",
             embedding_model=EMBEDDING_MODEL,
             default_llm_credential_id=payload.get("default_llm_credential_id") or None,

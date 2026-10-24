@@ -1,7 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
 
-from backend.app.db.repository import ProjectRepository
-from backend.app.routes.projects import auth_or_error
+from backend.app.routes.projects import corpus_or_error
 from backend.app.services.passages import resolve_passage
 from backend.app.services.query_service import QueryFailure, QueryService
 from backend.app.services.retrieval import MODES, RetrievalService, RetrievalUnavailable
@@ -30,47 +29,19 @@ def authorized_project(project_id):
                 503,
             ),
         )
-    auth, error = auth_or_error()
-    if error:
-        return None, None, error
-    try:
-        project = ProjectRepository(
-            current_app.config["TURSO_DATABASE_URL"],
-            current_app.config["TURSO_AUTH_TOKEN"],
-        ).get(project_id, auth.organization_id)
-    except Exception:  # noqa: BLE001 - redact application-store connection failures
-        return (
-            auth,
-            None,
-            (
-                jsonify(
-                    {
-                        "error": "Project lookup unavailable",
-                        "code": "project_lookup_unavailable",
-                    }
-                ),
-                503,
-            ),
-        )
-    if not project:
-        return (
-            auth,
-            None,
-            (jsonify({"error": "Project not found", "code": "project_not_found"}), 404),
-        )
-    return auth, project, None
+    return corpus_or_error(project_id)
 
 
 @query_bp.post("/<project_id>/query")
 def query_project(project_id):
-    auth, project, error = authorized_project(project_id)
+    auth, scope, error = authorized_project(project_id)
     if error:
         return error
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
         return jsonify({"error": "message is required"}), 400
     mode = (
-        project["default_query_mode"]
+        scope.project["default_query_mode"]
         if payload.get("mode") is None
         else payload["mode"]
     )
@@ -83,9 +54,12 @@ def query_project(project_id):
         )
     try:
         return jsonify(
-            QueryService(current_app.config, project, auth).answer(
-                payload.get("message"), mode, payload.get("conversation_id")
-            )
+            QueryService(
+                current_app.config,
+                scope.project,
+                auth,
+                retrieval_project=scope.retrieval_project,
+            ).answer(payload.get("message"), mode, payload.get("conversation_id"))
         )
     except (QueryFailure, RetrievalUnavailable) as exc:
         result = {
@@ -98,9 +72,11 @@ def query_project(project_id):
             result["query_run_id"] = exc.run_id
         if exc.status == 409:
             try:
-                result["readiness"] = RetrievalService(
-                    current_app.config, project
-                ).status()
+                result["readiness"] = scope.readiness(
+                    RetrievalService(
+                        current_app.config, scope.retrieval_project
+                    ).status()
+                )
             except Exception:  # noqa: BLE001
                 # Retain the original safe error if status is also unavailable.
                 result["readiness"] = None
@@ -112,11 +88,16 @@ def query_project(project_id):
 
 @query_bp.get("/<project_id>/passages/<chunk_id>")
 def source_passage(project_id, chunk_id):
-    _, project, error = authorized_project(project_id)
+    _, scope, error = authorized_project(project_id)
     if error:
         return error
     try:
-        passage = resolve_passage(current_app.config, project, chunk_id)
+        passage = resolve_passage(
+            current_app.config,
+            scope.retrieval_project,
+            chunk_id,
+            citation_project=scope.project,
+        )
     except ValueError:
         return (
             jsonify(

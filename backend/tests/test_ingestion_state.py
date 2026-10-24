@@ -232,53 +232,48 @@ def test_flask_factory_is_write_free_and_exposes_truthful_status(store, tmp_path
     before = path.read_bytes()
     app = create_app(Config)
     assert path.read_bytes() == before
-    from backend.app.routes import documents
-    from backend.app.routes import query as query_routes
-    from backend.app.services.auth_context import AuthContext
-
-    auth = AuthContext(user_id="u", organization_id="o", role="owner")
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(documents, "auth_or_error", lambda: (auth, None))
-        patch.setattr(query_routes, "auth_or_error", lambda: (auth, None))
-        client = app.test_client()
-        for _ in range(2):
-            response = client.post(
-                "/api/projects/p/documents/upload",
-                data={"file": (io.BytesIO(b"Source text"), "judgment.txt")},
-            )
-            assert response.status_code == 201
-            assert response.json["status"] == "text_ready"
-            assert not response.json["readiness"]["capabilities"]["vector"]
-        assert query(path, "SELECT count(*) FROM documents") == [(1,)]
-        assert (
-            client.get("/api/projects/p/indexing/status").json["state"] == "text_ready"
+    client = app.test_client()
+    client.environ_base.update(
+        HTTP_X_INTERNAL_SECRET="test-secret",
+        HTTP_X_USER_ID="u",
+        HTTP_X_ORGANIZATION_ID="o",
+    )
+    for _ in range(2):
+        response = client.post(
+            "/api/projects/p/documents/upload",
+            data={"file": (io.BytesIO(b"Source text"), "judgment.txt")},
         )
-        for mode in ("vector", "graph", "hybrid"):
-            assert (
-                client.post(
-                    "/api/projects/p/query", json={"message": "question", "mode": mode}
-                ).status_code
-                == 409
-            )
+        assert response.status_code == 201
+        assert response.json["status"] == "text_ready"
+        assert not response.json["readiness"]["capabilities"]["vector"]
+    assert query(path, "SELECT count(*) FROM documents") == [(1,)]
+    assert client.get("/api/projects/p/indexing/status").json["state"] == "text_ready"
+    for mode in ("vector", "graph", "hybrid"):
         assert (
             client.post(
-                "/api/projects/p/query", json={"message": "question", "mode": []}
+                "/api/projects/p/query", json={"message": "question", "mode": mode}
             ).status_code
-            == 400
+            == 409
         )
-        assert (
-            client.post(
-                "/api/projects/p/query", json={"message": "question", "mode": ["bad"]}
-            ).status_code
-            == 400
-        )
-        assert client.get("/api/projects/foreign/indexing/status").status_code == 404
-        assert (
-            client.post(
-                "/api/projects/p/documents/upload", json=["invalid"]
-            ).status_code
-            == 400
-        )
+    assert (
+        client.post(
+            "/api/projects/p/query", json={"message": "question", "mode": []}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/api/projects/p/query", json={"message": "question", "mode": ["bad"]}
+        ).status_code
+        == 400
+    )
+    assert client.get("/api/projects/foreign/indexing/status").status_code == 404
+    assert (
+        client.post(
+            "/api/projects/p/documents/upload", json=["invalid"]
+        ).status_code
+        == 400
+    )
 
 
 def test_no_sibling_or_lightrag_runtime_dependencies():

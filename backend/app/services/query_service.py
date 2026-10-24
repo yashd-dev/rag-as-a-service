@@ -22,9 +22,9 @@ class QueryFailure(RuntimeError):
 
 
 class QueryService:
-    def __init__(self, config, project, auth):
+    def __init__(self, config, project, auth, *, retrieval_project=None):
         self.config, self.project, self.auth = config, project, auth
-        self.retrieval = RetrievalService(config, project)
+        self.retrieval = RetrievalService(config, retrieval_project or project)
         self.runs = SimpleRepository(
             config["TURSO_DATABASE_URL"],
             config["TURSO_AUTH_TOKEN"],

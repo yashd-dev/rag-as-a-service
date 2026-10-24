@@ -38,6 +38,62 @@ the served digest/dimensions are verified before vector builds and queries. Exis
 No new package dependency is required. Optional `GRAPH_EXTRACTION_STRATEGY`
 selects an opt-in graph extractor; its default remains `full_legal`.
 
+## Shared legal corpus — Stage H.1 backend access
+
+The additive migration now also creates `shared_corpora` (the platform's `legal`
+registration) and `project_corpus_references` (workspace-local corpus references).
+Existing projects remain private unless explicitly registered or created as a
+reference. Neither migration nor registration copies, re-labels or re-embeds data.
+Run the migration above before deploying this backend; Flask startup remains
+write-free. This migration has **not** been applied to the configured live store.
+
+Platform operators with the existing backend database credentials may register
+the accepted legal project. Verify its actual organization/project IDs and source
+scope against the Stage C inventory first. This operation makes that project's
+source content available to every authenticated workspace through a local
+reference; it does not certify or publish its retrieval generations.
+
+```bash
+# Read-only plan; these variables must identify the verified legal scope.
+.venv/bin/python -m backend.scripts.register_shared_corpus --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID"
+
+# Stop application writers first. Requires a NEW private backup filename.
+.venv/bin/python -m backend.scripts.register_shared_corpus --env-file backend/.env \
+  --organization-id "$ORG_ID" --project-id "$PROJECT_ID" --apply \
+  --backup backend/storage/backups/before-legal-registration.db
+```
+
+Registration is idempotent for the same target and refuses retargeting. It has no
+HTTP endpoint: workspace roles and caller-supplied organization headers cannot
+authorize platform maintenance. Source/index maintenance CLIs remain operator
+tools requiring backend database/provider/Neo4j credentials, which must not be
+distributed to workspace users.
+
+Through the existing trusted-session API:
+
+- `POST /api/projects` accepts `{"name":"Legal","corpus_source":"legal"}` to
+  create a local reference. `corpus_source` defaults to `private`; legal creation
+  returns `503 shared_corpus_unavailable` until an operator registers the source.
+- Project list/detail/create responses include `corpus_source` and `read_only`.
+  Legal references default to vector mode; graph/hybrid still require independent
+  published readiness. Requests cannot select an arbitrary canonical target.
+- Query, passages, documents, readiness and graph reads use the authorized
+  canonical scope. Citation URLs, conversations and query runs retain the local
+  project/workspace; platform credentials and uploader identity are not copied.
+- Upload, document deletion and source attachment return `403
+  shared_corpus_read_only`, including for owners in the source workspace.
+  Deleting a reference detaches only that reference. Deleting the canonical
+  registered project is denied. Database foreign keys/triggers also prevent
+  canonical project deletion, reference retargeting and document ingestion into
+  references; foreign keys must remain enabled for direct operator connections.
+- Forwarded identities fail closed when `BACKEND_INTERNAL_SECRET` is unset.
+  These internal routes are not the future public Bearer-key API.
+
+Dashboard legal/private creation controls and live two-workspace acceptance remain
+the next Stage H increment. H.1 tests use actual local libSQL/canonical text with
+controlled model/vector/graph boundaries; they do not certify live providers.
+
 ## Preview and stage an existing OCR source
 
 Obtain the actual organization/project/source IDs from the existing project and

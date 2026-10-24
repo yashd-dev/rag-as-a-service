@@ -35,6 +35,7 @@ class ProjectCreate:
     embedding_model: str = "google/embeddinggemma-300m"
     default_llm_credential_id: str | None = None
     default_embedding_credential_id: str | None = None
+    shared_corpus_id: str | None = None
 
 
 class ProjectRepository:
@@ -71,6 +72,11 @@ class ProjectRepository:
                     timestamp,
                 ),
             )
+            if data.shared_corpus_id is not None:
+                conn.execute(
+                    "INSERT INTO project_corpus_references(project_id, shared_corpus_id) VALUES (?, ?)",
+                    (project_id, data.shared_corpus_id),
+                )
         return self.get(project_id, data.organization_id)
 
     def list_for_org(self, organization_id: str) -> list[dict]:

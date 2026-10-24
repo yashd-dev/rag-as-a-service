@@ -1,20 +1,16 @@
 from flask import Blueprint, current_app, jsonify, request
 
-from backend.app.db.repository import ProjectRepository, SimpleRepository
-from backend.app.routes.projects import auth_or_error
+from backend.app.db.repository import SimpleRepository
+from backend.app.routes.projects import corpus_or_error
 
 conversations_bp = Blueprint("conversations", __name__)
 
 
 @conversations_bp.post("/projects/<project_id>/conversations")
 def create_conversation(project_id: str):
-    auth, error = auth_or_error()
+    auth, _, error = corpus_or_error(project_id)
     if error:
         return error
-    if not ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id):
-        return jsonify({"error": "Project not found"}), 404
     row = SimpleRepository(
         current_app.config["TURSO_DATABASE_URL"],
         current_app.config["TURSO_AUTH_TOKEN"],

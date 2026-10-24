@@ -4,8 +4,8 @@ from pathlib import Path
 from flask import Blueprint, current_app, jsonify, request
 from werkzeug.utils import secure_filename
 
-from backend.app.db.repository import ProjectRepository, SimpleRepository
-from backend.app.routes.projects import auth_or_error
+from backend.app.db.repository import SimpleRepository
+from backend.app.routes.projects import corpus_or_error
 from backend.app.services.ingestion_service import IngestionError, IngestionService
 from backend.app.services.retrieval import RetrievalService
 
@@ -14,13 +14,9 @@ documents_bp = Blueprint("documents", __name__)
 
 @documents_bp.post("/<project_id>/documents/upload")
 def create_document(project_id: str):
-    auth, error = auth_or_error()
+    auth, scope, error = corpus_or_error(project_id, write=True)
     if error:
         return error
-    if not ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id):
-        return jsonify({"error": "Project not found"}), 404
     uploaded_files = request.files.getlist("file")
     uploaded_file = uploaded_files[0] if uploaded_files else None
     payload = request.get_json(silent=True) or {}
@@ -54,9 +50,7 @@ def create_document(project_id: str):
         "documents",
         "doc",
     )
-    project = ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id)
+    project = scope.project
     rows = []
     errors = []
     ingestion = IngestionService(current_app.config)
@@ -132,13 +126,10 @@ def create_document(project_id: str):
 
 @documents_bp.get("/<project_id>/documents")
 def list_documents(project_id: str):
-    auth, error = auth_or_error()
+    _, scope, error = corpus_or_error(project_id)
     if error:
         return error
-    if not ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id):
-        return jsonify({"error": "Project not found"}), 404
+    project = scope.retrieval_project
     rows = [
         row
         for row in SimpleRepository(
@@ -146,16 +137,15 @@ def list_documents(project_id: str):
             current_app.config["TURSO_AUTH_TOKEN"],
             "documents",
             "doc",
-        ).list_for_org(auth.organization_id)
-        if row["project_id"] == project_id
+        ).list_for_org(project["organization_id"])
+        if row["project_id"] == project["id"]
     ]
-    project = {"id": project_id, "organization_id": auth.organization_id}
     try:
         readiness = {
             item["document_id"]: item
-            for item in RetrievalService(current_app.config, project).status()[
-                "documents"
-            ]
+            for item in scope.readiness(
+                RetrievalService(current_app.config, project).status()
+            )["documents"]
         }
     except Exception:  # noqa: BLE001
         # Read-only status failures must not leak connection details.
@@ -172,21 +162,25 @@ def list_documents(project_id: str):
         row["readiness"] = readiness[row["id"]]
         row["legacy_status"] = row["status"]
         row["status"] = row["readiness"]["state"]
+        if scope.read_only:
+            # Expose source content/identity, not the platform uploader's identity.
+            row.pop("uploaded_by_user_id", None)
+            row["project_id"] = scope.project["id"]
+            row["organization_id"] = scope.project["organization_id"]
     return jsonify({"items": rows})
 
 
 @documents_bp.get("/<project_id>/indexing/status")
 def indexing_status(project_id):
-    auth, error = auth_or_error()
+    _, scope, error = corpus_or_error(project_id)
     if error:
         return error
-    project = ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id)
-    if not project:
-        return jsonify({"error": "Project not found"}), 404
     try:
-        return jsonify(RetrievalService(current_app.config, project).status())
+        return jsonify(
+            scope.readiness(
+                RetrievalService(current_app.config, scope.retrieval_project).status()
+            )
+        )
     except Exception:  # noqa: BLE001
         # Redact database/transport failures at the HTTP boundary.
         return jsonify({"error": "Index readiness unavailable"}), 503
@@ -194,13 +188,9 @@ def indexing_status(project_id):
 
 @documents_bp.delete("/<project_id>/documents/<document_id>")
 def delete_document(project_id: str, document_id: str):
-    auth, error = auth_or_error()
+    auth, _, error = corpus_or_error(project_id, write=True)
     if error:
         return error
-    if not ProjectRepository(
-        current_app.config["TURSO_DATABASE_URL"], current_app.config["TURSO_AUTH_TOKEN"]
-    ).get(project_id, auth.organization_id):
-        return jsonify({"error": "Project not found"}), 404
     repo = SimpleRepository(
         current_app.config["TURSO_DATABASE_URL"],
         current_app.config["TURSO_AUTH_TOKEN"],

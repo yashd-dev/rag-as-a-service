@@ -1,3 +1,4 @@
+import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -44,6 +45,13 @@ def migrate_db(conn) -> None:
     ):
         if statement.strip():
             conn.execute(statement)
+    # executescript would implicitly commit the caller's migration transaction.
+    statement = ""
+    for line in Path(__file__).with_name("corpus_schema.sql").read_text().splitlines():
+        statement += line + "\n"
+        if sqlite3.complete_statement(statement):
+            conn.execute(statement)
+            statement = ""
 
 
 @contextmanager

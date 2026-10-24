@@ -7,7 +7,7 @@ from backend.app.services.rag import fingerprint
 from backend.inventory.sql import open_reader
 
 
-def resolve_passage(config, project, chunk_id):
+def resolve_passage(config, project, chunk_id, *, citation_project=None):
     with open_reader(
         config["TURSO_DATABASE_URL"], config["TURSO_AUTH_TOKEN"]
     ) as reader:
@@ -55,7 +55,7 @@ def resolve_passage(config, project, chunk_id):
     ):
         raise ValueError("Canonical source integrity failed")
     result = citation(
-        project,
+        citation_project or project,
         {
             "chunk": row,
             "vector_score": None,

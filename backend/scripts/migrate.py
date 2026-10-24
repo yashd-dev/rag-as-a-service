@@ -51,7 +51,7 @@ def main(argv=None):
         print(
             "Read-only migration plan: initialize legacy schema"
             if "projects" not in tables
-            else "Read-only migration plan: preserve legacy rows; ensure document_sources, index_generations, canonical_chunks"
+            else "Read-only migration plan: preserve legacy rows; ensure document_sources, index_generations, canonical_chunks, shared_corpora, project_corpus_references"
         )
         return
     conn = connect(url, token)
