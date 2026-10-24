@@ -75,7 +75,8 @@ Through the existing trusted-session API:
 - `POST /api/projects` accepts `{"name":"Legal","corpus_source":"legal"}` to
   create a local reference. `corpus_source` defaults to `private`; legal creation
   returns `503 shared_corpus_unavailable` until an operator registers the source.
-- Project list/detail/create responses include `corpus_source` and `read_only`.
+- Project list/detail/create responses include `corpus_source`, `read_only` and
+  `is_shared_reference` (true only for a detachable local legal reference).
   Legal references default to vector mode; graph/hybrid still require independent
   published readiness. Requests cannot select an arbitrary canonical target.
 - Query, passages, documents, readiness and graph reads use the authorized
@@ -90,9 +91,12 @@ Through the existing trusted-session API:
 - Forwarded identities fail closed when `BACKEND_INTERNAL_SECRET` is unset.
   These internal routes are not the future public Bearer-key API.
 
-Dashboard legal/private creation controls and live two-workspace acceptance remain
-the next Stage H increment. H.1 tests use actual local libSQL/canonical text with
-controlled model/vector/graph boundaries; they do not certify live providers.
+Dashboard legal/private creation and read-only/detach controls are implemented in
+H.2, with controlled two-workspace browser proof in `../web/tests/stage-h2.md`.
+Live scope activation and real-source/provider acceptance remain open. H.1/H.2
+tests use actual local libSQL/canonical text with controlled model/vector/graph
+boundaries; they do not certify live providers. Deploy matching H.2 web/backend
+versions: the web contract rejects absent or contradictory access metadata.
 
 ## Preview and stage an existing OCR source
 

@@ -65,6 +65,9 @@ export type Project = {
   embedding_model: string;
   default_llm_credential_id?: string | null;
   default_embedding_credential_id?: string | null;
+  corpus_source: "private" | "legal";
+  read_only: boolean;
+  is_shared_reference: boolean;
 };
 
 export type Credential = {
@@ -103,7 +106,9 @@ export type DataSource = {
 
 export async function listProjects() {
   const result = await backendRequest<{ items: Project[] }>("/api/projects");
-  if (!Array.isArray(result?.items) || !result.items.every((item) => item && typeof item.id === "string" && typeof item.name === "string")) {
+  if (!Array.isArray(result?.items) || !result.items.every((item) => item && typeof item.id === "string" && typeof item.name === "string"
+    && typeof item.read_only === "boolean" && typeof item.is_shared_reference === "boolean"
+    && ((item.corpus_source === "legal" && item.read_only) || (item.corpus_source === "private" && !item.read_only && !item.is_shared_reference)))) {
     throw new Error("Invalid corpus response");
   }
   return result;
@@ -125,6 +130,7 @@ export async function createProject(payload: {
   embedding_model: string;
   default_llm_credential_id?: string;
   default_embedding_credential_id?: string;
+  corpus_source: "private" | "legal";
 }) {
   return backendRequest<Project>("/api/projects", { method: "POST", body: payload });
 }

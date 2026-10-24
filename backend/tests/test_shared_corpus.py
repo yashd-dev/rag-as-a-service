@@ -32,6 +32,7 @@ def shared(api):
         )
         assert response.status_code == 201
         assert response.json["read_only"] and response.json["corpus_source"] == "legal"
+        assert response.json["is_shared_reference"] is True
         workspaces.append((identity, response.json))
     return api, workspaces
 
@@ -115,6 +116,8 @@ def test_workspace_owners_cannot_mutate_shared_source_or_other_references(shared
             assert response.status_code == 403
             assert response.json["code"] == "shared_corpus_read_only"
     assert client.delete("/api/projects/p", headers=owner_headers).status_code == 403
+    canonical = client.get("/api/projects/p", headers=owner_headers).json
+    assert canonical["read_only"] and canonical["is_shared_reference"] is False
     (a_headers, a), (b_headers, b) = workspaces
     assert client.delete(f"/api/projects/{a['id']}", headers=b_headers).status_code == 404
     assert client.delete(f"/api/projects/{a['id']}", headers=a_headers).status_code == 204

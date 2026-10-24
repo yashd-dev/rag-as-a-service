@@ -1,13 +1,16 @@
 import { afterEach, expect, mock, test } from "bun:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { modeAvailable, parsePassage, parseQueryResult, parseReadiness, passageHref, safeSourceUri } from "../lib/rag-contract.ts";
 
 mock.module("@/lib/dashboard-context", () => ({
   getDashboardContext: async () => ({ session: { user: { id: "u" } }, organization: { id: "o" }, role: "member" }),
 }));
-mock.module("next/navigation", () => ({ redirect: () => { throw new Error("Unexpected redirect"); }, unstable_rethrow: () => {} }));
+mock.module("next/navigation", () => ({ redirect: () => { throw new Error("Unexpected redirect"); }, unstable_rethrow: () => {}, useRouter: () => ({ refresh: () => {} }) }));
 mock.module("next/cache", () => ({ revalidatePath: () => {} }));
 const { backendRequest, BackendError, listProjects, listDocuments, queryProject, sourcePassage } = await import("../lib/backend.ts");
-const { queryProjectAction } = await import("../lib/backend-actions.ts");
+const { queryProjectAction, createProjectAction } = await import("../lib/backend-actions.ts");
+const { DocumentClient } = await import("../app/dashboard/document/document-client.tsx");
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
@@ -101,4 +104,70 @@ test("malformed corpus/document lists fail safely instead of reaching render", a
   await expect(listProjects()).rejects.toThrow("Invalid corpus response");
   globalThis.fetch = async () => Response.json({ items: [{ id: "d", project_id: "p", file_name: "case", readiness: {} }] });
   await expect(listDocuments("p")).rejects.toThrow("Invalid document readiness response");
+});
+
+const project = {
+  id: "p", name: "Legal", slug: "legal", default_query_mode: "vector",
+  embedding_provider: "huggingface", embedding_model: "google/embeddinggemma-300m",
+  corpus_source: "legal", read_only: true, is_shared_reference: true,
+};
+
+test("corpus metadata fails closed when access flags are missing or contradictory", async () => {
+  for (const item of [
+    { id: "p", name: "Legacy response" },
+    { ...project, read_only: "false" },
+    { ...project, read_only: false },
+    { ...project, corpus_source: "private" },
+    { ...project, corpus_source: "unknown" },
+    { ...project, corpus_source: "private", read_only: false },
+  ]) {
+    globalThis.fetch = async () => Response.json({ items: [item] });
+    await expect(listProjects()).rejects.toThrow("Invalid corpus response");
+  }
+  globalThis.fetch = async () => Response.json({ items: [project, { ...project, corpus_source: "private", read_only: false, is_shared_reference: false }] });
+  expect((await listProjects()).items).toHaveLength(2);
+});
+
+test("legal creation forwards source choice and makes no source-attachment request", async () => {
+  const form = new FormData();
+  form.set("name", "Legal"); form.set("slug", "legal"); form.set("corpus_source", "legal");
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push(String(url));
+    expect(JSON.parse(options.body).corpus_source).toBe("legal");
+    return Response.json(project, { status: 201 });
+  };
+  // Successful action redirects outside its error handler.
+  await expect(createProjectAction(undefined, form)).rejects.toThrow("Unexpected redirect");
+  expect(calls).toHaveLength(1);
+  expect(calls[0]).toEndWith("/api/projects");
+  globalThis.fetch = async () => Response.json({ error: "not configured", code: "shared_corpus_unavailable" }, { status: 503 });
+  expect((await createProjectAction(undefined, form)).error).toContain("shared legal corpus is not available yet");
+});
+
+test("creation validates source input before creating partial projects", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw new Error("Should not send"); };
+  const form = new FormData();
+  form.set("corpus_source", "legal"); form.set("source_turso_url", "libsql://fixture");
+  expect((await createProjectAction(undefined, form)).error).toContain("cannot accept a source database");
+  form.set("corpus_source", "private");
+  expect((await createProjectAction(undefined, form)).error).toContain("Both Turso");
+  form.set("corpus_source", "foreign");
+  expect((await createProjectAction(undefined, form)).error).toContain("supported corpus source");
+  expect(calls).toBe(0);
+});
+
+test("document list renders unavailable counts and safe shared-reference controls", () => {
+  const html = renderToStaticMarkup(createElement(DocumentClient, {
+    projects: [project, { ...project, id: "canonical", slug: "platform", name: "Platform corpus", is_shared_reference: false }],
+    dataSources: [], documentsByProject: { p: null, canonical: [] },
+    createProjectAction: async () => undefined, deleteProjectAction: () => {}, deleteDocumentAction: () => {},
+  }));
+  expect(html).toContain("Document count unavailable");
+  expect(html).not.toContain("legal · 0 documents");
+  expect(html).toContain("Shared legal · Read-only");
+  expect(html).toContain("Detach");
+  expect(html).toContain("Platform-managed");
+  expect(html).not.toContain(">Delete<");
 });

@@ -17,6 +17,7 @@ export default async function DocumentPage() {
   return (
     <AppDashboardShell active="documents" organizationName={organization.name} user={session.user} role={role}>
       <DocumentClient
+        key={projects.items.map((project) => project.id).join(",")}
         projects={projects.items}
         dataSources={dataSources.items}
         documentsByProject={documentsByProject}

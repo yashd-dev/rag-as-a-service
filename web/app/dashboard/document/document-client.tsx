@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { FormEvent } from "react";
 import { useFormStatus } from "react-dom";
@@ -84,17 +85,25 @@ function CreateCorpusButton() {
 export function DocumentClient({ projects, dataSources, documentsByProject, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
   const [mode, setMode] = useState<"empty" | "create">(projects.length ? "empty" : "empty");
   const [jsonOpen, setJsonOpen] = useState(false);
+  const [corpusSource, setCorpusSource] = useState<"private" | "legal">("private");
+  const [corpusName, setCorpusName] = useState("");
+  const [corpusSlug, setCorpusSlug] = useState("");
+  const [corpusDescription, setCorpusDescription] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadFiles, setUploadFiles] = useState<string[]>([]);
-  const [createState, formAction] = useActionState(createProjectAction, undefined);
+  const [createState, formAction, creating] = useActionState(createProjectAction, undefined);
   const router = useRouter();
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
 
   async function handleDocumentUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedProject) {
+      return;
+    }
+    if (selectedProject.read_only) {
+      setUploadError("The shared legal corpus is read-only. Create a private corpus to upload files.");
       return;
     }
     const form = event.currentTarget;
@@ -133,8 +142,8 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
   }
 
   if (mode === "empty" && selectedProject) {
-    const documents = documentsByProject[selectedProject.id] || [];
-    const projectSources = dataSources.filter((source) => source.source_type === "turso_ocr" && source.project_id === selectedProject.id);
+    const documents = documentsByProject[selectedProject.id];
+    const projectSources = selectedProject.read_only ? [] : dataSources.filter((source) => source.source_type === "turso_ocr" && source.project_id === selectedProject.id);
     return (
       <div className="flex min-h-[calc(100svh-4rem)] flex-col">
         <div className="flex h-16 items-center justify-between border-b px-4 md:px-6">
@@ -149,7 +158,11 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
         </div>
 
         <div className="grid gap-5 p-4 md:p-6">
-          <section className="rounded-xl border bg-background p-4 md:p-5">
+          {selectedProject.read_only ? <section aria-label="Shared legal corpus" className="rounded-xl border bg-background p-4 md:p-5">
+            <h2 className="font-medium tracking-tight">Shared legal corpus · Read-only</h2>
+            <p className="mt-2 text-sm text-muted-foreground">You can query and inspect these legal sources. Only platform operators can change documents or indexes, including when you are a workspace owner. Upload your own files in a private corpus.</p>
+            <Link href="/dashboard/playground" className="mt-3 inline-block text-sm text-primary underline">Open playground</Link>
+          </section> : <section className="rounded-xl border bg-background p-4 md:p-5">
             <h2 className="font-medium tracking-tight">Upload document</h2>
             <p className="mt-1 text-sm text-muted-foreground">Upload one or more text files or PDFs with embedded text. Upload stages canonical text and chunks only; vector and graph indexing require the documented backend batch commands. Scanned PDFs need usable OCR text first.</p>
             <form onSubmit={handleDocumentUpload} className="mt-4 flex flex-col gap-3">
@@ -167,7 +180,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
               ) : null}
               {uploadError ? <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div> : null}
             </form>
-          </section>
+          </section>}
 
           {projectSources.length ? (
             <section className="overflow-hidden rounded-xl border bg-background">
@@ -193,8 +206,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
             </section>
           ) : null}
 
-          {documentsByProject[selectedProject.id] === null ? <p role="alert" className="rounded-xl border p-4 text-sm">Document readiness unavailable. Reload to retry.</p> : null}
-          <section className="overflow-x-auto rounded-xl border bg-background">
+          {documents == null ? <p role="alert" className="rounded-xl border p-4 text-sm">Document list and readiness unavailable. The document count is unknown. Reload to retry.</p> : <section className="overflow-x-auto rounded-xl border bg-background">
             <div className="grid grid-cols-[1fr_140px_160px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
               <span>Document</span>
               <span>Status</span>
@@ -209,16 +221,16 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
                 </div>
                 <span className="text-xs text-muted-foreground">{document.readiness?.state || "unverified"}<span className="mt-1 block">Text {document.readiness?.capabilities.text ? "✓" : "—"} · Vector {document.readiness?.capabilities.vector ? "✓" : "—"} · Graph {document.readiness?.capabilities.graph ? "✓" : "—"}</span></span>
                 <span className="text-muted-foreground">{new Date(document.created_at).toLocaleDateString()}</span>
-                <form action={deleteDocumentAction}>
+                {!selectedProject.read_only ? <form action={deleteDocumentAction}>
                   <input type="hidden" name="project_id" value={selectedProject.id} />
                   <input type="hidden" name="document_id" value={document.id} />
                   <button type="submit" className="h-9 rounded-lg border px-3 text-sm text-destructive hover:bg-destructive/10">Remove</button>
-                </form>
+                </form> : <span className="text-xs text-muted-foreground">Read-only</span>}
               </div>
             )) : (
               <div className="p-8 text-center text-sm text-muted-foreground">No documents added to this corpus yet.</div>
             )}
-          </section>
+          </section>}
         </div>
       </div>
     );
@@ -246,11 +258,15 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
             </div>
             <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">A corpus is required before adding documents</h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground">
-              Create a corpus to organize documents, configure retrieval metadata, and ground your assistants in your data.
+              Use the shared legal corpus or create a private corpus for your own documents.
             </p>
             <div className="mt-10 grid w-full gap-4">
-              <button type="button" onClick={() => setMode("create")} className="rounded-xl border bg-card p-5 text-left transition-colors hover:bg-(--card-hover)">
-                <h2 className="font-medium tracking-tight text-primary">Create your own corpus</h2>
+              <button type="button" onClick={() => { setCorpusSource("legal"); setMode("create"); }} className="rounded-xl border bg-card p-5 text-left transition-colors hover:bg-(--card-hover)">
+                <h2 className="font-medium tracking-tight text-primary">Use existing legal corpus</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Read-only legal sources shared across workspaces. Query and inspect citations without uploading or copying documents.</p>
+              </button>
+              <button type="button" onClick={() => { setCorpusSource("private"); setMode("create"); }} className="rounded-xl border bg-card p-5 text-left transition-colors hover:bg-(--card-hover)">
+                <h2 className="font-medium tracking-tight text-primary">Upload my own data</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Fill your corpus with PDFs, text documents, or an OCR Turso database.</p>
               </button>
             </div>
@@ -287,17 +303,19 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
               <div key={project.id} className="grid grid-cols-[1fr_240px_160px_120px_96px] items-center gap-3 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-card">
                 <button type="button" onClick={() => setSelectedProjectId(project.id)} className="min-w-0 text-left">
                   <p className="truncate font-medium tracking-tight text-primary">{project.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{project.slug} · {(documentsByProject[project.id] || []).length} documents</p>
+                  <p className="truncate text-xs text-muted-foreground">{project.slug} · {documentsByProject[project.id] == null ? "Document count unavailable" : `${documentsByProject[project.id]?.length} documents`}</p>
+                  <p className="text-xs text-muted-foreground">{project.read_only ? "Shared legal · Read-only" : "Private corpus"}</p>
                 </button>
                 <span className="truncate text-muted-foreground">{project.embedding_model || "Not configured"}</span>
                 <span className="text-muted-foreground">{project.default_query_mode}</span>
-                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{documentsByProject[project.id] === null ? "Unavailable" : !(documentsByProject[project.id]?.length) ? "No documents" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.graph) ? "Graph available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.vector) ? "Vector available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.text) ? "Text only" : "Partial / pending"}</span>
-                <form action={deleteProjectAction}>
+                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{documentsByProject[project.id] == null ? "Unavailable" : !(documentsByProject[project.id]?.length) ? "No documents" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.graph) ? "Graph available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.vector) ? "Vector available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.text) ? "Text only" : "Partial / pending"}</span>
+                {!project.read_only || project.is_shared_reference ? <form action={deleteProjectAction}>
                   <input type="hidden" name="project_id" value={project.id} />
                   <button type="submit" className="h-9 rounded-lg border px-3 text-sm text-destructive hover:bg-destructive/10">
-                    Delete
+                    {project.is_shared_reference ? "Detach" : "Delete"}
                   </button>
-                </form>
+                  {project.is_shared_reference ? <span className="mt-1 block text-xs text-muted-foreground">Shared sources stay intact.</span> : null}
+                </form> : <span className="text-xs text-muted-foreground">Platform-managed</span>}
               </div>
             ))}
           </div>
@@ -314,14 +332,27 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
           Back
         </button>
 
+        {/* Keep source choice outside the form reset so failed requests can retry the same source. */}
+        <fieldset disabled={creating} className="grid gap-3 rounded-xl border p-4 md:grid-cols-2">
+          <legend className="px-2 font-medium">Corpus source</legend>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4">
+            <input type="radio" name="corpus_source" value="legal" checked={corpusSource === "legal"} onChange={() => setCorpusSource("legal")} className="mt-1 size-4" />
+            <span><span className="block font-medium">Use existing legal corpus</span><span className="mt-1 block text-sm text-muted-foreground">Shared read-only legal sources. No upload or re-embedding required.</span></span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4">
+            <input type="radio" name="corpus_source" value="private" checked={corpusSource === "private"} onChange={() => setCorpusSource("private")} className="mt-1 size-4" />
+            <span><span className="block font-medium">Upload my own data</span><span className="mt-1 block text-sm text-muted-foreground">A private corpus for this workspace&apos;s files and source configuration.</span></span>
+          </label>
+        </fieldset>
         <form action={formAction} className="flex flex-col gap-5">
+          <input type="hidden" name="corpus_source" value={corpusSource} />
           <h1 className="text-2xl font-semibold tracking-tight">What do you want to name this corpus?</h1>
           <div className="grid max-w-2xl gap-5">
             <Field label="Name (required)" helper="Enter a name up to 50 characters long.">
-              <input name="name" defaultValue="Supreme Court" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input name="name" value={corpusName} onChange={(event) => setCorpusName(event.target.value)} required maxLength={50} placeholder={corpusSource === "legal" ? "Supreme Court" : "My documents"} className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
             </Field>
             <Field label="Key (required)" helper="Enter a key up to 50 characters long. This will be used to uniquely identify the corpus.">
-              <input name="slug" defaultValue="supreme_court" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <input name="slug" value={corpusSlug} onChange={(event) => setCorpusSlug(event.target.value)} required maxLength={50} placeholder={corpusSource === "legal" ? "supreme-court" : "my-documents"} className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
             </Field>
           </div>
         
@@ -329,10 +360,10 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
         <div className="flex flex-col gap-5">
           <h2 className="text-2xl font-semibold tracking-tight">Corpus configuration</h2>
           <Field label="Description">
-            <textarea name="description" defaultValue="Supreme Court Documents" className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <textarea name="description" value={corpusDescription} onChange={(event) => setCorpusDescription(event.target.value)} className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </Field>
 
-          <Section title="Source database">
+          {corpusSource === "private" ? <><Section title="Source database">
             <p className="text-sm text-muted-foreground">
               Optional: attach a Turso database that already contains OCR text. Saving this configuration does not start ingestion; use the documented backend batch commands to stage and index it.
             </p>
@@ -383,18 +414,21 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
                 </label>
               ))}
             </div>
-          </Section>
+          </Section></> : <Section title="Shared legal access">
+            <p className="text-sm text-muted-foreground">This creates a reference in your workspace to the platform&apos;s existing legal corpus. Original documents and indexes stay platform-managed. Your conversations, query history and credentials stay in your workspace.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Availability follows verified index readiness. If platform setup is incomplete, creation will report that the shared corpus is unavailable.</p>
+          </Section>}
 
         </div>
 
-        {createState?.error ? <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{createState.error}</p> : null}
+        {createState?.error ? <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{createState.error}</p> : null}
 
         <div className="flex items-center justify-between pb-10">
           <CreateCorpusButton />
-          <button type="button" onClick={() => setJsonOpen(true)} className="flex items-center gap-2 text-sm font-medium text-primary">
+          {corpusSource === "private" ? <button type="button" onClick={() => setJsonOpen(true)} className="flex items-center gap-2 text-sm font-medium text-primary">
             <Code2 className="size-4" />
             Edit JSON
-          </button>
+          </button> : null}
         </div>
         </form>
       </div>

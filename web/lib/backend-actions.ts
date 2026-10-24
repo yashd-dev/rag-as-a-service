@@ -8,12 +8,21 @@ import type { QueryState } from "@/lib/rag-contract";
 
 export async function createProjectAction(_state: { error?: string } | undefined, formData: FormData) {
   try {
+    const source = formData.get("corpus_source") || "private";
+    if (source !== "private" && source !== "legal") return { error: "Choose a supported corpus source." };
+    const tursoUrl = String(formData.get("source_turso_url") || "").trim();
+    const tursoToken = String(formData.get("source_turso_token") || "").trim();
+    if (source === "legal" && (tursoUrl || tursoToken)) return { error: "The shared legal corpus cannot accept a source database." };
+    if (source === "private" && Boolean(tursoUrl) !== Boolean(tursoToken)) {
+      return { error: "Both Turso database URL and auth token are required for a source database." };
+    }
     console.log("createProjectAction", {
       slug: String(formData.get("slug") || "").trim(),
       embedding_model: String(formData.get("embedding_model") || "google/embeddinggemma-300m").trim(),
       has_turso_source: Boolean(String(formData.get("source_turso_url") || "").trim()),
     });
     const project = await createProject({
+      corpus_source: source,
       name: String(formData.get("name") || "").trim(),
       slug: String(formData.get("slug") || "").trim(),
       description: String(formData.get("description") || "").trim(),
@@ -24,12 +33,7 @@ export async function createProjectAction(_state: { error?: string } | undefined
     });
     console.log("createProjectAction project created", { project_id: project.id, name: project.name });
 
-    const tursoUrl = String(formData.get("source_turso_url") || "").trim();
-    const tursoToken = String(formData.get("source_turso_token") || "").trim();
-    if (tursoUrl || tursoToken) {
-      if (!tursoUrl || !tursoToken) {
-        return { error: "Both Turso database URL and auth token are required for a source database." };
-      }
+    if (source === "private" && tursoUrl && tursoToken) {
       console.log("createProjectAction creating turso data source", {
         project_id: project.id,
         table_name: String(formData.get("source_turso_table") || "pdfs").trim(),
@@ -58,6 +62,10 @@ export async function createProjectAction(_state: { error?: string } | undefined
       });
     }
   } catch (error) {
+    unstable_rethrow(error);
+    if (error instanceof BackendError && error.code === "shared_corpus_unavailable") {
+      return { error: "The shared legal corpus is not available yet. Retry after platform setup or choose private uploads." };
+    }
     return { error: error instanceof Error ? error.message : "Could not create corpus." };
   }
 

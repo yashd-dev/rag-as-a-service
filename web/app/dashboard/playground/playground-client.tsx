@@ -72,7 +72,7 @@ function CorpusPlayground({ projects, project, queryProjectAction, onProjectChan
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium">Corpus
           <select value={project.id} disabled={pending} onChange={(event) => onProjectChange(event.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring">
-            {projects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            {projects.map((item) => <option key={item.id} value={item.id}>{item.name} — {item.read_only ? "shared legal (read-only)" : "private"}</option>)}
           </select>
         </label>
         <label className="grid gap-2 text-sm font-medium">Retrieval mode
@@ -81,6 +81,8 @@ function CorpusPlayground({ projects, project, queryProjectAction, onProjectChan
           </select>
         </label>
       </div>
+
+      {project.read_only ? <p className="text-sm text-muted-foreground">Shared legal corpus: source documents and indexes are read-only. Questions and history belong to your workspace.</p> : null}
 
       <section aria-label="Index readiness" aria-busy={checking} className="rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

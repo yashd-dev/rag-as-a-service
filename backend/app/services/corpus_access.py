@@ -69,4 +69,5 @@ class CorpusAccess:
         return project | {
             "corpus_source": "legal" if scope.read_only else "private",
             "read_only": scope.read_only,
+            "is_shared_reference": scope.project["id"] != scope.retrieval_project["id"],
         }
