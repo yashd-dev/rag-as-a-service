@@ -1,5 +1,26 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Grounded corpus playground
+
+`/dashboard/playground` requires a signed-in workspace. Configure the existing web
+auth environment and `BACKEND_URL`, with matching `BACKEND_INTERNAL_SECRET` in web
+and Flask. Select a corpus, wait for readiness, choose an available retrieval mode,
+then submit a question (maximum 1,024 UTF-8 bytes). Each query is independent.
+
+Readiness checks can take up to two minutes on the current full-scan backend. The
+Refresh readiness button rechecks capabilities; graph/hybrid stay unavailable
+until the backend publishes a verified graph. Query requests have a five-minute
+ceiling; errors retain your question. Timeout does not guarantee backend cancellation.
+
+Inline citations open `/dashboard/playground/<projectId>/passages/<chunkId>` in a
+new tab, preserving the playground. Source pages use the signed-in workspace and
+resolve canonical text through Flask; page numbers appear only when stored in the
+source. Used citations and retrieved-but-unused candidates are shown separately.
+
+Frontend regression checks: `bun test tests/rag.test.mjs`, `bun run lint`,
+`bunx --no-install tsc --noEmit --incremental false`, `bun run build`.
+See [Stage F evidence and remaining gates](tests/stage-f.md).
+
 ## Getting Started
 
 First, run the development server:

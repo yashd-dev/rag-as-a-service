@@ -89,6 +89,13 @@ answer-quality evidence. Reopen affected C checks when corpus/model/index change
 
 ## Evidence already available — does not close the gates above
 
+- User-directed F-first implementation (2026-10-25): `web/tests/stage-f.md` records
+  authenticated Next.js → actual Flask/local canonical SQL browser wiring, including
+  controlled vector/graph/hybrid responses and authorized citation resolution.
+  Retrieval/model fixtures are synthetic, not actual-corpus D/E acceptance. Return
+  next to **D, then E**, including the real authenticated corpus journey and measured
+  readiness/query latency. No graph job/publication was started for F.
+
 - C completion: `backend/inventory/reports/stage-c-complete.md` and the source-reviewed
   `backend/evaluation/stage-c-v3.json`; original fixtures/failures remain preserved.
 - D implementation and disposable-Neo4j storage/traversal verification:

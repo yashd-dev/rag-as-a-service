@@ -1,9 +1,11 @@
 # Implementation Specification & Completion Checklist
-## Agentic RAGaaS — Supreme Court Judgments
+## Agentic RAGaaS — Shared Legal Corpus and Private User Data
 
 > **Purpose:** Evidence-based audit and implementation contract for a first-party RAG backend and frontend. This revision plans implementation; it does not implement or certify the RAG pipeline. Checkboxes record only the specific work proven by their evidence.
 >
 > **Audit date:** 2026-10-18. **Scope:** `backend/` and `web/` (the actual Next.js frontend; no `frontend/` directory exists). Other service folders were not audited. **Required target:** Neo4j stores both the knowledge graph and real retrieval embeddings. Turso remains the application/control-plane database and an existing OCR input source. **LightRAG is conceptual reference only:** never import, install, invoke, wrap, vendor, or depend on its repository/modules/server.
+
+> **Product-scope correction — 2026-10-25:** The user confirmed a self-service product: choose the existing read-only legal corpus or upload private data, process uploads through a durable queue, select platform Mistral/Gemini or BYOK, and query with citations through a playground and public OpenAI-compatible API. The playground's right-side integration-code panel is required. Sections 1.1, 2.5.1 and 12.1 govern remaining product work and supersede older conflicting deferrals/order statements. Existing completed checkboxes, measurements, stage records and limitations remain historical evidence; this correction does not reopen accepted work or certify new functionality.
 
 ---
 
@@ -60,24 +62,95 @@
 
 ### Scope priority
 
-**P0 — correctness of the existing Supreme Court corpus**
+**P0 — self-service product and retrieval correctness**
 1. Read and inventory the existing corpus safely, recording and reviewing live counts, dimensions, model provenance and migration eligibility before writes.
 2. Establish stable document/chunk identities and make real embeddings plus semantic retrieval work correctly in Neo4j.
 3. Build a provenance-backed knowledge graph and working semantic-seeded graph retrieval.
 4. Integrate actual vector, graph and hybrid retrieval modes into Flask and the Next.js playground.
 5. Verify citations, indexing/retry reliability and regressions using a manually reviewed set of actual Supreme Court source passages.
+6. Offer every signed-in workspace the existing legal corpus as a read-only option when creating a corpus; also support isolated private uploads.
+7. Automatically queue uploaded data for extraction, chunking, embedding and indexing, with durable progress and safe retry; users must not need operator CLI commands.
+8. Execute queries with the user's selected platform Mistral/Gemini configuration or authorized BYOK endpoint/model/key.
+9. Provide a public OpenAI-compatible RAG API, corpus-scoped API keys and a playground with matching executable integration examples.
 
 **P1 — production-quality behavior**
 - Source citations with judgment metadata and page/section references where available.
 - Incremental, idempotent indexing.
 - Error handling, observability, and data-integrity checks.
-- Authentication/authorization and project/tenant boundaries, if already part of the application scope.
+- Authentication/authorization, private project/tenant boundaries and explicit shared-corpus read-only access.
 
 **P2 — broader platform capabilities**
-- Agentic routing, reranking, conversational memory, configurable providers/BYOK, S3 ingestion, web search, public API/streaming, embeddable assistant, and broader security evaluations. Hybrid retrieval is P0, not deferred.
+- Agentic routing, reranking, conversational memory, S3 ingestion, web search, embeddable assistant and broader security evaluations. BYOK, platform Mistral/Gemini, public API/streaming and the integration-code panel are core product requirements, not P2. Hybrid retrieval remains required for the graph-capable release.
 - Do not let P2 features distract from an incomplete P0 pipeline.
 
-**Scope control — applies to every later checklist and completion gate:** Authentication redesign/role hardening, BYOK wiring, conversational memory, S3 integration, broad deletion/file-retention reconciliation, frontend graph-layout/visualization improvements and operational platform expansion are deferred unless a concrete defect blocks one of the five P0 objectives. Existing tenant isolation, safe migration/rollback, source provenance, truthful readiness and reliable indexing remain required. Record a promoted blocker, its evidence and the minimum fix within the active stage; do not start a separate workstream. Later sections retain deferred findings for traceability, not as permission to expand the current stage or as unconditional P0 completion requirements.
+**Scope control — applies to every later checklist and completion gate:** Implement the confirmed journey in Section 1.1. Private-data isolation, shared-corpus write protection, credential permissions, API-key scope, durable ingestion and deletion behavior needed to keep that journey correct are mandatory. Broader auth redesign, conversational memory, S3 integration, advanced graph visualization, billing, analytics, embeddable chat and research extensions remain deferred unless separately authorized. Preserve existing integrity/migration requirements. Fix concrete blockers within the responsible bounded stage; do not build unrelated sidebar features merely because a link exists.
+
+### 1.1 Confirmed product contract — remaining work
+
+**User confirmation:** on new-corpus creation, offer **Use existing legal corpus** and **Upload my own data**. The existing legal corpus is available automatically to every signed-in workspace and is **read-only for workspace users, including workspace owners**. Platform operators alone manage its source documents and index generations. BYOK and platform Mistral/Gemini, cited answers, queued uploads and playground code examples are part of the main goal.
+
+**Preservation rule:** retain A/B/C acceptance and all D/E/F.1 implementation/test records exactly as recorded. Reuse their canonical identities, vectors, provenance, query service and citation handling. Do not clone/re-embed the shared legal corpus per workspace or discard working F.1 functionality to restore its panel. New requirements below stay unchecked until independently verified. Old baseline findings and broad unchecked lists are not proof that an implemented component is missing.
+
+#### Product requirements and acceptance ownership
+
+| ID | Required behavior | Current recorded starting point | Owner |
+|---|---|---|---|
+| PC-01 | New corpus offers shared legal or private uploaded data | Private project creation exists; shared selection/access missing | H |
+| PC-02 | Every signed-in workspace can query shared legal data and inspect its source passages; no workspace can mutate it | 333 documents / 10,417 vectors accepted in one recorded org/project, not globally shared | H |
+| PC-03 | Private uploads retain originals locally on persistent storage and automatically reach retrieval readiness | Local uploads/canonical text exist; embedding requires operator batches | G.1 |
+| PC-04 | Durable jobs expose stages, counts, failures and safe retry; survive restart and competing workers | Canonical retry/checkpoint primitives exist; complete queue/worker journey missing | G.1 |
+| PC-05 | Platform-managed Mistral and Gemini are selectable and actually used | One configured platform generation path plus local fallback exists; two-provider selection missing | I |
+| PC-06 | Users save/validate supported endpoint, model and encrypted key, then actually execute with that authorized BYOK configuration | Credential storage exists; selected BYOK is not wired into generation | I |
+| PC-07 | Selected corpus/provider returns grounded answers, abstention and exact authorized citations | E implementation and F.1 fixture-browser evidence exist; real-provider/source acceptance open | E + I |
+| PC-08 | External applications use OpenAI-compatible chat requests authenticated by revocable platform API keys restricted to selected corpora | Internal project query API exists; public compatibility/key management missing | J |
+| PC-09 | Playground tests the same service and restores right-side Python/JavaScript/cURL examples matching current selection | F.1 querying/citations work; integration-code panel was removed and must return | F.2 + J |
+| PC-10 | Release proves both shared-legal and private-upload journeys across workspaces, providers, playground and external clients | No complete product acceptance evidence yet | G.2 |
+
+#### H — shared legal access and private-corpus boundaries
+
+- [ ] Represent a workspace's legal-corpus selection as an authorized reference to the existing canonical retrieval scope, without copying/relabeling vectors or granting membership in the platform's owning organization. Discover the current schema first; record any proposed mapping/migration before implementing it.
+- [ ] Use one consistent access decision for corpus listing, query, passage resolution, document access and all mutations. Keep requester workspace/user identity separate from effective shared retrieval scope: query history, usage, conversations and BYOK credentials belong to the requester, never to another workspace or the shared corpus owner.
+- [ ] Allow authenticated legal-corpus reads; deny upload, source changes, document/corpus deletion, index build/re-embedding/publication and mutation through direct HTTP/worker/CLI paths to workspace users. Hiding buttons alone is not enforcement. Platform maintenance requires explicit operator authority, not a workspace role or caller-supplied organization header.
+- [ ] Deleting/detaching a workspace's legal reference leaves shared source files, chunks, vectors, graph evidence and other workspace references intact. Private data remains inaccessible to other workspaces and anonymous callers.
+- [ ] Verify with at least two workspaces: both can retrieve/cite the shared corpus; neither can modify it; each can access only its own private data, credentials and query history. Public keys must follow the same access rules when J is implemented.
+
+#### G.1 — automatic private upload and durable ingestion
+
+- [ ] Initially retain originals under the existing configured local upload storage with a persistent volume accessible to the web/backend intake and worker deployment. Enforce supported formats/resource limits and safe scoped file identities. Declare supported extraction/OCR paths; scanned/unsupported input must produce a precise failure or run a configured supported OCR path, never empty successful indexing.
+- [ ] Persist the file and durable job before acknowledging acceptance. Target asynchronous acceptance is HTTP 202 with document/job references; it is a new contract to implement, not the current synchronous upload behavior. Reconcile file/job partial failure so accepted data cannot silently disappear or become a permanently unqueued upload.
+- [ ] Use the existing application database for durable jobs plus a separate bounded worker initially; reuse checkpoint/lease primitives where suitable. Record schema and atomic claiming strategy before migration. Do not add Redis or another broker unless measured requirements justify it.
+- [ ] Track queued/active/completed/failed outcomes, current stage, document/chunk counts, attempts, safe error codes and retry eligibility. Job completion is not publication proof: text/vector/graph capabilities still follow verified generations, and graph failures do not erase valid vector capability.
+- [ ] Make claims atomic across processes, renew/expire leases safely and prevent expired workers from publishing. Use bounded backoff/attempts and idempotent stage replay (repeated delivery is possible; do not promise exactly-once execution). Resume after worker/backend restart without duplicate documents or embeddings.
+- [ ] Expose scoped queue status and retry controls in the UI; no user CLI step. Coordinate private deletion with active jobs so a late worker cannot recreate deleted data. Define required cross-store/file cleanup without broadening into unrelated retention products.
+- [ ] Test actual queued upload → extraction → canonical chunks → embeddings → Neo4j publication → query/citation, plus duplicate submission, worker crash, lease takeover, provider outage, restart and deletion during processing. Upload requests must not wait for model/indexing work.
+
+#### I — platform providers and working BYOK
+
+- [ ] Offer platform-managed Mistral and Gemini using server-held credentials and verified supported model IDs. Both must be independently selectable and tested; a single generic platform setting or static UI label does not satisfy this requirement. Record actual model IDs/configuration names during implementation; do not invent working defaults or expose raw platform keys.
+- [ ] Validate supported user base URL/model/key configurations with bounded requests, encrypt stored keys, mask safe output and enforce user/explicit workspace-sharing permissions. Validate outbound endpoints before making requests so a custom URL cannot expose internal services or forward credentials to an unintended origin.
+- [ ] Resolve the selected authorized configuration in the shared generation path used by playground and API. Reject foreign/revoked/unavailable configurations. Do not silently ignore BYOK and use platform credentials; any fallback must be explicitly configured and reported with actual provider/model/reason.
+- [ ] Keep answer-model choice separate from embedding provenance. Changing Gemini/Mistral/BYOK answer model reuses compatible indexed vectors. Embedding model changes use the existing explicit new-generation/re-embedding rules.
+- [ ] Verify both platform providers and a supported BYOK endpoint on real source-backed answer/citation/abstention cases, including invalid keys, timeouts, provider failure, permission denial and secret-safe logs/errors. Record any missing provider credentials as blocked acceptance, not a passing fixture test.
+
+#### J — public OpenAI-compatible RAG API
+
+- [ ] Implement target `POST /v1/chat/completions` as a public API contract, separate from internal forwarded-session authentication. Reuse the query/retrieval/citation services rather than a second RAG implementation. This path is a required target, not an existing route.
+- [ ] Create platform API keys authenticated by Bearer token, scoped to a workspace and explicit permitted corpus references. Show a secret only when created, store a secure verification hash, support listing safe metadata/revocation and never expose BYOK/platform provider secrets. Verify authorization on every request and source resolution.
+- [ ] Define and freeze request selection before implementation: target explicit `corpus_id` (OpenAI SDK clients may send it via `extra_body`) and a public `model` identifier resolving to an authorized platform/BYOK configuration. Provider secrets are not passed in integration snippets. Reject omitted/ambiguous/foreign selections; key scope never grants access to arbitrary caller-supplied source IDs. Multi-corpus queries are not assumed by this contract.
+- [ ] Document supported `messages`, generation parameters and limits. Unsupported fields/roles must have explicit behavior, not silently pretend to work. Initial single-turn RAG behavior must not claim conversational memory. Freeze model listing/discovery and any default selection behavior in the versioned API contract.
+- [ ] Return OpenAI-compatible completion/error envelopes and documented citation/source extensions with authorized source resolution. Support documented SSE streaming, completion termination, disconnects and safe partial/error behavior. Validate citation/source behavior in streaming as well as JSON responses; do not claim SDK compatibility from similar JSON alone.
+- [ ] Set and document bounded request/concurrency/rate limits and usage attribution for platform-key consumption. Exact limit values and chosen SDK versions must be recorded and tested before release. Keep secrets/source bodies out of routine logs.
+- [ ] Test Python OpenAI client, JavaScript OpenAI client, cURL and a pinned Vercel AI SDK integration against actual endpoints, including streaming/non-streaming, revoked/wrong-scope keys, provider/model selection, citations and provider/index failures. Add usable API documentation and corpus-scope/key-management dashboard controls.
+
+#### F.2 — complete playground and outstanding review fixes
+
+- [ ] Restore the right-side code panel using the existing editor where suitable. Python/JavaScript/cURL examples derive from selected corpus, provider/model, prompt, supported settings and actual API base URL. Provide copy/show/hide behavior and secret placeholders. Never generate examples for nonexistent endpoints or leak stored keys; test generated examples against J.
+- [ ] Add working platform Mistral/Gemini/BYOK selection, legal/private corpus choice and queued-upload progress/retry UX while preserving F.1 real results, readiness, diagnostics, citations and error states. Controls must affect actual requests; unsupported tools/settings remain explicitly unavailable.
+- [ ] Fix review finding: `parseQueryResult` must require an exact allowed string status, not accept `status: ["answered"]` through string conversion. Add that regression case; this requirement records the finding, not a completed code fix.
+- [ ] Fix review finding: a failed document-list request must display unavailable/unknown count, not also claim zero documents or an empty corpus. Add a UI regression for populated-corpus fetch failure.
+- [ ] Run relevant frontend tests, lint/typecheck/build and authenticated browser flows for the expanded journey. Preserve F.1 checks as historical evidence, not blanket certification of F.2.
+
+**Release boundaries:** a verified vector-backed self-service release can precede full GraphRAG acceptance, but must keep graph/hybrid unavailable where D is unaccepted/unpublished and must list D as unfinished. Full planned graph-capable product completion still requires D/E's independent actual-source graph/hybrid evidence. Neither foundation-stage completion nor passing fixture tests completes PC-01–PC-10. Billing, analytics, workspace-switching enhancements, embeddable chat, memory, S3 and advanced agent tools are not added to this release merely because they appear in the sidebar/README.
 
 ---
 
@@ -172,7 +245,7 @@ Frontend upload proxy: `web/app/api/projects/[projectId]/documents/upload/route.
 | Local SQLite schema/count inspection | Read-only snapshot results in Section 2.1; no data changed. |
 | Flask startup, remote Turso/source schema, Neo4j, Ollama, live embeddings/retrieval and browser/citations | **NOT RUN / UNVERIFIED**. No production indexing or remote schema mutation performed. No scoped read-only diagnostic command currently exists; startup/backfill are mutating paths. |
 
-### 2.5 Staged implementation plan (future work, in dependency order)
+### 2.5 Staged implementation plan and remaining product ownership
 
 Each stage occupies its own run and ends with evidence, relevant tests/checks, Git-diff inspection and a report in this file. Stop after the stage; passing its exit criteria permits a later run, not automatic continuation. Failed or unverified criteria keep the current stage open. Proposed module/command/schema names are design proposals until implemented, not existing interfaces.
 
@@ -182,11 +255,24 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 | B — Backend ownership, identity and state | After reviewed Stage A, implement backend-owned RAG interfaces and replace scoped `ai.*` runtime imports. Add necessary repeatable metadata migrations, stable org/project/source-record identity, canonical versioned chunks, retained source metadata, indexing ledger/retry state and formal readiness outputs (Section 5.3). | No LightRAG or sibling-service runtime dependency; same source twice produces one document/generation; failed rows retry; source spans survive extraction; state-transition tests pass; dry-run makes no writes. Any migration failure blocks exit. |
 | C — Neo4j vectors + semantic retrieval | Validate served model dimensions, implement Neo4j chunk vectors/index and backend semantic search, then batch-copy only eligible Turso vectors or re-embed from canonical text. Preserve valid IDs and generation metadata; validate rollback before cutover. | Real vectors in Neo4j, index online, verified per-project coverage/integrity and query dimensions; reviewed paraphrase retrieval succeeds before generation. Record vector-mode results in Section 9.1; no fabricated vectors or unknown-provenance reuse. |
 | D — Grounded graph + graph retrieval | Independently extract/resolve typed entities and source-backed relations from canonical chunk references; implement bounded semantic-seeded graph retrieval, idempotent merge and explicit partial failures. | Each assertion links to source chunk/span; extraction failures are visible; unsupported legal assertions rejected; graph-mode retrieval returns manually reviewed connected evidence (Section 9.1). |
-| E — Retrieval + grounded API | Dispatch real vector/graph/hybrid modes; query embeddings → Neo4j candidates → bounded graph expansion → source-aware fusion → evidence budget → grounded generation. Add passage/citation and diagnostics contracts. | Independently tested modes; paraphrase + relationship queries retrieve reviewed real evidence; unanswerable/error paths do not fabricate answers. |
-| F — Real frontend integration | Fix `web/lib/backend.ts` types/actions and playground results/corpus/mode selection; display formal backend readiness/errors and clickable source evidence. Graph-view/layout changes only if they block this flow. | Query displays actual answer/sources and mode, citations open authorized passages, partial/error/missing-vector states visible; lint/typecheck/build and core browser flow pass. |
-| G — Core acceptance + indexing reliability | Complete backend-owned resumable indexing/retry/re-embedding, core integrity regressions, reviewed corpus evaluation, migration/restore/runbook and dependency-boundary checks. Broader operational/deletion features remain deferred unless blocking core integrity. | Relevant tests and real-service checks pass; independent vector/graph/hybrid evidence and citation reviews meet Section 9.1; indexing retry/idempotency and rollback recorded; applicable Section 12 gates satisfied. |
+| E — Retrieval + grounded API | Preserve implemented mode dispatch, fusion, grounding and passage contracts. Finish real-provider/source acceptance; extend to shared legal/private corpus access and selected platform/BYOK execution after H/I. | Reviewed independent modes, citations/claims, abstention, provider/failure/isolation cases; vector acceptance recorded separately from D-dependent graph/hybrid acceptance. |
+| F — Real frontend integration | Preserve F.1 implementation/fixture-browser evidence. Complete F.2: restore configuration-driven code panel, legal/private corpus and provider selection, queue status/retry and review fixes in Section 1.1. | Existing query/source behavior stays working; actual selected settings drive requests; code examples execute against J; frontend checks and real authenticated expanded journey pass. |
+| G — Automatic ingestion + product acceptance | G.1 delivers durable upload queue/worker and safe private-data processing using B/C primitives. G.2 finishes reconciliation/recovery, reviewed evaluation, measured serving performance, migration/restore/runbook and end-to-end product acceptance. | G.1 worker restart/concurrency/retry/idempotency and upload-to-query checks pass. G.2 proves PC-01–PC-10 and Section 12.1; full graph release additionally meets D/E and Section 9.1. |
+| H — Shared legal corpus + access | Implement legal/private choice and shared read-only references without copying existing legal vectors or weakening private tenant checks. | Two workspaces can query/cite shared data, cannot mutate it, and cannot see each other's private data/credentials/history; detach/delete preserves shared corpus. |
+| I — Platform Mistral/Gemini + BYOK execution | Implement authorized provider/model selection, supported custom endpoints, credential validation and actual query execution; preserve embedding provenance independently. | Real platform Mistral, Gemini and supported BYOK cases pass with citations, safe failure handling and no credential leakage/unauthorized use. |
+| J — Public OpenAI-compatible API + scoped keys | Implement external API/key lifecycle, corpus/model selection, streaming/citations, integration documentation and dashboard controls. Reuse E's query service. | Actual Python/JS OpenAI, cURL and pinned Vercel AI SDK cases pass; scope/revocation, stream/error and provider/source contracts verified. |
 
-**Stage handoff record (complete after every stage):** stage ID and scope; sections completed and their Conventional Commit hashes (or verified no-change outcomes); exit criterion → evidence/result; commands and outcomes; changed/new files and Git-diff review; inventory/migration/readiness changes; blockers/deferred findings; next-stage eligibility. Each section follows implement → verify → update checklist → review diff → commit → next eligible section. No stage is currently implemented by this planning revision.
+#### 2.5.1 Execution dependencies after the product-scope correction
+
+The earlier A–G sequence and F → D → E handoffs remain historical records. This revision assigns the missing product work explicitly; letter order is not a new requirement to finish D before implementing shared access or private uploads. Execute one bounded stage/subsection per implementation run, with its own checks/handoff; do not run multiple stages automatically from this documentation update.
+
+- **Preserved:** A/B/C are accepted only for their recorded scope; D/E implementation and F.1 evidence remain intact. Do not rerun/rewrite completed work unless a material change affects its proof.
+- **Recommended product implementation order:** H → G.1 → I → J → F.2 integration → E expanded vector/answer acceptance → G.2 vector-product sign-off. F.2's small review fixes may be handled as a separate bounded prerequisite; its code-panel/API acceptance depends on J and provider controls depend on I. G.1 uses the existing embedding baseline and does not require answer-model selection.
+- **Graph track:** D retains all unresolved extraction, coverage, publication and human-review requirements. When D passes, finish E's real graph/hybrid acceptance, then record full graph-capable release evidence. Vector-product progress must not silently publish/enable an incomplete graph or mark D complete.
+- **Migration scope:** H/G/I/J may need additive metadata. Inventory affected existing schema/records, preserve canonical data and use explicit safe migrations; newly proposed names/fields remain proposals until implemented. No shared legal re-ingestion or model/provider change is authorized just by this plan.
+- **G.2 performance:** replace expensive serving-time full proofs with generation-aware publication/readiness evidence where needed, retaining deep diagnostics and invalidation on source/model/index changes. The recorded 80.29s status check is unresolved. Record a concrete concurrent-workspace workload and latency acceptance targets before measuring; longer frontend timeouts alone are not a fix.
+
+**Stage handoff record (complete after every stage):** stage ID and scope; sections completed and their Conventional Commit hashes (or verified no-change outcomes); exit criterion → evidence/result; commands and outcomes; changed/new files and Git-diff review; inventory/migration/readiness changes; blockers/deferred findings; dependency-based next-stage eligibility. Each section follows implement → verify → update checklist → review diff → commit when authorized → next eligible section. The original planning revision implemented no stages; subsequent acceptance records below and the new remaining-work ownership above must be read separately. This product-scope update changes documentation only.
 
 ### 2.6 Neo4j target contract (proposed; not the current verified schema)
 
@@ -196,6 +282,7 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 - **Embedding baseline:** preserve the current Ollama EmbeddingGemma direction initially, subject to measured output compatibility. The declared Turso width is 768; do not assume every configured Ollama tag returns that width. Resolve the model once per generation, validate ingestion/query dimensions and numeric finiteness, prohibit mixing incompatible generations.
 - **Vector index:** explicitly configure dimensions and cosine similarity on canonical chunk vectors. Discover Neo4j server version/edition and supported index/query syntax before implementing; do not infer capabilities from the `neo4j>=5.25.0` client dependency. Verify index ONLINE state and query plans.
 - **Isolation:** filter org/project and model generation before candidate selection where supported; otherwise implement and test a partitioned/overfetch strategy for the deployed version. Post-filtering a global top-k alone can lose all relevant tenant results. Recheck scope on graph endpoints, traversal and source resolution; never send foreign evidence to the LLM.
+- **Shared access extension (H, not implemented):** resolve an authorized read-only corpus reference to the canonical shared partition before applying the same generation/candidate/provenance checks. Keep the requester identity for private credentials, history and usage. Shared access is an explicit permission path, never removal of project/tenant filters or automatic exposure of arbitrary foreign projects.
 - **Retrieval:** vector mode uses chunk similarity only; graph mode starts with semantic seeds and follows bounded allowed evidence-backed relationships; hybrid fuses semantic passages and graph evidence using a documented strategy (for example rank fusion, not addition of incomparable scores). Cap seeds, hops, fanout, total evidence and token budget. Record how graph evidence changes the final context.
 - **LightRAG-inspired local/global retrieval:** local means query-relevant entities with nearby source evidence; broader retrieval means relationship-level evidence connecting themes/documents. Optional entity/relation description embeddings require their own measured/model-versioned index and provenance. Community summaries and embeddings are deferred, not mandatory P0 checkboxes.
 - **Cross-store consistency:** SQL and Neo4j do not share a transaction. Use generation-aware staged writes, durable checkpoints and reconciliation; publish readiness only after vector + required graph stages succeed. Readers must not mix partial/new and old generations.
@@ -309,6 +396,17 @@ Each stage occupies its own run and ends with evidence, relevant tests/checks, G
 **C.3b versioned source-review correction selected before new evaluation:** the user explicitly selected **“Approve versioned correction”** after reviewing the actual sentence reasoning span, removal of its misleading BM25-miss designation and the exact new semantic-only query. Freeze this decision as `backend/evaluation/stage-c-v2.json` before measuring that new query; preserve original fixture/reports unchanged. Exact-case and generic-paraphrase questions/labels remain unchanged; the sentence question now names its reviewed actual reasoning passage. New predeclared semantic-only question must independently retrieve its approved passage in top 8 while BM25 misses it; do not assume or manufacture a passing result. Source spans/hashes/excerpts must validate against canonical text before committing this fixture. Repeat live vector build already verified **10,417/10,417 reused**, zero re-embedding or duplicate generation; index remains unpublished. Candidate recall fix committed as `46c9af7`.
 
 **C.3b reviewed body evidence (before v3 validation):** v2 was frozen as `bca8002` and its first result is preserved at `stage-c-vector-evaluation-v2-01.json`. Its new query actually retrieves the same judgment's supporting body passages at ranks 1–4, while the headnote-only label misses. The user explicitly selected **“Approve actual-body evidence”** after reading the exact 9089–10829 quotation, its rank 3 and BM25 top-8 absence. Freeze that source-label correction in `stage-c-v3.json`; keep the question, k=8 and BM25-miss requirement unchanged. Preserve every earlier failure. This is a pooled, manually source-reviewed smoke set, not a held-out generalization benchmark or an additional production algorithm improvement. Configured read-only E smoke also passed: source GET **200**, exact hash verified/no-store; unpublished vector POST **409/vector_not_ready**, **0 generation calls**, query-run count **0 → 0**. No publication or live graph enrichment yet.
+
+### Stage F execution record — user-directed F → D → E order
+
+**User authorization (2026-10-25):** “DO F first now Then we do D then E”. This permits frontend implementation before D/E live acceptance; it does not authorize unattended enrichment, partial graph publication, or closing D/E gates. E's implemented API is the frontend contract. Finish F work first, then return to D and E in that order. No D job is started by this increment.
+
+**F.1 selected before editing:** replace the static playground with corpus/mode selection, actual structured query results and measured diagnostics; display read-only backend readiness and refuse unavailable modes; open citations through authenticated canonical passage resolution. Correct document readiness/model-selection claims that contradict the backend. Preserve project/tenant checks and handle loading, empty, partial, malformed-response, timeout and service-error states. Reuse existing components and server forwarding; add no dependency. Graph visualization changes remain deferred unless blocking this flow. Acceptance: focused frontend contract/interaction checks, lint, TypeScript, build and browser evidence. Controlled browser fixtures prove wiring only; real graph/hybrid quality and production-authenticated corpus checks remain separately recorded. Section changes remain uncommitted unless the user requests a commit.
+
+- [x] F.1 implementation: `web/lib/{backend.ts,backend-actions.ts,rag-contract.ts}`, playground, read-only readiness proxy and authenticated passage page now use E's real contracts. Corpus/mode selection, whole response rendering, inline citations, exact passages, source spans/pages, actual provider/fallback/timings, independent capability display and explicit failure/abstention states replace static content. Unsupported embedding choices and unconditional corpus Ready badge removed. `.gitignore` now exposes previously ignored `web/lib/`; existing auth/context/utility source is preserved.
+- [x] F.1 controlled authenticated browser proof: actual Next.js production app → Better Auth disposable local session/workspace → actual Flask E endpoints/local canonical SQL. Vector/graph/hybrid results, citation click-through, absent pages, empty corpus, unavailable-mode gating, stale publication refusal, provider failure/question preservation, abstention and malformed-readiness refusal were exercised. Anonymous source access redirects to auth; foreign-project source shows no passage. Graph/model retrieval fixtures are controlled, not real-corpus quality evidence. Detail: `web/tests/stage-f.md`.
+- [x] F.1 final checks: **7 frontend tests / 40 assertions passed**, **10 backend E API regressions passed**, ESLint, explicit TypeScript, production build and `git diff --check` passed. Final rebuilt app rechecked for vector answer/submitted-question rendering; document/corpus capability badges verified in the authenticated browser. Existing production sources/model settings unchanged; temporary proof servers stopped after verification. No dependency added and no commit created.
+- [ ] **Integrated production-corpus acceptance remains open:** preserve F.1 evidence and finish expanded provider/shared/private/browser acceptance under E/G.2 and F.2. Graph/hybrid acceptance still depends on D. F.1 does not close D/E, fix the measured 80.29s backend readiness latency, restore the integration-code panel or certify the product. The later product-scope correction in Sections 1.1/2.5.1 governs remaining dependencies; the earlier F → D → E instruction above is retained as history.
 
 ### Stage B execution record — 2026-10-18 (complete)
 
@@ -556,7 +654,7 @@ Expose readiness as validated backend output for each document/index generation 
 - [ ] Enforce a bounded evidence/context token budget and meaningful score/coverage handling before generation.
 - [ ] Do not fabricate case names, quotations, paragraph numbers, citations, or holdings.
 - [ ] Add timeout, retry, and error handling for model and database calls.
-- [ ] Report actual provider/model/fallback for the core query path; selected-credential/BYOK wiring is deferred unless it blocks the configured working provider. Do not advertise unsupported selection behavior.
+- [ ] Report actual provider/model/fallback for the core query path; selected platform Mistral/Gemini and authorized BYOK execution are required under I. Preserve existing E diagnostics; do not advertise unsupported selection behavior or silently ignore selected credentials.
 - [ ] Validate `conversation_id` belongs to the authorized project/org/user before use; conversation memory remains P2 until message persistence/history retrieval are implemented.
 - [ ] Test questions requiring exact text, semantic paraphrase, case citation lookup, and multi-document/relationship reasoning.
 
@@ -575,7 +673,7 @@ Expose readiness as validated backend output for each document/index generation 
 - [ ] Validate request payloads and return consistent HTTP status codes.
 - [ ] Add endpoints or commands for indexing status and diagnostics if missing.
 - [ ] Make diagnostics/status read-only; current graph GETs must not create constraints/projects. Decouple schema migration from app factory startup.
-- [ ] Ensure long indexing tasks do not block ordinary query requests indefinitely; use the project's existing background-job approach or document a safe batch command.
+- [ ] Ensure long indexing tasks do not block upload/query requests; implement G.1's durable queue and separate bounded worker. Existing safe batch commands remain operator/repair tools, not a substitute for automatic user ingestion.
 - [ ] Add structured logs for indexing, embedding, retrieval, graph construction, and model calls. Do not log API keys or sensitive document content unnecessarily.
 - [ ] Enforce project/document access boundaries wherever multi-tenancy exists.
 - [ ] Require a configured internal secret/trusted server boundary; validate roles and conversation/source membership rather than accepting spoofable identity headers when secret is empty.
@@ -587,20 +685,22 @@ Expose readiness as validated backend output for each document/index generation 
 ## 8. Next.js Frontend
 
 - [x] Audit document, graph, playground pages/components, API types/actions, auth and backend forwarding before planning changes (Section 2).
-- [ ] Verify the UI calls the real Flask endpoints rather than using mock data or hard-coded examples.
-- [ ] Show clear loading, empty, partial, success, and failure states for document indexing and queries.
-- [ ] Show ingestion/indexing status based on backend data, not optimistic assumptions.
-- [ ] Display answers with clickable, source-grounded citations.
-- [ ] Return query results from the action/API and render them in playground state; remove static conversation/reasoning/performance as substitutes for real output.
-- [ ] Select the actual corpus and retrieval mode rather than always submitting `projects[0]` with hidden `hybrid`.
-- [ ] Align model choices with the effective backend model; no MiniLM/Nomic selection while silently generating Ollama Gemma vectors.
+- [x] Verify the UI calls the real Flask endpoints rather than using mock data or hard-coded examples. F.1 browser exercised real E HTTP endpoints with isolated canonical SQL and explicitly controlled model/retrieval fixtures; production code has no fixture switch.
+- [x] Show clear loading, empty, partial, success, and failure states for document indexing and queries. F.1 evidence in `web/tests/stage-f.md`.
+- [x] Show ingestion/indexing status based on backend data, not optimistic assumptions. Corpus/document summaries derive from returned capabilities; playground displays backend counts, failure reasons and verification time.
+- [x] Display answers with clickable, source-grounded citations. Authenticated passage page resolves the exact canonical chunk; claim faithfulness on real judgments remains E acceptance.
+- [x] Return query results from the action/API and render them in playground state; remove static conversation/reasoning/performance as substitutes for real output. F.1.
+- [x] Select the actual corpus and retrieval mode rather than always submitting `projects[0]` with hidden `hybrid`. Defaults to vector; graph/hybrid require backend capabilities and retain independent dispatch.
+- [x] Align model choices with the effective backend model; no MiniLM/Nomic selection while silently generating Ollama Gemma vectors. Only supported Gemma baseline offered; runtime model provenance is in actual query diagnostics.
 - [ ] If graph visualization exists, distinguish node types and edge types and expose source evidence when a node/edge is selected.
 - [ ] Fix directed-cycle/self-loop layout termination in `graph-client.tsx:54–61`; graph data must have traversal/size limits and provenance-rich types.
-- [ ] Make it clear when a graph is not yet indexed or embeddings are missing; do not show a misleading “ready” state.
-- [ ] Handle API timeouts, backend unavailability, and malformed responses without crashing the page.
-- [ ] Verify responsive layout and accessibility of important controls.
+- [x] Make it clear when a graph is not yet indexed or embeddings are missing; do not show a misleading “ready” state. Separate capabilities gate modes; backend still rechecks publication on every query.
+- [x] Handle API timeouts, backend unavailability, and malformed responses without crashing the page. F.1 validated results and error handling; focused tests and malformed-status browser case pass.
+- [x] Verify responsive layout and accessibility of important controls. F.1 labels, native keyboard controls, visible focus rings, live loading/error regions; 390px authenticated iframe layout has no page overflow. This is not a full accessibility audit.
 - [x] Baseline lint, TypeScript checks and production build pass on 2026-10-18 (Section 2.4).
-- [ ] Re-run frontend checks after implementation and verify authenticated query/indexing/citation flows in a browser.
+- [x] Re-run frontend checks after implementation and verify authenticated query/indexing/citation flows in a browser. F.1 controlled-service browser evidence and checks recorded in `web/tests/stage-f.md`; actual-source release journey remains explicitly open in F/D/E acceptance.
+
+**Remaining product frontend scope:** F.1's checked items above remain accepted within their recorded scope. F.2 in Section 1.1 adds the restored integration-code panel, actual provider/key selection, shared legal/private creation flow, queue progress/retry and review regressions. F.1 alone does not complete the product frontend or all sidebar pages.
 
 ---
 
@@ -765,7 +865,7 @@ Existing OCR ingestion is triggered by `POST /api/data-sources` with `source_typ
 
 ## 12. Completion Gate — Do Not Declare Done Until These Pass
 
-These are core RAG acceptance gates, subject to Section 1 scope control. Retained deferred findings elsewhere are not additional unconditional completion gates. A stage report may declare that stage complete only; it must not declare the entire project complete.
+These are core RAG acceptance gates, subject to Section 1 scope control. Section 12.1 additionally governs the confirmed self-service product. Retained deferred findings elsewhere are not additional unconditional completion gates. A stage report may declare that stage complete only; it must not declare the entire project complete. A separately verified vector-backed release must explicitly retain unfinished graph gates, not mark them passed or claim full graph-capable completion.
 
 - [x] Initial scoped static audit and available baseline evidence recorded in Section 2; live data audit remains a separate gate below.
 - [ ] Every completed stage has its own run/handoff, relevant test results, inspected Git diff and passed exit criteria; no stage advanced across a failed/unknown gate.
@@ -785,13 +885,29 @@ These are core RAG acceptance gates, subject to Section 1 scope control. Retaine
 - [ ] Flask endpoints return grounded evidence and valid citations.
 - [ ] Next.js UI uses real backend data and handles failure/loading states.
 - [ ] Indexing is repeatable, idempotent, observable, and recoverable.
-- [ ] Source replay, failed-row retry, generation changes and interrupted writes pass core reconciliation tests. Deletion tests are required here only if deletion was a documented blocker promoted into core scope.
+- [ ] Source replay, failed-row retry, generation changes and interrupted writes pass core reconciliation tests. Private deletion during queued work and shared-corpus detach/write protection are required by Section 12.1; broader retention features remain deferred.
 - [ ] Turso-vector cutover comparison and rollback are documented and verified; no required retrieval depends on the legacy Turso vector table after cutover.
 - [ ] Relevant backend tests pass.
 - [ ] Frontend lint/typecheck/build pass.
 - [ ] Core regression scenarios in Section 9 have recorded outcomes; deferred visualization/deletion/platform findings are explicitly identified rather than silently treated as passes.
 - [ ] Runbook and configuration documentation are updated.
 - [ ] Final summary lists completed work, unresolved items, evidence, and commands.
+
+### 12.1 Self-service product release gate — all new items remain open
+
+- [ ] PC-01–PC-10 have implemented contracts, scoped tests and actual integration evidence; no provider label, sidebar link, operator CLI or fixture response stands in for working functionality.
+- [ ] Two signed-in workspaces can independently choose and query/cite the same existing legal corpus without duplicated embeddings. Direct mutation attempts by either workspace, including owners, are denied. Detaching/deleting one workspace reference preserves shared data and the other workspace's access.
+- [ ] Each workspace can upload supported private data and observe automatic queued progress to vector readiness, then query it with exact citations. Neither workspace can read or mutate the other's private data, jobs, credentials, query history or passage URLs.
+- [ ] Worker crash/restart, competing claims, expired leases, repeated submissions/delivery, safe retries, storage/model failures and private deletion during processing pass without lost accepted uploads, duplicate publication or resurrection of deleted data. Unusable/scanned/unsupported documents produce truthful configured OCR/error outcomes.
+- [ ] Platform Mistral and Gemini plus supported BYOK are independently exercised on actual source-backed answer/citation/abstention cases. Selected configuration is used; changing answer model does not re-embed the corpus; invalid/foreign/revoked credentials fail safely.
+- [ ] Public corpus-scoped API keys can be created/revoked and enforce permitted shared/private corpus access on every request. Actual external clients prove OpenAI-compatible JSON/SSE, provider selection, citations/source access and error behavior; pinned Vercel AI SDK integration evidence is recorded.
+- [ ] Playground preserves F.1 functionality and restores a right-side code panel whose generated Python/JavaScript/cURL examples execute against the real API. Model/key/corpus/settings controls match effective execution; loading/error/queue states and source links work in an authenticated browser.
+- [ ] Review regressions for array-valued answer status and failed document-list/unknown-count rendering are fixed and tested; this documentation update does not fix them.
+- [ ] Shared and private serving workload, concurrency/rate/resource limits and latency targets are documented and measured. The previous 80.29s readiness cost has a verified serving-path resolution; merely increasing timeouts is insufficient.
+- [ ] Local persistent storage, worker/API startup, durable job schema/migrations, backup/restore/recovery, provider configuration and public API usage are documented and verified for the agreed deployment. No secrets are exposed by examples, responses or routine logs.
+- [ ] G.2 records the real legal/private × platform/BYOK × playground/external-client acceptance matrix, per-case failures/results, release scope and remaining D/E graph gates. Full graph-capable completion additionally satisfies the original D/E and Section 9.1 requirements; a vector release does not waive them.
+
+**Open implementation choices, not missing product intent:** exact supported provider model IDs, versioned SDK/protocol details, supported upload/OCR matrix and measured load/latency/limit values must be discovered/selected and recorded in the responsible stage before its acceptance. Local persistent uploads and a database-backed bounded worker are the initial direction. No new application route, table, environment variable or model is claimed implemented by this document.
 
 ---
 

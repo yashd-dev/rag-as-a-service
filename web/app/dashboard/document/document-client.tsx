@@ -35,21 +35,9 @@ const corpusJson = `{
 const embeddingModels = [
   {
     provider: "huggingface",
-    model: "nomic-ai/nomic-embed-text-v1",
-    label: "nomic-embed-text-v1",
-    description: "Nomic text embedding model for general retrieval.",
-  },
-  {
-    provider: "huggingface",
-    model: "embeddinggemma-300m",
+    model: "google/embeddinggemma-300m",
     label: "embeddinggemma-300m",
-    description: "Compact Gemma embedding model for retrieval.",
-  },
-  {
-    provider: "huggingface",
-    model: "sentence-transformers/all-MiniLM-L6-v2",
-    label: "all-MiniLM-L6-v2",
-    description: "Small sentence-transformers model for fast semantic search.",
+    description: "Supported backend embedding baseline. Effective Ollama model and revision are verified during indexing and querying.",
   },
 ] as const;
 
@@ -78,7 +66,7 @@ function Field({ label, helper, children }: { label: string; helper?: string; ch
 type DocumentClientProps = {
   projects: Project[];
   dataSources: DataSource[];
-  documentsByProject: Record<string, Document[]>;
+  documentsByProject: Record<string, Document[] | null>;
   createProjectAction: (_state: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
   deleteProjectAction: (formData: FormData) => void;
   deleteDocumentAction: (formData: FormData) => void;
@@ -163,18 +151,18 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
         <div className="grid gap-5 p-4 md:p-6">
           <section className="rounded-xl border bg-background p-4 md:p-5">
             <h2 className="font-medium tracking-tight">Upload document</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Upload one or more files. The request waits for text extraction/OCR, chunking, Ollama knowledge-graph labeling, and graph indexing before it returns.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Upload one or more text files or PDFs with embedded text. Upload stages canonical text and chunks only; vector and graph indexing require the documented backend batch commands. Scanned PDFs need usable OCR text first.</p>
             <form onSubmit={handleDocumentUpload} className="mt-4 flex flex-col gap-3">
               <input type="hidden" name="project_id" value={selectedProject.id} />
               <div className="flex flex-col gap-3 sm:flex-row">
-                <input name="file" type="file" multiple disabled={uploading} className="h-11 flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm focus:ring-2 focus:ring-ring disabled:opacity-60" />
+                <input name="file" type="file" aria-label="Documents to upload" multiple disabled={uploading} className="h-11 flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm focus:ring-2 focus:ring-ring disabled:opacity-60" />
                 <button type="submit" disabled={uploading} className="h-11 rounded-lg bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:bg-primary/80 disabled:pointer-events-none disabled:opacity-70">
                   {uploading ? "Processing..." : "Upload and process"}
                 </button>
               </div>
               {uploading ? (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
-                  Processing {uploadFiles.length} file{uploadFiles.length === 1 ? "" : "s"}: {uploadFiles.join(", ")}. This can take a few minutes for OCR and graph extraction.
+                    Staging text for {uploadFiles.length} file{uploadFiles.length === 1 ? "" : "s"}: {uploadFiles.join(", ")}. Retrieval readiness is verified separately.
                 </div>
               ) : null}
               {uploadError ? <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div> : null}
@@ -205,7 +193,8 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
             </section>
           ) : null}
 
-          <section className="overflow-hidden rounded-xl border bg-background">
+          {documentsByProject[selectedProject.id] === null ? <p role="alert" className="rounded-xl border p-4 text-sm">Document readiness unavailable. Reload to retry.</p> : null}
+          <section className="overflow-x-auto rounded-xl border bg-background">
             <div className="grid grid-cols-[1fr_140px_160px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
               <span>Document</span>
               <span>Status</span>
@@ -218,7 +207,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
                   <p className="truncate font-medium tracking-tight">{document.file_name}</p>
                   <p className="truncate text-xs text-muted-foreground">{document.id}</p>
                 </div>
-                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{document.status}</span>
+                <span className="text-xs text-muted-foreground">{document.readiness?.state || "unverified"}<span className="mt-1 block">Text {document.readiness?.capabilities.text ? "✓" : "—"} · Vector {document.readiness?.capabilities.vector ? "✓" : "—"} · Graph {document.readiness?.capabilities.graph ? "✓" : "—"}</span></span>
                 <span className="text-muted-foreground">{new Date(document.created_at).toLocaleDateString()}</span>
                 <form action={deleteDocumentAction}>
                   <input type="hidden" name="project_id" value={selectedProject.id} />
@@ -286,7 +275,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
           </Button>
         </div>
         <div className="p-4 md:p-6">
-          <div className="overflow-hidden rounded-xl border bg-background">
+          <div className="overflow-x-auto rounded-xl border bg-background">
             <div className="grid grid-cols-[1fr_240px_160px_120px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
               <span>Name</span>
               <span>Embedding</span>
@@ -300,9 +289,9 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
                   <p className="truncate font-medium tracking-tight text-primary">{project.name}</p>
                   <p className="truncate text-xs text-muted-foreground">{project.slug} · {(documentsByProject[project.id] || []).length} documents</p>
                 </button>
-                <span className="truncate text-muted-foreground">{project.embedding_model || "sentence-transformers/all-MiniLM-L6-v2"}</span>
+                <span className="truncate text-muted-foreground">{project.embedding_model || "Not configured"}</span>
                 <span className="text-muted-foreground">{project.default_query_mode}</span>
-                <span className="w-fit rounded-full bg-green-100 px-2.5 py-1 text-xs text-green-700">Ready</span>
+                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{documentsByProject[project.id] === null ? "Unavailable" : !(documentsByProject[project.id]?.length) ? "No documents" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.graph) ? "Graph available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.vector) ? "Vector available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.text) ? "Text only" : "Partial / pending"}</span>
                 <form action={deleteProjectAction}>
                   <input type="hidden" name="project_id" value={project.id} />
                   <button type="submit" className="h-9 rounded-lg border px-3 text-sm text-destructive hover:bg-destructive/10">
@@ -345,7 +334,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
 
           <Section title="Source database">
             <p className="text-sm text-muted-foreground">
-              Optional: attach a Turso database that already contains OCR text. The backend stores this as a corpus data source for ingestion into the knowledge graph.
+              Optional: attach a Turso database that already contains OCR text. Saving this configuration does not start ingestion; use the documented backend batch commands to stage and index it.
             </p>
             <div className="mt-6 grid gap-4">
               <Field label="Turso database URL" helper="Example: libsql://ocr-content-org.aws-ap-south-1.turso.io">
@@ -376,23 +365,16 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
                   <input name="source_turso_url_column" defaultValue="url" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </Field>
               </div>
-              <label className="flex items-start gap-3 rounded-lg border bg-card p-3 text-sm">
-                <input name="source_skip_graph_extraction" type="checkbox" value="true" className="mt-1 size-4" />
-                <span>
-                  <span className="block font-medium tracking-tight">Emergency speed mode: skip knowledge graph extraction</span>
-                  <span className="mt-1 block text-muted-foreground">Leave this unchecked for GraphRAG. Check only if you need fast chunk-only ingestion.</span>
-                </span>
-              </label>
             </div>
           </Section>
 
           <Section title="Embedding model">
-            <p className="text-sm text-muted-foreground">The embedding model used to convert text to vectors.</p>
+            <p className="text-sm text-muted-foreground">Supported project model metadata. Effective model, digest and dimensions are verified by the backend; alternate model execution is not available here.</p>
             <input type="hidden" name="embedding_provider" value="huggingface" />
             <div className="mt-6 grid gap-3">
               {embeddingModels.map((item, index) => (
                 <label key={item.model} className="flex items-start gap-4 rounded-xl border bg-card p-4 hover:bg-(--card-hover)">
-                  <input type="radio" name="embedding_model" value={item.model} defaultChecked={index === 2} className="mt-1 size-4" />
+                  <input type="radio" name="embedding_model" value={item.model} defaultChecked={index === 0} className="mt-1 size-4" />
                   <span>
                     <span className="block text-sm font-medium tracking-tight">{item.label}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{item.model}</span>
