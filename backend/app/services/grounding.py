@@ -29,6 +29,29 @@ class GenerationFailure(RuntimeError):
         self.code, self.status = code, 503
 
 
+def _extract_json(text):
+    """Parse a JSON object from text that may wrap it in markdown fences or prose."""
+    try:
+        return json.loads(text)
+    except (TypeError, ValueError):
+        pass
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("no JSON object found")
+    depth = 0
+    for end in range(start, len(text)):
+        if text[end] == "{":
+            depth += 1
+        elif text[end] == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start:end + 1])
+                except (TypeError, ValueError):
+                    raise ValueError("embedded JSON is invalid")
+    raise ValueError("unterminated JSON object")
+
+
 def citation(project, candidate, label):
     row = candidate["chunk"]
     metadata = json.loads(row.get("source_metadata", "{}"))
@@ -107,12 +130,12 @@ def messages_for(question, context):
 
 def validate_answer(raw, labels):
     try:
-        result = json.loads(raw)
+        result = _extract_json(raw)
     except (TypeError, ValueError):
         raise GenerationFailure("invalid_generation") from None
     if (
         not isinstance(result, dict)
-        or set(result) != {"status", "answer", "used_sources"}
+        or not {"status", "answer", "used_sources"} <= set(result)
         or not isinstance(result["status"], str)
         or result["status"] not in {"answered", "insufficient_evidence"}
         or not isinstance(result["answer"], str)

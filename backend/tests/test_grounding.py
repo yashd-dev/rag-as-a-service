@@ -55,6 +55,34 @@ def test_model_abstention_cannot_return_unsupported_answer_prose():
     assert result["answer"] == ABSTENTION and result["used_sources"] == []
 
 
+def test_extra_provider_fields_are_accepted():
+    result = validate_answer(
+        json.dumps(
+            {
+                "status": "answered",
+                "answer": "Supported [S1]",
+                "used_sources": ["S1"],
+                "model": "fixture-model",
+                "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+            }
+        ),
+        ["S1"],
+    )
+    assert result["status"] == "answered"
+
+
+def test_markdown_code_fence_json_is_extracted():
+    raw = "```json\n{\"status\": \"answered\", \"answer\": \"Supported [S1]\", \"used_sources\": [\"S1\"]}\n```"
+    result = validate_answer(raw, ["S1"])
+    assert result["status"] == "answered"
+
+
+def test_surrounding_prose_json_is_extracted():
+    raw = "Here is the answer: {\"status\": \"answered\", \"answer\": \"Supported [S1]\", \"used_sources\": [\"S1\"]}"
+    result = validate_answer(raw, ["S1"])
+    assert result["status"] == "answered"
+
+
 @pytest.mark.parametrize(
     "uri",
     [
