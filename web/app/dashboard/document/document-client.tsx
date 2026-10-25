@@ -9,6 +9,7 @@ import { ArrowLeft, Check, ChevronDown, Code2, Database, Plus, X } from "lucide-
 
 import { Button } from "@/components/ui/button";
 import type { DataSource, Document, Project } from "@/lib/backend";
+import { JobProgress } from "./job-progress";
 
 const corpusJson = `{
   "corpusKey": "supreme_court",
@@ -130,6 +131,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
         throw new Error(payload?.error || `Upload failed with status ${response.status}`);
       }
       if (payload?.errors?.length) {
+        router.refresh();
         throw new Error(payload.errors.map((item: { file_name: string; error: string }) => `${item.file_name}: ${item.error}`).join("; "));
       }
       form.reset();
@@ -164,23 +166,25 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
             <Link href="/dashboard/playground" className="mt-3 inline-block text-sm text-primary underline">Open playground</Link>
           </section> : <section className="rounded-xl border bg-background p-4 md:p-5">
             <h2 className="font-medium tracking-tight">Upload document</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Upload one or more text files or PDFs with embedded text. Upload stages canonical text and chunks only; vector and graph indexing require the documented backend batch commands. Scanned PDFs need usable OCR text first.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Upload TXT, MD, CSV, JSON or PDFs with embedded text. Originals are retained and automatically queued for extraction, chunking and vector indexing. Scanned PDFs require usable OCR text.</p>
             <form onSubmit={handleDocumentUpload} className="mt-4 flex flex-col gap-3">
               <input type="hidden" name="project_id" value={selectedProject.id} />
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input name="file" type="file" aria-label="Documents to upload" multiple disabled={uploading} className="h-11 flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm focus:ring-2 focus:ring-ring disabled:opacity-60" />
                 <button type="submit" disabled={uploading} className="h-11 rounded-lg bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:bg-primary/80 disabled:pointer-events-none disabled:opacity-70">
-                  {uploading ? "Processing..." : "Upload and process"}
+                  {uploading ? "Uploading..." : "Upload and index"}
                 </button>
               </div>
               {uploading ? (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
-                    Staging text for {uploadFiles.length} file{uploadFiles.length === 1 ? "" : "s"}: {uploadFiles.join(", ")}. Retrieval readiness is verified separately.
+                    Saving originals for {uploadFiles.length} file{uploadFiles.length === 1 ? "" : "s"}: {uploadFiles.join(", ")}. Indexing continues in the background.
                 </div>
               ) : null}
               {uploadError ? <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{uploadError}</div> : null}
             </form>
           </section>}
+
+          {!selectedProject.read_only ? <JobProgress projectId={selectedProject.id} /> : null}
 
           {projectSources.length ? (
             <section className="overflow-hidden rounded-xl border bg-background">

@@ -2,6 +2,7 @@
 
 import json
 import logging
+from contextlib import nullcontext
 
 from neo4j import GraphDatabase, Query
 
@@ -76,13 +77,14 @@ def canonical_snapshot(config, project):
 
 
 class Neo4jVectorStore:
-    def __init__(self, config, snapshot, provenance):
+    def __init__(self, config, snapshot, provenance, *, write_guard=None):
         if (
             provenance.get("provider") != "ollama"
             or provenance.get("dimensions") != 768
         ):
             raise ValueError("Unsupported embedding provenance")
         self.snapshot, self.provenance = snapshot, provenance
+        self.write_guard = write_guard or nullcontext
         # shortcut: retain a separate index per immutable corpus snapshot; add cross-snapshot reuse/retention for frequent updates.
         self.key = fingerprint(
             [
@@ -103,9 +105,8 @@ class Neo4jVectorStore:
         self.driver.close()
 
     def _run(self, cypher, write=False, **params):
-        with self.driver.session(
-            default_access_mode="WRITE" if write else "READ"
-        ) as session:
+        guard = self.write_guard() if write else nullcontext()
+        with guard, self.driver.session(default_access_mode="WRITE" if write else "READ") as session:
             return session.run(Query(cypher, timeout=120), **params).data()
 
     def prepare(self):
@@ -250,13 +251,16 @@ class Neo4jVectorStore:
             project=self.snapshot["project_id"],
         )
 
-    def build(self, provider, batch_size=16):
+    def build(self, provider, batch_size=16, progress=None):
         if not 1 <= batch_size <= 64:
             raise ValueError("Batch size must be between 1 and 64")
         self.prepare()
         completed = 0
         try:
             valid = self.valid_ids()
+            reused = len(valid)
+            if progress:
+                progress(valid)
             pending = [row for row in self.snapshot["rows"] if row["id"] not in valid]
             completed = len(valid)
             self.checkpoint("processing", completed)
@@ -266,6 +270,9 @@ class Neo4jVectorStore:
                     [row["content"] for row in batch], self.provenance
                 )
                 self.write_batch(batch, vectors)
+                valid.update(row["id"] for row in batch)
+                if progress:
+                    progress(valid)
                 completed += len(batch)
                 self.checkpoint("processing", completed)
                 logging.getLogger(__name__).info(
@@ -280,7 +287,7 @@ class Neo4jVectorStore:
                 "partition": self.key,
                 "expected_chunks": len(self.snapshot["rows"]),
                 "verified_vectors": completed,
-                "reused_vectors": len(valid),
+                "reused_vectors": reused,
                 "state": "verified_unpublished",
                 "index": self.index,
             }

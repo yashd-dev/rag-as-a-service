@@ -157,7 +157,20 @@ export async function listDocuments(projectId: string) {
 }
 
 export async function createDocument(projectId: string, payload: FormData | { file_name: string }) {
-  return backendRequest<Document | { items: Document[]; errors: { document_id: string; file_name: string; error: string }[] }>(`/api/projects/${projectId}/documents/upload`, { method: "POST", body: payload });
+  return backendRequest<{ items: { document_id: string; job_id: string; job: IngestionJob }[]; errors: { file_name: string; error: string }[] }>(`/api/projects/${encodeURIComponent(projectId)}/documents/upload`, { method: "POST", body: payload, timeoutMs: 120_000 });
+}
+
+export type IngestionJob = {
+  document_id: string; project_id: string;
+  state: "queued" | "active" | "completed" | "failed";
+  stage: string; attempts: number; chunk_count: number; vector_count: number;
+  error_code: string | null;
+};
+
+export async function listJobs(projectId: string) {
+  const result = await backendRequest<{ items: IngestionJob[] }>(`/api/projects/${encodeURIComponent(projectId)}/jobs`);
+  if (!Array.isArray(result.items) || !result.items.every((job) => job.project_id === projectId && typeof job.document_id === "string" && ["queued", "active", "completed", "failed"].includes(job.state) && typeof job.stage === "string" && Number.isSafeInteger(job.attempts) && Number.isSafeInteger(job.chunk_count) && Number.isSafeInteger(job.vector_count))) throw new Error("Invalid ingestion status");
+  return result;
 }
 
 export async function deleteDocument(projectId: string, documentId: string) {

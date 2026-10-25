@@ -243,11 +243,11 @@ def test_flask_factory_is_write_free_and_exposes_truthful_status(store, tmp_path
             "/api/projects/p/documents/upload",
             data={"file": (io.BytesIO(b"Source text"), "judgment.txt")},
         )
-        assert response.status_code == 201
-        assert response.json["status"] == "text_ready"
-        assert not response.json["readiness"]["capabilities"]["vector"]
+        assert response.status_code == 202
+        assert response.json["items"][0]["job"]["state"] == "queued"
     assert query(path, "SELECT count(*) FROM documents") == [(1,)]
-    assert client.get("/api/projects/p/indexing/status").json["state"] == "text_ready"
+    assert query(path, "SELECT count(*) FROM ingestion_jobs") == [(1,)]
+    assert client.get("/api/projects/p/indexing/status").json["state"] == "pending"
     for mode in ("vector", "graph", "hybrid"):
         assert (
             client.post(

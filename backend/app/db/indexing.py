@@ -363,6 +363,7 @@ class IndexRepository:
         file_name=None,
         document_id=None,
         dry_run=False,
+        authorize=None,
     ):
         if not isinstance(text, str):
             raise TypeError("Source text must be a string")
@@ -381,6 +382,8 @@ class IndexRepository:
         # shortcut: 60s lease covers text staging only; add renewal before long-running embedding/extraction jobs.
         with db(self.url, self.token) as conn:
             conn.execute("BEGIN IMMEDIATE")
+            if authorize:
+                authorize(conn)
             plan = self._plan(Reader(conn), *args)
             doc_id, generation = plan["document_id"], plan["generation"]
             busy = conn.execute(
@@ -460,11 +463,13 @@ class IndexRepository:
                 raise ValueError("empty_source_text")
             with db(self.url, self.token) as conn:
                 conn.execute("BEGIN IMMEDIATE")
+                if authorize:
+                    authorize(conn)
                 owner = conn.execute(
                     "SELECT lease_token FROM index_generations WHERE id=?",
                     (generation,),
                 ).fetchone()
-                if owner[0] != lease:
+                if not owner or owner[0] != lease:
                     raise RuntimeError("generation_lease_lost")
                 for chunk in chunks:
                     pages = [

@@ -104,6 +104,45 @@ tests use actual local libSQL/canonical text with controlled model/vector/graph
 boundaries; they do not certify live providers. Deploy matching H.2 web/backend
 versions: the web contract rejects absent or contradictory access metadata.
 
+## Automatic private uploads
+
+Private multipart uploads now return **202** with document/job references after
+persisting originals and a durable database job. They no longer run extraction or
+model calls in the upload request. Run the additive migration before rollout and
+run a separate worker against the same application database and persistent
+`UPLOAD_DIR` volume:
+
+```bash
+.venv/bin/python -m backend.scripts.worker
+# One bounded claimed project batch, useful for local checks:
+.venv/bin/python -m backend.scripts.worker --once
+```
+
+Supported input: UTF-8 TXT/MD/CSV/JSON and PDFs with embedded text. The existing
+`MAX_UPLOAD_MB` limits the whole request and individual originals; extracted text
+is limited to 20 MiB. Scanned PDFs fail precisely with `pdf_requires_ocr` rather
+than empty successful indexing. Shared legal uploads remain forbidden.
+
+The worker stages canonical text, resumes real Neo4j vectors and publishes only
+verified generations. Lightweight job status and retry routes are
+`GET /api/projects/<id>/jobs` and `POST /api/projects/<id>/jobs/<document_id>/retry`.
+The dashboard polls these job records, not expensive full readiness proofs.
+Jobs have three automatic attempts with bounded backoff; exhausted failures can
+be retried in the UI. Multiple workers use atomic project leases, heartbeats and
+database-fenced Neo4j writes/publication; expired workers cannot publish or
+recreate deleted project data.
+
+Private deletion invalidates derived project indexes under the same fence and
+queues remaining canonical documents for re-publication. Original-file deletion
+is durable in `upload_cleanup` and processed by the worker. Deletion returns 202
+while file cleanup is queued; source metadata is not removed if Neo4j cleanup
+fails. Shared-reference detach never invokes this private cleanup path.
+
+Current canonical snapshot partitioning can re-embed unchanged private documents
+when a corpus changes; cross-snapshot reuse remains performance work. An invalid
+unprocessed document keeps whole-corpus readiness unavailable until retried or
+removed. Graph enrichment is not implied by a completed vector ingestion job.
+
 ## Preview and stage an existing OCR source
 
 Obtain the actual organization/project/source IDs from the existing project and

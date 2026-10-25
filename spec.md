@@ -7,6 +7,8 @@
 
 > **Product-scope correction — 2026-10-25:** The user confirmed a self-service product: choose the existing read-only legal corpus or upload private data, process uploads through a durable queue, select platform Mistral/Gemini or BYOK, and query with citations through a playground and public OpenAI-compatible API. The playground's right-side integration-code panel is required. Sections 1.1, 2.5.1 and 12.1 govern remaining product work and supersede older conflicting deferrals/order statements. Existing completed checkboxes, measurements, stage records and limitations remain historical evidence; this correction does not reopen accepted work or certify new functionality.
 
+> **Delivery direction — 2026-10-25:** The user subsequently authorized carrying the remaining product implementation through without repeated “next stage” handoffs. Build and verify cohesive increments for G.1, I, J and F.2; commit verified batches and continue independent implementation despite the configured provider's upstream 503. This direction supersedes the older one-stage-per-run/stop-for-handoff and H-provider-availability-before-G.1 execution restrictions below. It does not waive source preservation, tenant isolation, safe migrations, strict citation validation, truthful capability reporting or actual release acceptance. H.3/H.4 failures remain recorded; no implementation batch turns an unavailable provider into a passing live check.
+
 ---
 
 ## 0. Operating Rules for the Coding Agent
@@ -157,6 +159,8 @@
 **H.4 handoff:** the reproduced unsafe automatic fallback is fixed; current live blocker is upstream generation availability. Existing H.3 source/isolation proof and legal registration remain intact. No new migration/dependency/environment variable or source/index write; no frontend contract change. Real two-workspace revalidation is still pending, and serving latency remains separate/open.
 
 #### G.1 — automatic private upload and durable ingestion
+
+**Delivery increment:** backend queue/worker and dashboard job progress/retry are implemented with additive `ingestion_jobs`, `ingestion_project_leases` and `upload_cleanup` metadata. Originals use content-addressed private paths beneath configured `UPLOAD_DIR`; intake is HTTP 202 without extraction/model work. Project leases, text-stage authorization and fenced Neo4j writes coordinate takeover/deletion. Local checks: full backend **209 passed / 4 opt-in skipped**, including new queue/deduplication/concurrent claim/restart/fencing/publication/retry/deletion tests; frontend contracts and TypeScript pass. Real queued-upload integration remains an explicit final verification item. This increment does not certify full G.1 acceptance or graph enrichment; no live migration has yet been applied for the queue tables.
 
 - [ ] Initially retain originals under the existing configured local upload storage with a persistent volume accessible to the web/backend intake and worker deployment. Enforce supported formats/resource limits and safe scoped file identities. Declare supported extraction/OCR paths; scanned/unsupported input must produce a precise failure or run a configured supported OCR path, never empty successful indexing.
 - [ ] Persist the file and durable job before acknowledging acceptance. Target asynchronous acceptance is HTTP 202 with document/job references; it is a new contract to implement, not the current synchronous upload behavior. Reconcile file/job partial failure so accepted data cannot silently disappear or become a permanently unqueued upload.

@@ -15,6 +15,7 @@ def create_app(config=None) -> Flask:
 
     app = Flask(__name__)
     app.config.from_object(config or Config)
+    app.config["MAX_CONTENT_LENGTH"] = int(app.config.get("MAX_UPLOAD_MB", 100)) * 1024 * 1024
     CORS(app)
 
     app.register_blueprint(health_bp, url_prefix="/api")

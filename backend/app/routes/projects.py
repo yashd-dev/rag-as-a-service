@@ -3,6 +3,7 @@ from flask import Blueprint, current_app, jsonify, request
 from backend.app.db.repository import ProjectRepository
 from backend.app.services.auth_context import AuthError, current_auth_context
 from backend.app.services.corpus_access import CorpusAccess, CorpusAccessError
+from backend.app.services.jobs import Jobs
 from backend.app.services.project_service import ProjectService, ValidationError
 
 projects_bp = Blueprint("projects", __name__)
@@ -105,6 +106,12 @@ def delete_project(project_id: str):
         return jsonify(
             {"error": "Shared corpus is read only", "code": "shared_corpus_read_only"}
         ), 403
+    if not scope.read_only:
+        try:
+            Jobs(current_app.config).remove(scope.project)
+        except Exception:  # noqa: BLE001 - preserve metadata on storage failure
+            return jsonify({"error": "Deletion unavailable; retry when storage is reachable"}), 503
+        return jsonify({"status": "deleted", "file_cleanup": "queued"}), 202
     deleted = service().delete_project(auth, project_id)
     if not deleted:
         return jsonify({"error": "Project not found"}), 404

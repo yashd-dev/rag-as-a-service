@@ -1,29 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getDashboardContext } from "@/lib/dashboard-context";
-
-const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
+import { unstable_rethrow } from "next/navigation";
+import { BackendError, createDocument } from "@/lib/backend";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const { session, organization, role } = await getDashboardContext();
-  const formData = await request.formData();
-  const response = await fetch(`${backendUrl}/api/projects/${projectId}/documents/upload`, {
-    method: "POST",
-    headers: {
-      "X-Internal-Secret": process.env.BACKEND_INTERNAL_SECRET || "",
-      "X-User-Id": session.user.id,
-      "X-Organization-Id": organization.id,
-      "X-User-Role": role,
-    },
-    body: formData,
-  });
-
-  const text = await response.text();
-  return new NextResponse(text, {
-    status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") || "application/json",
-    },
-  });
+  if (request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+  if (Number(request.headers.get("content-length")) > 100 * 1024 * 1024) return NextResponse.json({ error: "Upload exceeds 100MB request limit" }, { status: 413 });
+  try {
+    return NextResponse.json(await createDocument(projectId, await request.formData()), { status: 202 });
+  } catch (error) {
+    unstable_rethrow(error);
+    return NextResponse.json({ error: error instanceof BackendError ? error.message : "Upload could not be queued" }, { status: error instanceof BackendError ? error.status : 503 });
+  }
 }
