@@ -126,7 +126,7 @@ function CorpusPlayground({ projects, generationConfigs, project, queryProjectAc
         <p role="status" className="mt-3 text-sm text-muted-foreground">{pending ? "Query running. Your question is preserved; source verification and generation may take several minutes." : !checking && !modeAvailable(readiness, mode) ? "Selected mode is unavailable. Refresh readiness or choose an available mode." : ""}</p>
       </form>
 
-      {state.error ? <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm">{state.error}{state.code ? ` (${state.code})` : ""} Refresh readiness before retrying an unavailable index.</p> : null}
+      {state.error ? <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm">{state.error}{state.code ? ` (${state.code})` : ""} {state.code === "generation_unavailable" || state.code === "invalid_generation" ? "Check the selected provider/model and retry." : "Refresh readiness before retrying an unavailable index."}</p> : null}
       {result && !pending ? <section aria-label="Query result" className="min-w-0 space-y-5">
         <div className="rounded-xl border p-5" role="status">
           <h2 className="font-semibold">{result.status === "answered" ? "Answer" : "Insufficient evidence"}</h2>

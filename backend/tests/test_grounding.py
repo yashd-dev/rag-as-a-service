@@ -165,6 +165,7 @@ def test_platform_generation_is_bounded_reports_actual_model_and_closes_client(
                 "type": "json_object"
             }
             assert payload["temperature"] == 0
+            assert "reasoning_effort" not in payload
             return SimpleNamespace(
                 model="resolved-model",
                 choices=[
@@ -196,6 +197,36 @@ def test_platform_generation_is_bounded_reports_actual_model_and_closes_client(
         and metadata["fallback"] is False
         and closed == [True]
     )
+
+
+def test_vercel_gateway_disables_reasoning_for_bounded_json(monkeypatch):
+    calls = []
+
+    def sdk(**kwargs):
+        def create(**payload):
+            calls.append(payload)
+            return SimpleNamespace(
+                model="gateway-model",
+                choices=[SimpleNamespace(message=SimpleNamespace(content="{}"))],
+            )
+
+        return SimpleNamespace(
+            chat=SimpleNamespace(completions=SimpleNamespace(create=create)),
+            close=lambda: None,
+        )
+
+    monkeypatch.setattr(llm_client, "OpenAI", sdk)
+    client = llm_client.OpenAICompatibleLlm(
+        llm_client.LlmConfig(
+            "https://ai-gateway.vercel.sh/v1",
+            "private",
+            "gateway-model",
+            "credential:test",
+            user_supplied=True,
+        )
+    )
+    client.complete(messages_for("question", []), json_mode=True)
+    assert calls[0]["reasoning_effort"] == "none"
 
 
 @pytest.mark.parametrize(

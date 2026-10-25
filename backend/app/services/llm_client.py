@@ -1,13 +1,14 @@
 import math
 import re
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 import httpx
-from openai import OpenAI, OpenAIError
 
 from backend.app.services.crypto import SecretBox
 from backend.app.services.graph_extraction import GRAPH_EXTRACTION_SCHEMA
 from backend.app.services.grounding import ANSWER_SCHEMA, GenerationFailure
+from openai import OpenAI, OpenAIError
 
 
 @dataclass(frozen=True)
@@ -35,12 +36,17 @@ class OpenAICompatibleLlm:
     def complete(
         self, messages: list[dict], temperature: float = 0.2, json_mode: bool = False
     ) -> str:
+        options = {}
+        if self.config.user_supplied and urlsplit(self.config.base_url).hostname == "ai-gateway.vercel.sh":
+            # Reasoning models can spend the bounded completion budget before emitting JSON.
+            options["reasoning_effort"] = "none"
         response = self.client.chat.completions.create(
             model=self.config.model,
             messages=messages,
             temperature=temperature,
             max_tokens=1024,
             **({"response_format": {"type": "json_object"}} if json_mode else {}),
+            **options,
         )
         self.last_model = response.model or self.config.model
         usage = getattr(response, "usage", None)
