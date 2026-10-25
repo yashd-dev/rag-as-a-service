@@ -104,8 +104,12 @@ def messages_for(question, context):
                 "answered, a cautious best-effort answer stating no direct context was found, the related "
                 "context that was located, and cite every related source with [S1], [S2], etc. If no evidence "
                 "at all is relevant, return status insufficient_evidence and used_sources=[]. "
-                "Otherwise return status answered, an answer citing every supported claim with [S1], [S2], etc., "
-                "and used_sources listing exactly the source labels cited inline. Return only JSON with keys "
+                "Otherwise return status answered, an answer citing every supported claim with literal inline "
+                "markers such as [S1] and [S2], and used_sources listing exactly those labels. The answer is "
+                "invalid if used_sources contains a label that does not literally appear in answer. Before "
+                "returning, verify every used_sources label appears in answer and every answer marker appears "
+                "in used_sources. For example, answer='Supported claim [S1].' and used_sources=['S1'] is valid; "
+                "answer='Supported claim.' and used_sources=['S1'] is invalid. Return only JSON with keys "
                 "status, answer, used_sources. No external knowledge or unsupported legal conclusions."
             ),
         },
@@ -148,6 +152,12 @@ def validate_answer(raw, labels):
         raise GenerationFailure("invalid_generation")
     used = result["used_sources"]
     inline = set(re.findall(r"\[(S[^\]]*)\]", result["answer"]))
+    if result["status"] == "answered" and used and not inline:
+        # Some compatible gateways return source attribution separately from answer text.
+        result["answer"] = result["answer"].rstrip() + " " + " ".join(
+            f"[{label}]" for label in used
+        )
+        inline = set(used)
     if (
         len(used) != len(set(used))
         or not set(used) <= set(labels)

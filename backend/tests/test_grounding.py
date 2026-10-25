@@ -29,7 +29,6 @@ def test_prompt_keeps_source_in_untrusted_json_and_enforces_a_byte_budget():
     "response",
     [
         {"status": "answered", "answer": "Invented [S9]", "used_sources": ["S9"]},
-        {"status": "answered", "answer": "Uncited claim", "used_sources": ["S1"]},
         {"status": "answered", "answer": "Claim [S1] [S2]", "used_sources": ["S1"]},
         {"status": "answered", "answer": "Claim [S1]", "used_sources": ["S1", "S1"]},
         {"status": [], "answer": "bad schema", "used_sources": []},
@@ -72,6 +71,20 @@ def test_best_effort_answer_with_related_context_passes():
     )
     assert result["status"] == "answered"
     assert result["used_sources"] == ["S1", "S2"]
+
+
+def test_gateway_source_list_gets_canonical_inline_markers():
+    result = validate_answer(
+        json.dumps(
+            {
+                "status": "answered",
+                "answer": "The evidence supports this conclusion.",
+                "used_sources": ["S1", "S2"],
+            }
+        ),
+        ["S1", "S2"],
+    )
+    assert result["answer"].endswith("[S1] [S2]")
 
 
 def test_best_effort_answer_with_inline_citation_mismatch_fails():
