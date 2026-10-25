@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-25",
+  "status": "unsafe_fallback_removed_upstream_unavailable",
+  "original_h3_response_available": false,
+  "probe": {
+    "question": "Why did the court spare Ram Narain a return to prison after he had spent years on bail?",
+    "context": "Three retained public legal passages from H.3 workspace A; no new retrieval or source/index writes",
+    "labels": ["S1", "S2", "S3"],
+    "fixed_attempts_before": 3,
+    "fixed_attempts_after": 3
+  },
+  "before": [
+    {
+      "attempt": 1,
+      "provider": "openai_compatible",
+      "reported_model": "gemini-3.8-flash",
+      "fallback": false,
+      "validation": "passed",
+      "seconds": 52.41
+    },
+    {
+      "attempt": 2,
+      "provider": "ollama",
+      "reported_model": "smollm2:135m",
+      "fallback": true,
+      "fallback_reason": "platform_unavailable",
+      "answer": "the appellant was acquitted.",
+      "used_sources": ["S1", "S2", "D1"],
+      "inline_sources": [],
+      "validation": "invalid_citations",
+      "seconds": 76.99
+    },
+    {
+      "attempt": 3,
+      "provider": "ollama",
+      "reported_model": "smollm2:135m",
+      "fallback": true,
+      "fallback_reason": "platform_unavailable",
+      "answer": "the appellant was acquitted.",
+      "used_sources": ["S1", "S2", "D1"],
+      "inline_sources": [],
+      "validation": "invalid_citations",
+      "seconds": 124.74
+    }
+  ],
+  "after": [
+    {"attempt": 1, "outcome": "generation_unavailable", "seconds": 6.57},
+    {"attempt": 2, "outcome": "generation_unavailable", "seconds": 63.1},
+    {"attempt": 3, "outcome": "generation_unavailable", "seconds": 120.7}
+  ],
+  "direct_provider_diagnostic": {
+    "exception_type": "InternalServerError",
+    "http_status": 503,
+    "seconds": 64.9
+  },
+  "change": {
+    "grounded_automatic_fallback_removed": true,
+    "citation_validation_unchanged": true,
+    "provider_timeout_seconds": 60,
+    "provider_sdk_max_retries": 1,
+    "new_repair_or_retry_logic": false,
+    "missing_credentials_code": "generation_not_configured",
+    "provider_failure_code": "generation_unavailable"
+  },
+  "checks": {
+    "focused_backend_passed": 47,
+    "full_backend_passed": 205,
+    "opt_in_integration_skipped": 4,
+    "changed_python_ruff": "passed",
+    "diff_check": "passed"
+  },
+  "stage_h_accepted": false,
+  "two_workspace_live_revalidation": "blocked_on_provider_availability",
+  "next_stage_g1_eligible": false
+}

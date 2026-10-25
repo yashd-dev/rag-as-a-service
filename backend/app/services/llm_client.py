@@ -167,38 +167,24 @@ def fallback_generation_llm(
 
 
 def generate_grounded(app_config, messages):
-    reason = "platform_credentials_missing"
-    if app_config.get("PLATFORM_LLM_API_KEY"):
-        client = None
-        try:
-            client = OpenAICompatibleLlm(platform_llm_config(app_config))
-            raw = client.complete(messages, temperature=0, json_mode=True)
-            return raw, {
-                "provider": "openai_compatible",
-                "model": client.last_model,
-                "fallback": False,
-                "fallback_reason": None,
-            }
-        except (OpenAIError, httpx.HTTPError, ValueError):
-            reason = "platform_unavailable"
-        finally:
-            if client is not None:
-                client.client.close()
+    if not app_config.get("PLATFORM_LLM_API_KEY"):
+        raise GenerationFailure("generation_not_configured")
+    client = None
     try:
-        fallback = fallback_generation_llm(app_config, json_mode=True)
-        raw = fallback.generate(
-            "\n".join(
-                message["role"] + ": " + message["content"] for message in messages
-            )
-        )
+        client = OpenAICompatibleLlm(platform_llm_config(app_config))
+        raw = client.complete(messages, temperature=0, json_mode=True)
         return raw, {
-            "provider": "ollama",
-            "model": fallback.last_model,
-            "fallback": True,
-            "fallback_reason": reason,
+            "provider": "openai_compatible",
+            "model": client.last_model,
+            "fallback": False,
+            "fallback_reason": None,
         }
-    except (httpx.HTTPError, ValueError):
+    except (OpenAIError, httpx.HTTPError, ValueError):
+        # A provider outage must not silently select an unvalidated answer model.
         raise GenerationFailure("generation_unavailable") from None
+    finally:
+        if client is not None:
+            client.client.close()
 
 
 def generate_text_with_fallback(app_config: dict, messages: list[dict]) -> str:

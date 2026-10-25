@@ -96,8 +96,10 @@ Through the existing trusted-session API:
 Dashboard legal/private creation and read-only/detach controls are implemented in
 H.2, with controlled two-workspace browser proof in `../web/tests/stage-h2.md`.
 Live scope activation and isolation checks are recorded in H.3. Full cited-answer
-acceptance remains open: the second real-provider query failed closed with
-`invalid_citations`; serving latency also remains unresolved. H.1/H.2
+acceptance remains open: H.3's second query failed with `invalid_citations`.
+H.4 reproduced invalid local fallback output, removed automatic grounded-model
+substitution and confirmed the configured upstream is returning HTTP 503; serving
+latency also remains unresolved. H.1/H.2
 tests use actual local libSQL/canonical text with controlled model/vector/graph
 boundaries; they do not certify live providers. Deploy matching H.2 web/backend
 versions: the web contract rejects absent or contradictory access metadata.
@@ -372,9 +374,18 @@ See `inventory/reports/stage-e-implementation.md` and the mandatory
   failures return safe 503 diagnostics. Failed/insufficient work is never recorded
   as a successful completed answer.
 
-Platform generation uses existing `PLATFORM_LLM_*` configuration, with existing
-`OLLAMA_BASE_URL` / `FALLBACK_LLM_MODEL` fallback. Provider/model/fallback are reported;
-the selected-credential/BYOK path is not advertised as implemented. Evidence is
+Grounded generation uses the existing `PLATFORM_LLM_*` configuration and **does not
+automatically substitute a local model**. Missing platform credentials return
+`503 generation_not_configured`; provider/transport failures return
+`503 generation_unavailable`, with a failed run and no answer. Successful responses
+still report actual provider/model and `fallback: false`. The H.4 diagnosis found
+that automatic `smollm2:135m` fallback invented an acquittal and citation `D1` after
+platform outages; strict citation validation correctly rejected it. See
+`inventory/reports/stage-h4-generation.md` for the retained evidence and upstream
+503 blocker. `FALLBACK_LLM_MODEL` remains a legacy text-helper setting, not permission
+to select a grounded answer provider. No new fallback switch or provider was added.
+
+The selected-credential/BYOK path is not advertised as implemented. Evidence is
 untrusted JSON under a whole-passage budget, not instructions to the model. Known
 source-reference validation does not substitute for human claim/citation review.
 

@@ -137,52 +137,63 @@ def test_platform_generation_is_bounded_reports_actual_model_and_closes_client(
     )
 
 
-def test_provider_failure_uses_explicit_bounded_ollama_fallback_without_secret_leaks(
-    monkeypatch,
-):
+@pytest.mark.parametrize(
+    "failure",
+    [
+        httpx.ConnectError("secret-key-and-endpoint"),
+        llm_client.OpenAIError("secret-key-and-endpoint"),
+        ValueError("secret-key-and-endpoint"),
+    ],
+)
+def test_provider_failure_never_switches_to_an_unselected_model(monkeypatch, failure):
+    closed = []
+
     class Platform:
         def __init__(self, config):
-            self.client = SimpleNamespace(close=lambda: None)
+            self.client = SimpleNamespace(close=lambda: closed.append(True))
 
         def complete(self, *args, **kwargs):
-            raise httpx.ConnectError("secret-key-and-endpoint")
+            raise failure
 
     monkeypatch.setattr(llm_client, "OpenAICompatibleLlm", Platform)
 
-    def post(url, *, json, timeout):
-        assert timeout == 60 and json["format"]["required"] == [
-            "status",
-            "answer",
-            "used_sources",
-        ]
-        assert (
-            json["options"]["num_ctx"] == 8192
-            and json["options"]["num_predict"] == 1024
-        )
-        return httpx.Response(
-            200,
-            json={
-                "model": "resolved-local",
-                "response": '{"status":"insufficient_evidence","answer":"","used_sources":[]}',
-            },
-            request=httpx.Request("POST", url),
-        )
+    def forbidden(*args, **kwargs):
+        pytest.fail("Grounded queries must not fall back to an unselected model")
 
-    monkeypatch.setattr(llm_client.httpx, "post", post)
-    _, metadata = llm_client.generate_grounded(
+    monkeypatch.setattr(llm_client, "fallback_generation_llm", forbidden)
+    monkeypatch.setattr(llm_client.httpx, "post", forbidden)
+    with pytest.raises(GenerationFailure, match="^generation_unavailable$") as caught:
+        llm_client.generate_grounded(
+            {
+                "PLATFORM_LLM_API_KEY": "private",
+                "PLATFORM_LLM_BASE_URL": "http://provider",
+                "PLATFORM_LLM_MODEL": "remote",
+                "OLLAMA_BASE_URL": "http://model",
+                "FALLBACK_LLM_MODEL": "local",
+            },
+            messages_for("question", []),
+        )
+    assert closed == [True] and caught.value.status == 503
+    assert "secret" not in str(caught.value)
+
+
+def test_missing_platform_credentials_do_not_authorize_local_generation(monkeypatch):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Missing credentials must not make any provider request")
+
+    monkeypatch.setattr(llm_client, "OpenAICompatibleLlm", forbidden)
+    monkeypatch.setattr(llm_client, "fallback_generation_llm", forbidden)
+    with pytest.raises(GenerationFailure, match="^generation_not_configured$"):
+        llm_client.generate_grounded({"FALLBACK_LLM_MODEL": "local"}, [])
+
+
+def test_reproduced_fallback_hallucination_is_not_repaired_into_valid_citations():
+    raw = json.dumps(
         {
-            "PLATFORM_LLM_API_KEY": "private",
-            "PLATFORM_LLM_BASE_URL": "http://provider",
-            "PLATFORM_LLM_MODEL": "remote",
-            "OLLAMA_BASE_URL": "http://model",
-            "FALLBACK_LLM_MODEL": "local",
-        },
-        messages_for("question", []),
+            "status": "answered",
+            "answer": "the appellant was acquitted.",
+            "used_sources": ["S1", "S2", "D1"],
+        }
     )
-    assert metadata == {
-        "provider": "ollama",
-        "model": "resolved-local",
-        "fallback": True,
-        "fallback_reason": "platform_unavailable",
-    }
-    assert "secret" not in json.dumps(metadata)
+    with pytest.raises(GenerationFailure, match="^invalid_citations$"):
+        validate_answer(raw, ["S1", "S2", "S3"])

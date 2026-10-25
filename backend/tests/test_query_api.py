@@ -1,11 +1,14 @@
 import json
 import sqlite3
 from contextlib import contextmanager
+from types import SimpleNamespace
 
+import httpx
 import pytest
 
 from backend.app import create_app
 from backend.app.db.repository import ProjectCreate, ProjectRepository, SimpleRepository
+from backend.app.services import llm_client
 from backend.app.services.neo4j_vectors import canonical_snapshot
 from backend.app.services.rag import fingerprint
 from backend.app.services.retrieval import RetrievalService, RetrievalUnavailable
@@ -378,3 +381,47 @@ def test_api_invalid_model_citations_return_safe_failure_with_failed_run(
     )
     assert "Private invalid answer" not in response.get_data(as_text=True)
     assert query(path, "SELECT status,answer FROM query_runs") == [("failed", None)]
+
+
+@pytest.mark.parametrize("configured", [False, True])
+def test_real_generation_path_reports_provider_failure_without_local_substitution(
+    api, monkeypatch, configured
+):
+    app, client, headers, _, path, _, _, _ = api
+    closed = []
+    app.config.update(
+        PLATFORM_LLM_API_KEY="fixture-secret" if configured else "",
+        PLATFORM_LLM_BASE_URL="https://provider.example.test/v1",
+        PLATFORM_LLM_MODEL="selected-model",
+    )
+
+    class UnavailableProvider:
+        def __init__(self, config):
+            self.client = SimpleNamespace(close=lambda: closed.append(True))
+
+        def complete(self, *args, **kwargs):
+            raise httpx.ConnectError("private-provider-transport-details")
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("A failed query must not switch to local generation")
+
+    monkeypatch.setattr(llm_client, "OpenAICompatibleLlm", UnavailableProvider)
+    monkeypatch.setattr(llm_client, "fallback_generation_llm", forbidden)
+    monkeypatch.setattr(
+        "backend.app.services.query_service.generate_grounded",
+        llm_client.generate_grounded,
+    )
+    response = client.post(
+        "/api/projects/p/query",
+        headers=headers,
+        json={"message": "vector question", "mode": "vector"},
+    )
+    assert response.status_code == 503
+    assert response.json["code"] == (
+        "generation_unavailable" if configured else "generation_not_configured"
+    )
+    assert response.json["status"] == "failed" and response.json["query_run_id"]
+    assert "private-provider" not in response.get_data(as_text=True)
+    assert "answer" not in response.json and "sources" not in response.json
+    assert query(path, "SELECT status,answer FROM query_runs") == [("failed", None)]
+    assert closed == ([True] if configured else [])
