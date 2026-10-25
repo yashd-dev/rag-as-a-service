@@ -45,7 +45,9 @@ registration) and `project_corpus_references` (workspace-local corpus references
 Existing projects remain private unless explicitly registered or created as a
 reference. Neither migration nor registration copies, re-labels or re-embeds data.
 Run the migration above before deploying this backend; Flask startup remains
-write-free. This migration has **not** been applied to the configured live store.
+write-free. The configured store received this migration and the verified legal
+registration on **2026-10-25**. See `inventory/reports/stage-h3-live.md` for backups,
+preservation proof, live access checks and the remaining answer-acceptance blocker.
 
 Platform operators with the existing backend database credentials may register
 the accepted legal project. Verify its actual organization/project IDs and source
@@ -93,7 +95,9 @@ Through the existing trusted-session API:
 
 Dashboard legal/private creation and read-only/detach controls are implemented in
 H.2, with controlled two-workspace browser proof in `../web/tests/stage-h2.md`.
-Live scope activation and real-source/provider acceptance remain open. H.1/H.2
+Live scope activation and isolation checks are recorded in H.3. Full cited-answer
+acceptance remains open: the second real-provider query failed closed with
+`invalid_citations`; serving latency also remains unresolved. H.1/H.2
 tests use actual local libSQL/canonical text with controlled model/vector/graph
 boundaries; they do not certify live providers. Deploy matching H.2 web/backend
 versions: the web contract rejects absent or contradictory access metadata.

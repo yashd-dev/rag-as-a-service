@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-25",
+  "status": "activated_isolation_verified_answer_acceptance_blocked",
+  "scope": {
+    "organization_id": "z94VqUBs7dCK6PdESE7nYmzlfQXL2rFl",
+    "project_id": "proj_c1317127b1c4413596c54b21a633a38f",
+    "documents": 333,
+    "current_chunks": 10417,
+    "canonical_manifest": "5f1c67fdcd058eb06d3a7a9f87fbc593b7963dc41e922550cd1360fd8c115689",
+    "partition": "02336a1d1a5a22883559a3cfedd22ecdb3b39247342d3c99178e44a1b99f3032",
+    "model_digest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+    "verified_published_vectors": 10417,
+    "dimensions": 768,
+    "source_index_writes": 0
+  },
+  "activation": {
+    "metadata_migration_applied": true,
+    "legal_registration_applied": true,
+    "backups": [
+      {"path": "backend/storage/backups/stage-h-before-2026-10-25.db", "mode": "0600"},
+      {"path": "backend/storage/backups/stage-h-registration-before-2026-10-25.db", "mode": "0600"}
+    ]
+  },
+  "verification": {
+    "auth": "Actual Better Auth; two isolated owner workspaces in a disposable auth database",
+    "stores": "Configured application Turso, Neo4j, Ollama and configured answer provider",
+    "model_or_retrieval_mocks": false,
+    "exact_shared_passages_both_workspaces": true,
+    "owner_shared_upload_document_delete_source_attachment_denied": true,
+    "anonymous_and_foreign_reference_denied": true,
+    "private_upload_text_readiness_and_passage_resolution": true,
+    "cross_workspace_private_sources_denied": true,
+    "shared_reference_cannot_resolve_private_chunk": true,
+    "private_credential_encryption_and_isolation": true,
+    "foreign_conversation_denied_before_retrieval": true,
+    "query_runs_keep_requester_ownership": true,
+    "detach_preserves_other_workspace_source_access": true
+  },
+  "answer_attempts": [
+    {
+      "workspace": "A",
+      "status": "answered",
+      "provider": "openai_compatible",
+      "reported_model": "gemini-3.8-flash",
+      "fallback": false,
+      "source_chunk_id": "chk_ffd0238ef0ad4b6b0a2fc8924f97bfcd6571ac8f2b0d520add8c523d41280248",
+      "source_start_char": 16785,
+      "source_end_char": 18481,
+      "source_content_hash": "1f9cab4c2e93d9e124b70e9cbfe0cd17dbdc8fe4f76edd2ff8f98624286a2505",
+      "retrieval_ms": 94235.94,
+      "generation_ms": 29946.87,
+      "browser_readiness_plus_query_seconds": 250.142,
+      "persisted_outcome": "completed"
+    },
+    {
+      "workspace": "B",
+      "status": "failed",
+      "http_status": 503,
+      "code": "invalid_citations",
+      "provider_and_model_on_failure": "not exposed by current error contract",
+      "browser_readiness_plus_query_seconds": 293.475,
+      "persisted_outcome": "failed",
+      "persisted_answer": null
+    }
+  ],
+  "preservation_after_cleanup": {
+    "all_13_preexisting_application_tables_row_equal_to_backup": true,
+    "canonical_manifest_unchanged": true,
+    "test_workspace_records_removed": true,
+    "test_upload_files_removed": true,
+    "proof_servers_and_browser_stopped": true,
+    "legal_registration_retained": true
+  },
+  "stage_h_accepted": false,
+  "next_stage_g1_eligible": false
+}

@@ -103,10 +103,11 @@ No production credentials, source/index records or auth sessions were changed.
 
 ## Remaining Stage H gate
 
-Live metadata migration and legal registration remain unapplied. Review the real
-canonical scope before enabling cross-workspace access, use the existing backed-up
-operator commands in `backend/README.md`, then record real two-workspace source,
-provider and isolation acceptance. H is still open; G.1 has not started.
+At the H.2 handoff, live migration/registration remained unapplied. Subsequent H.3
+activation and real-store isolation evidence are in
+`backend/inventory/reports/stage-h3-live.md`: migration/registration and isolation
+passed; the second real provider query was rejected with `invalid_citations`.
+H is still open; G.1 has not started.
 
 No dependencies or environment variables added. Existing `BACKEND_URL`, matching
 `BACKEND_INTERNAL_SECRET` and auth/database settings are required. Run Flask from
