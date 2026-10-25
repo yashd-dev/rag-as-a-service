@@ -237,3 +237,51 @@ def test_ollama_structured_request_uses_exact_source_schema_and_timeout(monkeypa
     assert GraphExtractor(llm, "vectors").extract(
         chunk("This judgment cited AIR 1967 SC 1326.")
     )["assertions"]
+
+
+def test_nvidia_graph_request_uses_configured_endpoint_and_bounded_reasoning(monkeypatch):
+    response_payload = json.dumps(cited_payload())
+
+    def post(url, *, headers, json, timeout):
+        assert url == "https://integrate.api.nvidia.com/v1/chat/completions"
+        assert headers["Authorization"] == "Bearer fixture-nvidia-key"
+        assert json["model"] == "nvidia/nemotron-3.5-lightning-30b-a3b"
+        assert json["stream"] is False
+        assert json["max_tokens"] == 4096
+        assert json["reasoning_budget"] == 16384
+        assert json["chat_template_kwargs"] == {"enable_thinking": True}
+        assert "This judgment cited AIR 1967 SC 1326." in json["messages"][0]["content"]
+        return httpx.Response(
+            200,
+            json={
+                "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+                "choices": [{"message": {"content": response_payload}}],
+            },
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr("backend.app.services.llm_client.httpx.post", post)
+    llm = graph_extraction_llm(
+        {
+            "NVIDIA_API_KEY": "fixture-nvidia-key",
+            "GRAPH_LLM_NUM_PREDICT": 700,
+            "GRAPH_LLM_NUM_CTX": 4096,
+        }
+    )
+    assert GraphExtractor(llm, "vectors").extract(
+        chunk("This judgment cited AIR 1967 SC 1326.")
+    )["assertions"]
+
+
+def test_nvidia_api_alias_is_supported(monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.services.llm_client.NvidiaGenerateLlm",
+        lambda *args: args,
+    )
+    llm = graph_extraction_llm(
+        {
+            "NVIDIA_API": "fixture-nvidia-key",
+            "NVIDIA_GRAPH_LLM_MODEL": "fixture-model",
+        }
+    )
+    assert llm[0] == "fixture-nvidia-key" and llm[2] == "fixture-model"

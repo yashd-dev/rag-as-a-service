@@ -120,6 +120,53 @@ class OllamaGenerateLlm:
         return text
 
 
+class NvidiaGenerateLlm:
+    def __init__(self, api_key, endpoint, model, timeout, max_tokens, reasoning_budget):
+        self.api_key = api_key
+        self.endpoint = endpoint
+        self.base_url = endpoint.rsplit("/chat/completions", 1)[0]
+        self.model = model
+        self.timeout = timeout
+        self.options = {
+            "temperature": 0,
+            "top_p": 0.95,
+            "max_tokens": max_tokens,
+            "reasoning_budget": reasoning_budget,
+            "chat_template_kwargs": {"enable_thinking": True},
+        }
+        self.last_model = model
+
+    def revision(self):
+        return {"model": self.model, "revision": f"nvidia:{self.model}"}
+
+    def generate(self, prompt: str) -> str:
+        response = httpx.post(
+            self.endpoint,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+                **self.options,
+            },
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        body = response.json()
+        self.last_model = body.get("model") or self.model
+        try:
+            text = body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            raise ValueError("NVIDIA response did not contain message content") from None
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("NVIDIA response did not contain message content")
+        return text
+
+
 def platform_llm_config(app_config: dict) -> LlmConfig:
     return LlmConfig(
         base_url=app_config.get("PLATFORM_LLM_BASE_URL", ""),
@@ -139,7 +186,7 @@ def credential_llm_config(credential: dict, encryption_key: str) -> LlmConfig:
     )
 
 
-def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
+def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm | NvidiaGenerateLlm:
     timeout = float(app_config.get("GRAPH_LLM_TIMEOUT_SECONDS", 60))
     if not math.isfinite(timeout) or not 0 < timeout <= 120:
         raise ValueError("Graph extraction timeout must be between 0 and 120 seconds")
@@ -149,6 +196,27 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm:
     if not 1 <= predictions <= 4096 or context < 4096:
         raise ValueError(
             "Graph extraction requires bounded output and at least 4096 context tokens"
+        )
+    nvidia_key = app_config.get("NVIDIA_API_KEY") or app_config.get("NVIDIA_API")
+    if nvidia_key:
+        model = app_config.get("GRAPH_LLM_MODEL")
+        if not model or model == "smollm2:135m":
+            model = app_config.get(
+                "NVIDIA_GRAPH_LLM_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b"
+            )
+        reasoning_budget = int(app_config.get("GRAPH_LLM_REASONING_BUDGET", 16384))
+        if not 0 <= reasoning_budget <= 16384:
+            raise ValueError("Graph reasoning budget must be between 0 and 16384")
+        return NvidiaGenerateLlm(
+            nvidia_key,
+            app_config.get(
+                "NVIDIA_GRAPH_LLM_URL",
+                "https://integrate.api.nvidia.com/v1/chat/completions",
+            ),
+            model,
+            timeout,
+            max(predictions, 4096),
+            reasoning_budget,
         )
     return OllamaGenerateLlm(
         app_config["OLLAMA_BASE_URL"],

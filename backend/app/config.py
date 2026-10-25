@@ -27,6 +27,13 @@ class Config:
     MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GRAPH_LLM_MODEL = os.getenv("GRAPH_LLM_MODEL", "smollm2:135m")
+    NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY") or os.getenv("NVIDIA_API", "")
+    NVIDIA_GRAPH_LLM_URL = os.getenv(
+        "NVIDIA_GRAPH_LLM_URL", "https://integrate.api.nvidia.com/v1/chat/completions"
+    )
+    NVIDIA_GRAPH_LLM_MODEL = os.getenv(
+        "NVIDIA_GRAPH_LLM_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b"
+    )
     GRAPH_EXTRACTION_STRATEGY = os.getenv("GRAPH_EXTRACTION_STRATEGY", "full_legal")
     GRAPH_LLM_TIMEOUT_SECONDS = os.getenv("GRAPH_LLM_TIMEOUT_SECONDS", "60")
     GRAPH_LLM_NUM_PREDICT = int(os.getenv("GRAPH_LLM_NUM_PREDICT", "700"))
