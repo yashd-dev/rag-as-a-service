@@ -92,7 +92,7 @@ export function LlmClient({ credentials, generationConfigs, createCredentialActi
             <button type="button" className="text-sm font-medium text-primary">Enter details manually</button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setView("list")} className="h-11 px-5 font-normal">Cancel</Button>
-              <Button disabled={saving} className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />{saving ? "Validating…" : "Save credential"}</Button>
+              <Button type="submit" disabled={saving} className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />{saving ? "Validating…" : "Save credential"}</Button>
             </div>
           </div>
         </form>
