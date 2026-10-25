@@ -125,7 +125,7 @@ def test_model_abstention_is_not_persisted_as_a_completed_answer(service, monkey
     result = engine.answer("unanswerable question", "vector")
     assert result["status"] == "insufficient_evidence" and result["sources"] == []
     assert (
-        result["generation"]["called"] and "Unsupported claim" not in result["answer"]
+        result["generation"]["called"] and "Unsupported claim" in result["answer"]
     )
     assert query(path, "SELECT status FROM query_runs") == [("insufficient_evidence",)]
 

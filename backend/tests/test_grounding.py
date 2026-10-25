@@ -6,7 +6,6 @@ import pytest
 
 from backend.app.services import llm_client
 from backend.app.services.grounding import (
-    ABSTENTION,
     GenerationFailure,
     citation,
     messages_for,
@@ -41,18 +40,52 @@ def test_unknown_missing_or_inconsistent_citations_fail_closed(response):
         validate_answer(json.dumps(response), ["S1"])
 
 
-def test_model_abstention_cannot_return_unsupported_answer_prose():
+def test_insufficient_evidence_keeps_best_effort_answer_and_sources():
     result = validate_answer(
         json.dumps(
             {
                 "status": "insufficient_evidence",
-                "answer": "An unsupported answer",
-                "used_sources": [],
+                "answer": "No direct context found. Related: The court discussed contempt law in [S1] and [S2].",
+                "used_sources": ["S1", "S2"],
             }
         ),
-        ["S1"],
+        ["S1", "S2", "S3"],
     )
-    assert result["answer"] == ABSTENTION and result["used_sources"] == []
+    assert result["status"] == "insufficient_evidence"
+    assert (
+        result["answer"]
+        == "No direct context found. Related: The court discussed contempt law in [S1] and [S2]."
+    )
+    assert result["used_sources"] == ["S1", "S2"]
+
+
+def test_best_effort_answer_with_related_context_passes():
+    result = validate_answer(
+        json.dumps(
+            {
+                "status": "answered",
+                "answer": "No specific context on sentencing was found. Related material discusses judicial authority in [S1] and contempt powers in [S2].",
+                "used_sources": ["S1", "S2"],
+            }
+        ),
+        ["S1", "S2", "S3"],
+    )
+    assert result["status"] == "answered"
+    assert result["used_sources"] == ["S1", "S2"]
+
+
+def test_best_effort_answer_with_inline_citation_mismatch_fails():
+    with pytest.raises(GenerationFailure, match="invalid_citations"):
+        validate_answer(
+            json.dumps(
+                {
+                    "status": "answered",
+                    "answer": "No specific context [S9]. Related: [S1].",
+                    "used_sources": ["S1"],
+                }
+            ),
+            ["S1", "S2"],
+        )
 
 
 def test_extra_provider_fields_are_accepted():
