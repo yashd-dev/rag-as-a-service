@@ -15,13 +15,17 @@ api = test_query_api.api
 
 @pytest.mark.parametrize("url", [
     "http://127.0.0.1/v1", "https://localhost/v1", "https://169.254.169.254/v1",
-    "https://api.openai.com.evil.test/v1", "https://key@api.openai.com/v1",
+    "https://key@api.openai.com/v1",
     "https://api.openai.com:8443/v1", "https://api.openai.com/v1?redirect=private",
     "https://api.openai.com/v1/../private", "https://api.openai.com/v1#secret",
 ])
 def test_byok_rejects_unsafe_or_unsupported_endpoint_before_network(url):
     with pytest.raises(ValidationError):
         generation.endpoint(url)
+
+
+def test_byok_accepts_custom_gateway_endpoint():
+    assert generation.endpoint("https://ai-gateway.vercel.sh/v1") == "https://ai-gateway.vercel.sh/v1"
 
 
 def test_key_validation_is_bounded_no_redirects_and_verifies_model(monkeypatch):

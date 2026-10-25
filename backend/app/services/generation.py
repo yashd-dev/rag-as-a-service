@@ -9,14 +9,6 @@ from backend.app.services.crypto import SecretBox
 from backend.app.services.llm_client import LlmConfig, platform_llm_config
 from backend.app.services.project_service import ValidationError
 
-SUPPORTED_BASES = {
-    "api.openai.com": "/v1",
-    "api.mistral.ai": "/v1",
-    "generativelanguage.googleapis.com": "/v1beta/openai",
-    "openrouter.ai": "/api/v1",
-    "api.groq.com": "/openai/v1",
-}
-
 
 class SelectionError(RuntimeError):
     def __init__(self, code, status=400):
@@ -28,16 +20,28 @@ def endpoint(value):
     try:
         parsed = urlsplit(value)
         if (
-            parsed.scheme != "https" or parsed.hostname not in SUPPORTED_BASES
-            or parsed.port not in (None, 443) or parsed.username or parsed.password
-            or parsed.query or parsed.fragment or parsed.path.rstrip("/") != SUPPORTED_BASES[parsed.hostname]
+            not value
+            or parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.port not in (None, 443)
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
             or any(char.isspace() for char in value)
+            or ".." in parsed.path.split("/")
+            or parsed.hostname in {"localhost", "localhost.localdomain"}
+            or parsed.hostname.endswith(".localhost")
+            or parsed.hostname == "127.0.0.1"
+            or parsed.hostname == "::1"
+            or parsed.hostname.startswith("169.254.")
         ):
             raise ValueError
+        path = parsed.path.rstrip("/") or "/"
     except (TypeError, ValueError, AttributeError):
-        raise ValidationError("Use a supported HTTPS provider base URL: OpenAI, Mistral, Gemini, OpenRouter or Groq") from None
-    # Exact provider origins/base paths avoid custom-host SSRF and DNS rebinding.
-    return "https://" + parsed.hostname + SUPPORTED_BASES[parsed.hostname]
+        raise ValidationError("Use a valid HTTPS base URL, e.g. https://ai-gateway.vercel.sh/v1") from None
+    # BYOK allows any provider gateway; only the scheme/host/path are reused, never credentials.
+    return "https://" + parsed.hostname + path
 
 
 def validate_key_model(base_url, api_key, model):
