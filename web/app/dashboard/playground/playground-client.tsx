@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Project } from "@/lib/backend";
+import type { GenerationConfig, Project } from "@/lib/backend";
 import { modeAvailable, parseReadiness, passageHref, type QueryState, type Readiness, type RetrievalMode, type Source } from "@/lib/rag-contract";
+import { IntegrationPanel } from "./integration-panel";
 
 type Props = {
   projects: Project[];
+  generationConfigs: GenerationConfig[];
   queryProjectAction: (state: QueryState, formData: FormData) => Promise<QueryState>;
   error?: string;
 };
@@ -33,11 +35,14 @@ function SourceCard({ source, projectId }: { source: Source; projectId: string }
   );
 }
 
-function CorpusPlayground({ projects, project, queryProjectAction, onProjectChange }: Props & { project: Project; onProjectChange: (id: string) => void }) {
+function CorpusPlayground({ projects, generationConfigs, project, queryProjectAction, onProjectChange }: Props & { project: Project; onProjectChange: (id: string) => void }) {
   const [state, formAction, pending] = useActionState(queryProjectAction, {});
   const [message, setMessage] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
   const [mode, setMode] = useState<RetrievalMode>("vector");
+  const [generationConfig, setGenerationConfig] = useState(generationConfigs.find((item) => item.available)?.id || "");
+  const providerAvailable = generationConfigs.some((item) => item.id === generationConfig && item.available);
+  const [showCode, setShowCode] = useState(true);
   const [readiness, setReadiness] = useState<Readiness | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -68,11 +73,19 @@ function CorpusPlayground({ projects, project, queryProjectAction, onProjectChan
   }, [project.id, refresh]);
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-6 p-4 md:p-6">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className={`mx-auto grid w-full max-w-[1600px] gap-6 p-4 md:p-6 ${showCode ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]" : ""}`}>
+      <div className="min-w-0 space-y-6">
+      {!showCode ? <button type="button" className="text-sm text-primary underline" onClick={() => setShowCode(true)}>Show integration code</button> : null}
+      <div className="grid gap-4 sm:grid-cols-3">
         <label className="grid gap-2 text-sm font-medium">Corpus
           <select value={project.id} disabled={pending} onChange={(event) => onProjectChange(event.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring">
             {projects.map((item) => <option key={item.id} value={item.id}>{item.name} — {item.read_only ? "shared legal (read-only)" : "private"}</option>)}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-medium">Answer provider / model
+          <select value={generationConfig} disabled={pending} onChange={(event) => setGenerationConfig(event.target.value)} className="h-11 min-w-0 rounded-lg border bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring">
+            {!generationConfig ? <option value="">No configured provider</option> : null}
+            {generationConfigs.map((item) => <option key={item.id} value={item.id} disabled={!item.available}>{item.name} · {item.model || "model not configured"}{item.available ? "" : " — unavailable"}</option>)}
           </select>
         </label>
         <label className="grid gap-2 text-sm font-medium">Retrieval mode
@@ -103,11 +116,12 @@ function CorpusPlayground({ projects, project, queryProjectAction, onProjectChan
       <form action={formAction} onSubmit={() => setSubmittedQuestion(message.trim())} aria-busy={pending} className="rounded-xl border bg-card p-5">
         <input type="hidden" name="project_id" value={project.id} />
         <input type="hidden" name="mode" value={mode} />
+        <input type="hidden" name="generation_config" value={generationConfig} />
         <label htmlFor="question" className="block font-medium">Question</label>
         <textarea id="question" name="message" value={message} onChange={(event) => setMessage(event.target.value)} required readOnly={pending} aria-describedby="question-limit" placeholder="Ask about this corpus…" className="mt-3 min-h-32 w-full resize-y rounded-lg border bg-background p-3 text-sm focus-visible:ring-2 focus-visible:ring-ring" />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <p id="question-limit" className={`text-xs ${questionBytes > 1024 ? "text-destructive" : "text-muted-foreground"}`}>{questionBytes} / 1,024 UTF-8 bytes. Each query is independent; chat memory is not enabled.</p>
-          <Button type="submit" disabled={pending || checking || !modeAvailable(readiness, mode) || !questionBytes || questionBytes > 1024}>{pending ? "Retrieving and generating…" : "Ask corpus"}</Button>
+          <Button type="submit" disabled={pending || checking || !providerAvailable || !modeAvailable(readiness, mode) || !questionBytes || questionBytes > 1024}>{pending ? "Retrieving and generating…" : "Ask corpus"}</Button>
         </div>
         <p role="status" className="mt-3 text-sm text-muted-foreground">{pending ? "Query running. Your question is preserved; source verification and generation may take several minutes." : !checking && !modeAvailable(readiness, mode) ? "Selected mode is unavailable. Refresh readiness or choose an available mode." : ""}</p>
       </form>
@@ -136,17 +150,19 @@ function CorpusPlayground({ projects, project, queryProjectAction, onProjectChan
           <ul className="grid gap-3">{result.citation_candidates.map((source) => <SourceCard key={source.citation_id} source={source} projectId={result.project_id} />)}</ul>
         </details>
       </section> : !pending && !state.error ? <p className="text-sm text-muted-foreground">Ask a question to see an actual answer and source evidence.</p> : null}
+      </div>
+      {showCode ? <IntegrationPanel corpusId={project.id} model={generationConfig} message={message} mode={mode} available={providerAvailable} onHide={() => setShowCode(false)} /> : null}
     </div>
   );
 }
 
-export function PlaygroundClient({ projects, queryProjectAction, error }: Props) {
+export function PlaygroundClient({ projects, generationConfigs, queryProjectAction, error }: Props) {
   const [projectId, setProjectId] = useState(projects[0]?.id || "");
   const project = projects.find((item) => item.id === projectId);
   return (
     <div className="min-h-[calc(100svh-4rem)] bg-background">
       <header className="border-b px-4 py-5 md:px-6"><h1 className="text-2xl font-semibold tracking-tight">Playground</h1><p className="mt-1 text-sm text-muted-foreground">Answers grounded in your selected corpus.</p></header>
-      {error ? <p role="alert" className="p-6 text-sm">{error} Reload to retry.</p> : project ? <CorpusPlayground key={project.id} projects={projects} project={project} queryProjectAction={queryProjectAction} onProjectChange={setProjectId} /> : <div className="p-6"><p>No corpus available.</p><Link href="/dashboard/document" className="mt-3 inline-block text-primary underline">Create a corpus</Link></div>}
+      {error ? <p role="alert" className="p-6 text-sm">{error} Reload to retry.</p> : project ? <CorpusPlayground key={project.id} projects={projects} generationConfigs={generationConfigs} project={project} queryProjectAction={queryProjectAction} onProjectChange={setProjectId} /> : <div className="p-6"><p>No corpus available.</p><Link href="/dashboard/document" className="mt-3 inline-block text-primary underline">Create a corpus</Link></div>}
     </div>
   );
 }

@@ -48,6 +48,9 @@ def migrate_db(conn) -> None:
     for statement in Path(__file__).with_name("jobs_schema.sql").read_text().split(";"):
         if statement.strip():
             conn.execute(statement)
+    for statement in Path(__file__).with_name("api_schema.sql").read_text().split(";"):
+        if statement.strip():
+            conn.execute(statement)
     # executescript would implicitly commit the caller's migration transaction.
     statement = ""
     for line in Path(__file__).with_name("corpus_schema.sql").read_text().splitlines():

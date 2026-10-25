@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 
-import { BackendError, createCredential, createDataSource, createDocument, createProject, deleteDocument, deleteProject, queryProject } from "@/lib/backend";
+import { BackendError, backendRequest, createCredential, createDataSource, createDocument, createProject, deleteDocument, deleteProject, queryProject, type KeyState } from "@/lib/backend";
 import type { QueryState } from "@/lib/rag-contract";
 
 export async function createProjectAction(_state: { error?: string } | undefined, formData: FormData) {
@@ -73,8 +73,9 @@ export async function createProjectAction(_state: { error?: string } | undefined
   redirect("/dashboard/document");
 }
 
-export async function createCredentialAction(formData: FormData) {
-  await createCredential({
+export async function createCredentialAction(_state: { error?: string } | undefined, formData: FormData) {
+  try {
+    await createCredential({
     name: String(formData.get("name") || "").trim(),
     provider: String(formData.get("provider") || "openai").trim(),
     credential_type: String(formData.get("credential_type") || "llm").trim(),
@@ -82,7 +83,12 @@ export async function createCredentialAction(formData: FormData) {
     base_url: String(formData.get("base_url") || "").trim() || undefined,
     default_model: String(formData.get("default_model") || "").trim() || undefined,
     default_embedding_model: String(formData.get("default_embedding_model") || "").trim() || undefined,
-  });
+    is_org_shared: formData.get("is_org_shared") === "on",
+    });
+  } catch (error) {
+    unstable_rethrow(error);
+    return { error: error instanceof BackendError ? error.message : "Could not validate or save credential." };
+  }
 
   revalidatePath("/dashboard/llm");
   redirect("/dashboard/llm");
@@ -98,12 +104,49 @@ export async function queryProjectAction(_state: QueryState, formData: FormData)
   if (mode !== "vector" && mode !== "graph" && mode !== "hybrid") return { error: "Unsupported retrieval mode." };
   if (new TextEncoder().encode(message).length > 1024) return { error: "Question exceeds the 1,024-byte limit." };
   try {
-    return { result: await queryProject(projectId, { message, mode }) };
+    return { result: await queryProject(projectId, { message, mode, generation_config: String(formData.get("generation_config") || "") || undefined }) };
   } catch (error) {
     unstable_rethrow(error);
     return error instanceof BackendError
       ? { error: error.message, code: error.code }
       : { error: "Query could not finish. The backend may be unavailable, timed out, or returned an invalid response. Your question is preserved; retry when ready." };
+  }
+}
+
+export async function createPlatformKeyAction(_state: KeyState, formData: FormData): Promise<KeyState> {
+  try {
+    const created = await backendRequest<{ id: string; key: string; corpus_ids: string[] }>("/api/api-keys", { method: "POST", body: { name: String(formData.get("name") || "").trim(), corpus_ids: formData.getAll("corpus_ids").map(String) } });
+    revalidatePath("/dashboard/api");
+    return { created };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { error: error instanceof BackendError ? error.message : "Could not create API key." };
+  }
+}
+
+export async function revokePlatformKeyAction(_state: { error?: string }, formData: FormData) {
+  try {
+    await backendRequest(`/api/api-keys/${encodeURIComponent(String(formData.get("key_id") || ""))}`, { method: "DELETE" });
+    revalidatePath("/dashboard/api");
+    return {};
+  } catch (error) {
+    unstable_rethrow(error);
+    return { error: error instanceof BackendError ? error.message : "Could not revoke API key." };
+  }
+}
+
+export async function credentialControlAction(_state: { error?: string }, formData: FormData) {
+  try {
+    const operation = formData.get("operation");
+    if (operation !== "validate" && operation !== "revoke") return { error: "Unsupported credential operation." };
+    const id = encodeURIComponent(String(formData.get("credential_id") || ""));
+    await backendRequest(`/api/credentials/${id}${operation === "validate" ? "/validate" : ""}`, { method: operation === "validate" ? "POST" : "DELETE" });
+    revalidatePath("/dashboard/llm");
+    revalidatePath("/dashboard/playground");
+    return {};
+  } catch (error) {
+    unstable_rethrow(error);
+    return { error: error instanceof BackendError ? error.message : "Credential operation failed." };
   }
 }
 

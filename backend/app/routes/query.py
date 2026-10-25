@@ -59,7 +59,7 @@ def query_project(project_id):
                 scope.project,
                 auth,
                 retrieval_project=scope.retrieval_project,
-            ).answer(payload.get("message"), mode, payload.get("conversation_id"))
+            ).answer(payload.get("message"), mode, payload.get("conversation_id"), payload.get("generation_config"))
         )
     except (QueryFailure, RetrievalUnavailable) as exc:
         result = {

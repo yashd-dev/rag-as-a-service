@@ -79,7 +79,23 @@ export type Credential = {
   default_embedding_model?: string | null;
   api_key_hint?: string;
   status: string;
+  owner_user_id: string;
 };
+
+export type PlatformKey = { id: string; name: string; prefix: string; corpus_ids: string[]; revoked_at: number | null; request_count: number };
+export type KeyState = { error?: string; created?: { id: string; key: string; corpus_ids: string[] } };
+
+export async function listPlatformKeys() {
+  return backendRequest<{ items: PlatformKey[] }>("/api/api-keys");
+}
+
+export type GenerationConfig = { id: string; name: string; model: string; available: boolean };
+
+export async function listGenerationConfigs() {
+  const result = await backendRequest<{ items: GenerationConfig[] }>("/api/credentials/generation-configs");
+  if (!Array.isArray(result.items) || !result.items.every((item) => typeof item.id === "string" && typeof item.name === "string" && typeof item.model === "string" && typeof item.available === "boolean")) throw new Error("Invalid provider configurations");
+  return result;
+}
 
 export type Document = {
   id: string;
@@ -177,11 +193,11 @@ export async function deleteDocument(projectId: string, documentId: string) {
   return backendRequest<void>(`/api/projects/${projectId}/documents/${documentId}`, { method: "DELETE" });
 }
 
-export async function createCredential(payload: Record<string, string | undefined>) {
+export async function createCredential(payload: Record<string, string | boolean | undefined>) {
   return backendRequest<Credential>("/api/credentials", { method: "POST", body: payload });
 }
 
-export async function queryProject(projectId: string, payload: { message: string; mode: RetrievalMode }) {
+export async function queryProject(projectId: string, payload: { message: string; mode: RetrievalMode; generation_config?: string }) {
   const response = await backendRequest<unknown>(`/api/projects/${encodeURIComponent(projectId)}/query`, { method: "POST", body: payload, timeoutMs: 300_000 });
   return parseQueryResult(response, projectId, payload.mode);
 }

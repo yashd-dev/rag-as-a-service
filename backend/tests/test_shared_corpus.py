@@ -129,7 +129,7 @@ def test_workspace_owners_cannot_mutate_shared_source_or_other_references(shared
     ).status_code == 200
 
 
-def test_private_projects_sources_conversations_and_credentials_stay_private(shared):
+def test_private_projects_sources_conversations_and_credentials_stay_private(shared, monkeypatch):
     (_, client, _, repository, path, _, snapshot, _), workspaces = shared
     (a_headers, a), (b_headers, b) = workspaces
     private = client.post(
@@ -158,6 +158,7 @@ def test_private_projects_sources_conversations_and_credentials_stay_private(sha
     ).status_code == 404
     listed = client.get("/api/projects", headers=b_headers)
     assert {row["id"] for row in listed.json["items"]} == {b["id"]}
+    monkeypatch.setattr("backend.app.services.credential_service.validate_key_model", lambda *args: "https://api.openai.com/v1")
     credential = client.post(
         "/api/credentials", headers=a_headers,
         json={

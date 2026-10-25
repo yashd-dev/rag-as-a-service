@@ -1,52 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, ChevronDown, Copy, HelpCircle, Plus, RefreshCw, Search, X, Zap } from "lucide-react";
+import { useActionState, useState } from "react";
+import { ArrowLeft, ChevronDown, HelpCircle, Plus, RefreshCw, Search, X, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { Credential } from "@/lib/backend";
+import type { Credential, GenerationConfig } from "@/lib/backend";
 
-const llms = [
-  { id: "platform_gemini", name: "gemini-2.5-flash", description: "Built-in Gemini model exposed through an OpenAI-compatible API wrapper." },
-];
-
-type Llm = (typeof llms)[number];
+type Llm = GenerationConfig & { description: string };
 type LlmClientProps = {
   credentials: Credential[];
-  createCredentialAction: (formData: FormData) => void;
+  generationConfigs: GenerationConfig[];
+  userId: string;
+  controlAction: (state: { error?: string }, data: FormData) => Promise<{ error?: string }>;
+  createCredentialAction: (state: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
 };
 
+function CredentialControls({ credential, action }: { credential: Credential; action: LlmClientProps["controlAction"] }) {
+  const [state, submit, pending] = useActionState(action, {});
+  return <form action={submit} className="flex flex-wrap gap-2 text-xs">
+    <input type="hidden" name="credential_id" value={credential.id} />
+    <button type="submit" name="operation" value="validate" disabled={pending || credential.status === "revoked"} className="text-primary underline">Validate</button>
+    <button type="submit" name="operation" value="revoke" disabled={pending || credential.status === "revoked"} className="text-destructive underline">Revoke</button>
+    {state.error ? <span role="alert">{state.error}</span> : null}
+  </form>;
+}
+
 function llmJson(llm: Llm) {
-  return `{
-  "id": "${llm.id}",
-  "name": "${llm.name}",
-  "description": "${llm.description}",
-  "enabled": true,
-  "capabilities": {
-    "image_support": true,
-    "context_limit": 128000,
-    "tool_calling": true,
-    "structured_outputs": true
-  },
-  "ownership": "platform",
-  "type": "openai-compatible",
-  "model": "${llm.name}",
-  "uri": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-  "headers": {},
-  "auth": {
-    "type": "bearer",
-    "token": "****"
-  }
-}`;
+  return JSON.stringify({ id: llm.id, name: llm.name, model: llm.model, available: llm.available, ownership: "platform" }, null, 2);
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{children}</span>;
 }
 
-export function LlmClient({ credentials, createCredentialAction }: LlmClientProps) {
+export function LlmClient({ credentials, generationConfigs, createCredentialAction, controlAction, userId }: LlmClientProps) {
+  const [saveState, saveAction, saving] = useActionState(createCredentialAction, undefined);
   const [view, setView] = useState<"list" | "add">("list");
   const [selected, setSelected] = useState<Llm | null>(null);
+  const llms = generationConfigs.filter((item) => item.id.startsWith("platform:")).map((item) => ({ ...item, description: item.available ? `Configured answer model: ${item.model}` : "Platform key/model must be configured before use." }));
 
   if (view === "add") {
     return (
@@ -59,11 +50,12 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
         <div className="flex flex-col gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">Add LLM</h1>
           <p className="text-sm text-muted-foreground">
-            Add an OpenAI-compatible endpoint and token. Queries use the built-in Gemini wrapper by default unless a corpus selects one of these credentials.
+            Add a supported HTTPS provider endpoint, model and key. Saved credentials are validated and can be selected in the playground and API.
           </p>
         </div>
 
-        <form action={createCredentialAction} className="flex flex-col gap-6">
+        <form action={saveAction} className="flex flex-col gap-6">
+          {saveState?.error ? <p role="alert" className="text-sm text-destructive">{saveState.error}</p> : null}
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium tracking-tight">Name</span>
             <input name="name" defaultValue="OpenAI" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
@@ -80,7 +72,7 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
           </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium tracking-tight">API key or credentials</span>
-            <span className="text-sm text-muted-foreground">Paste an API key, or a full credential such as a Google service-account JSON. We detect the provider automatically.</span>
+            <span className="text-sm text-muted-foreground">Provider API key only. Stored encrypted and never included in integration code.</span>
             <textarea name="api_key" autoFocus placeholder="sk-..." className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </label>
 
@@ -94,12 +86,13 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
             <span className="text-sm font-medium tracking-tight">Default model</span>
             <input name="default_model" defaultValue="gpt-4o-mini" className="h-11 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </label>
+          <label className="flex items-center gap-3 text-sm"><input type="checkbox" name="is_org_shared" />Share this credential with this workspace (otherwise only you can use it)</label>
 
           <div className="flex items-center justify-between">
             <button type="button" className="text-sm font-medium text-primary">Enter details manually</button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setView("list")} className="h-11 px-5 font-normal">Cancel</Button>
-              <Button className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />Save credential</Button>
+              <Button disabled={saving} className="h-11 gap-2 px-5 font-normal"><Search className="size-4" />{saving ? "Validating…" : "Save credential"}</Button>
             </div>
           </div>
         </form>
@@ -145,7 +138,7 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
               </div>
               <p className="truncate text-muted-foreground">{credential.provider} {credential.default_model || credential.default_embedding_model || credential.credential_type}</p>
               <span className="w-fit rounded-full bg-green-100 px-2.5 py-1 text-xs text-green-700">{credential.status}</span>
-              <Button variant="outline" size="icon-sm"><ChevronDown className="size-3.5" /></Button>
+              {credential.owner_user_id === userId ? <CredentialControls credential={credential} action={controlAction} /> : <span className="text-xs text-muted-foreground">Shared</span>}
             </div>
           ))}
           {llms.map((llm) => (
@@ -157,7 +150,7 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
                 <Badge>Platform</Badge>
               </div>
               <p className="truncate text-muted-foreground">{llm.description}</p>
-              <span className="w-fit rounded-full bg-green-100 px-2.5 py-1 text-xs text-green-700">Enabled</span>
+              <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs">{llm.available ? "Configured" : "Unavailable"}</span>
               <Button variant="outline" size="icon-sm" onClick={() => setSelected(llm)}><ChevronDown className="size-3.5" /></Button>
             </div>
           ))}
@@ -196,7 +189,6 @@ export function LlmClient({ credentials, createCredentialAction }: LlmClientProp
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-medium tracking-tight">JSON</p>
-                  <Button variant="ghost" size="icon-sm"><Copy className="size-3.5" /></Button>
                 </div>
                 <pre className="overflow-auto rounded-xl bg-secondary p-5 text-xs leading-6 text-foreground"><code>{llmJson(selected)}</code></pre>
               </div>

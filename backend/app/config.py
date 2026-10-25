@@ -21,6 +21,10 @@ class Config:
         "GEMINI_API_KEY", ""
     )
     PLATFORM_LLM_MODEL = os.getenv("PLATFORM_LLM_MODEL", "gemini-2.5-flash")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "")
+    MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+    MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GRAPH_LLM_MODEL = os.getenv("GRAPH_LLM_MODEL", "smollm2:135m")
     GRAPH_EXTRACTION_STRATEGY = os.getenv("GRAPH_EXTRACTION_STRATEGY", "full_legal")

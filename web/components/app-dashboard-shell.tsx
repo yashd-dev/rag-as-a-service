@@ -32,7 +32,7 @@ const groups = [
   {
     label: "DEPLOY",
     items: [
-      ["⌘", "API Keys", "/api-keys", ""],
+      ["⌘", "API Keys", "/dashboard/api", "api"],
       ["</>", "API", "/dashboard/api", "api"],
       ["▣", "Chat Widget", "/chat-widget", ""],
     ],

@@ -5,6 +5,7 @@ import Editor, { type BeforeMount } from "@monaco-editor/react";
 type MonacoCodeEditorProps = {
   language: string;
   value: string;
+  readOnly?: boolean;
 };
 
 const editorOptions = {
@@ -243,7 +244,7 @@ const beforeMount: BeforeMount = (monaco) => {
   });
 };
 
-export function MonacoCodeEditor({ language, value }: MonacoCodeEditorProps) {
+export function MonacoCodeEditor({ language, value, readOnly = false }: MonacoCodeEditorProps) {
   return (
     <Editor
       height="100%"
@@ -251,7 +252,8 @@ export function MonacoCodeEditor({ language, value }: MonacoCodeEditorProps) {
       value={value}
       beforeMount={beforeMount}
       theme="recall-light"
-      options={editorOptions}
+      options={{ ...editorOptions, readOnly }}
+      loading={<pre className="h-full overflow-auto whitespace-pre-wrap break-all p-3 text-xs">{value}</pre>}
     />
   );
 }

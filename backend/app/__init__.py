@@ -4,6 +4,7 @@ from flask_cors import CORS
 
 def create_app(config=None) -> Flask:
     from backend.app.config import Config
+    from backend.app.routes.api_keys import api_keys_bp
     from backend.app.routes.conversations import conversations_bp
     from backend.app.routes.credentials import credentials_bp
     from backend.app.routes.data_sources import data_sources_bp
@@ -11,6 +12,7 @@ def create_app(config=None) -> Flask:
     from backend.app.routes.graph import graph_bp
     from backend.app.routes.health import health_bp
     from backend.app.routes.projects import projects_bp
+    from backend.app.routes.public_api import public_api_bp
     from backend.app.routes.query import query_bp
 
     app = Flask(__name__)
@@ -26,4 +28,6 @@ def create_app(config=None) -> Flask:
     app.register_blueprint(conversations_bp, url_prefix="/api")
     app.register_blueprint(query_bp, url_prefix="/api/projects")
     app.register_blueprint(graph_bp, url_prefix="/api/projects")
+    app.register_blueprint(api_keys_bp, url_prefix="/api/api-keys")
+    app.register_blueprint(public_api_bp, url_prefix="/v1")
     return app

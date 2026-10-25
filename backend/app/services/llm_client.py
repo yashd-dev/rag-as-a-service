@@ -16,6 +16,7 @@ class LlmConfig:
     api_key: str
     model: str
     source: str
+    user_supplied: bool = False
 
 
 class OpenAICompatibleLlm:
@@ -26,8 +27,10 @@ class OpenAICompatibleLlm:
             base_url=config.base_url.rstrip("/"),
             timeout=60,
             max_retries=1,
+            **({"http_client": httpx.Client(follow_redirects=False, trust_env=False)} if config.user_supplied else {}),
         )
         self.last_model = config.model
+        self.last_usage = None
 
     def complete(
         self, messages: list[dict], temperature: float = 0.2, json_mode: bool = False
@@ -40,6 +43,8 @@ class OpenAICompatibleLlm:
             **({"response_format": {"type": "json_object"}} if json_mode else {}),
         )
         self.last_model = response.model or self.config.model
+        usage = getattr(response, "usage", None)
+        self.last_usage = usage.model_dump(include={"prompt_tokens", "completion_tokens", "total_tokens"}) if usage is not None else None
         return response.choices[0].message.content or ""
 
 
@@ -111,9 +116,9 @@ class OllamaGenerateLlm:
 
 def platform_llm_config(app_config: dict) -> LlmConfig:
     return LlmConfig(
-        base_url=app_config["PLATFORM_LLM_BASE_URL"],
-        api_key=app_config["PLATFORM_LLM_API_KEY"],
-        model=app_config["PLATFORM_LLM_MODEL"],
+        base_url=app_config.get("PLATFORM_LLM_BASE_URL", ""),
+        api_key=app_config.get("PLATFORM_LLM_API_KEY", ""),
+        model=app_config.get("PLATFORM_LLM_MODEL", ""),
         source="platform",
     )
 
@@ -166,18 +171,20 @@ def fallback_generation_llm(
     )
 
 
-def generate_grounded(app_config, messages):
-    if not app_config.get("PLATFORM_LLM_API_KEY"):
+def generate_grounded(app_config, messages, *, llm_config=None):
+    if llm_config is None and not app_config.get("PLATFORM_LLM_API_KEY"):
         raise GenerationFailure("generation_not_configured")
     client = None
     try:
-        client = OpenAICompatibleLlm(platform_llm_config(app_config))
+        client = OpenAICompatibleLlm(llm_config or platform_llm_config(app_config))
         raw = client.complete(messages, temperature=0, json_mode=True)
         return raw, {
             "provider": "openai_compatible",
             "model": client.last_model,
             "fallback": False,
             "fallback_reason": None,
+            **({"configuration": llm_config.source} if llm_config is not None else {}),
+            **({"usage": client.last_usage} if getattr(client, "last_usage", None) else {}),
         }
     except (OpenAIError, httpx.HTTPError, ValueError):
         # A provider outage must not silently select an unvalidated answer model.

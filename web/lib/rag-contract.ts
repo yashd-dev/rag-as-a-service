@@ -92,7 +92,7 @@ export function parseReadiness(value: unknown, projectId?: string): Readiness {
 
 export function parseQueryResult(value: unknown, projectId: string, mode: RetrievalMode): QueryResult {
   if (!record(value) || value.project_id !== projectId || value.mode !== mode
-    || !text(value.query_run_id) || !text(value.answer) || !["answered", "insufficient_evidence"].includes(String(value.status))
+    || !text(value.query_run_id) || !text(value.answer) || typeof value.status !== "string" || !["answered", "insufficient_evidence"].includes(value.status)
     || !Array.isArray(value.sources) || !value.sources.every(source)
     || !value.sources.every((item) => typeof item.label === "string" && /^S\d+$/.test(item.label))
     || !Array.isArray(value.citation_candidates) || !value.citation_candidates.every(source)

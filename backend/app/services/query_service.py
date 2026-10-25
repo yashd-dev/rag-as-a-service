@@ -3,6 +3,7 @@
 import time
 
 from backend.app.db.repository import SimpleRepository
+from backend.app.services.generation import SelectionError, resolve
 from backend.app.services.grounding import (
     ABSTENTION,
     MAX_QUESTION_BYTES,
@@ -64,8 +65,14 @@ class QueryService:
             ):
                 raise QueryFailure("conversation_not_found", 404)
 
-    def answer(self, message, mode, conversation_id=None):
+    def answer(self, message, mode, conversation_id=None, generation_config=None):
         self.validate(message, mode, conversation_id)
+        selected = None
+        if generation_config is not None:
+            try:
+                selected = resolve(self.config, self.auth, generation_config)
+            except SelectionError as exc:
+                raise QueryFailure(exc.code, exc.status) from None
         retrieved = self.retrieval.retrieve(message, mode)
         context = retrieved["context"]
         candidates = [
@@ -100,7 +107,8 @@ class QueryService:
             if context:
                 started = time.perf_counter()
                 raw, generation = generate_grounded(
-                    self.config, messages_for(message, context)
+                    self.config, messages_for(message, context),
+                    **({"llm_config": selected} if selected is not None else {}),
                 )
                 elapsed = round((time.perf_counter() - started) * 1000, 2)
                 generation["called"] = True
