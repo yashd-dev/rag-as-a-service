@@ -103,15 +103,24 @@ def validate_candidate_payload(payload, row, graph_key):
 class CitationCandidateExtractor:
     def __init__(self, config, vector_partition):
         self.resolver = graph_extraction_llm(config)
-        self.options = {
-            "temperature": 0,
-            "num_predict": 64,
-            "num_ctx": self.resolver.options["num_ctx"],
-        }
+        self.options = (
+            {
+                "temperature": 0,
+                "max_tokens": 4096,
+                "reasoning_budget": 0,
+                "thinking": False,
+            }
+            if getattr(self.resolver, "provider", "ollama") == "nvidia"
+            else {
+                "temperature": 0,
+                "num_predict": 64,
+                "num_ctx": self.resolver.options["num_ctx"],
+            }
+        )
         self.profile = {
             "version": VERSION,
             "strategy": "citation_candidates",
-            "provider": "ollama",
+            "provider": getattr(self.resolver, "provider", "ollama"),
             **self.resolver.revision(),
             "options": self.options.copy(),
             "think": False,
@@ -142,6 +151,25 @@ class CitationCandidateExtractor:
         try:
             self.check_revision()
             self.inference_calls += 1
+            if getattr(self.resolver, "provider", "ollama") == "nvidia":
+                value = json.loads(
+                    self.resolver.generate(
+                        PROMPT
+                        + "\n"
+                        + json.dumps(
+                            {"case_citation": citation, "source": quote},
+                            ensure_ascii=False,
+                        )
+                    )
+                )
+                if (
+                    not isinstance(value, dict)
+                    or set(value) != {"supported"}
+                    or type(value["supported"]) is not bool
+                ):
+                    raise ExtractionError("parse_error")
+                self.check_revision()
+                return value["supported"]
             response = httpx.post(
                 self.resolver.base_url + "/api/chat",
                 json={

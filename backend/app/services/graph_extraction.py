@@ -265,7 +265,7 @@ class GraphExtractor:
         self.llm = llm
         self.profile = {
             "version": EXTRACTOR_VERSION,
-            "provider": "ollama",
+            "provider": getattr(llm, "provider", "ollama"),
             **llm.revision(),
             "options": dict(llm.options),
             "schema_hash": fingerprint(GRAPH_EXTRACTION_SCHEMA),
@@ -283,6 +283,8 @@ class GraphExtractor:
             "Do not infer relationships from co-occurrence, negate propositions, resolve pronouns, invent aliases or correct OCR. "
             "Omit unsupported relationships. Use empty arrays when no supported extraction exists.\nSOURCE_JSON="
             + json.dumps({"text": row["content"]}, ensure_ascii=False)
+            + "\nSCHEMA_JSON="
+            + json.dumps(GRAPH_EXTRACTION_SCHEMA, ensure_ascii=False)
         )
         try:
             expected = {key: self.profile[key] for key in ("model", "revision")}

@@ -117,6 +117,23 @@ def test_only_llm_support_decision_controls_candidate_relation(
     assert extractor.inference_calls == 1
 
 
+def test_nvidia_classifier_uses_chat_adapter(monkeypatch):
+    calls = []
+    resolver = SimpleNamespace(
+        provider="nvidia",
+        model="nvidia/test",
+        timeout=60,
+        options={"max_tokens": 4096},
+        revision=lambda: {"model": "nvidia/test", "revision": "nvidia:test"},
+        generate=lambda prompt: calls.append(prompt) or '{"supported":true}',
+    )
+    monkeypatch.setattr(citations, "graph_extraction_llm", lambda config: resolver)
+    extractor = citations.CitationCandidateExtractor({}, "vector-generation")
+    result = extractor.extract(chunk("This judgment cited AIR 1967 SC 1326."))
+    assert result["assertions"] and extractor.inference_calls == 1
+    assert '"case_citation": "AIR 1967 SC 1326"' in calls[0]
+
+
 @pytest.mark.parametrize(
     "response", ['{"supported":"yes"}', '{"supported":true,"extra":1}', "not json"]
 )

@@ -34,6 +34,7 @@ class Config:
     NVIDIA_GRAPH_LLM_MODEL = os.getenv(
         "NVIDIA_GRAPH_LLM_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b"
     )
+    NVIDIA_GRAPH_LLM_THINKING = os.getenv("NVIDIA_GRAPH_LLM_THINKING", "false")
     GRAPH_EXTRACTION_STRATEGY = os.getenv("GRAPH_EXTRACTION_STRATEGY", "full_legal")
     GRAPH_LLM_TIMEOUT_SECONDS = os.getenv("GRAPH_LLM_TIMEOUT_SECONDS", "60")
     GRAPH_LLM_NUM_PREDICT = int(os.getenv("GRAPH_LLM_NUM_PREDICT", "700"))

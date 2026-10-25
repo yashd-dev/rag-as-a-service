@@ -146,7 +146,7 @@ class Llm:
     def generate(self, prompt):
         assert "SOURCE_JSON=" in prompt
         assert (
-            json.loads(prompt.split("SOURCE_JSON=", 1)[1])["text"]
+            json.loads(prompt.split("SOURCE_JSON=", 1)[1].split("\nSCHEMA_JSON=", 1)[0])["text"]
             == "This judgment cited AIR 1967 SC 1326."
         )
         return json.dumps(cited_payload())
@@ -248,8 +248,9 @@ def test_nvidia_graph_request_uses_configured_endpoint_and_bounded_reasoning(mon
         assert json["model"] == "nvidia/nemotron-3.5-lightning-30b-a3b"
         assert json["stream"] is False
         assert json["max_tokens"] == 4096
-        assert json["reasoning_budget"] == 16384
-        assert json["chat_template_kwargs"] == {"enable_thinking": True}
+        assert json["reasoning_budget"] == 0
+        assert json["chat_template_kwargs"] == {"enable_thinking": False}
+        assert json["response_format"] == {"type": "json_object"}
         assert "This judgment cited AIR 1967 SC 1326." in json["messages"][0]["content"]
         return httpx.Response(
             200,

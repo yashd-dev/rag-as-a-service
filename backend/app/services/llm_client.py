@@ -121,7 +121,10 @@ class OllamaGenerateLlm:
 
 
 class NvidiaGenerateLlm:
-    def __init__(self, api_key, endpoint, model, timeout, max_tokens, reasoning_budget):
+    def __init__(
+        self, api_key, endpoint, model, timeout, max_tokens, reasoning_budget, thinking
+    ):
+        self.provider = "nvidia"
         self.api_key = api_key
         self.endpoint = endpoint
         self.base_url = endpoint.rsplit("/chat/completions", 1)[0]
@@ -132,7 +135,7 @@ class NvidiaGenerateLlm:
             "top_p": 0.95,
             "max_tokens": max_tokens,
             "reasoning_budget": reasoning_budget,
-            "chat_template_kwargs": {"enable_thinking": True},
+            "chat_template_kwargs": {"enable_thinking": thinking},
         }
         self.last_model = model
 
@@ -151,6 +154,7 @@ class NvidiaGenerateLlm:
                 "model": self.model,
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
+                "response_format": {"type": "json_object"},
                 **self.options,
             },
             timeout=self.timeout,
@@ -207,6 +211,11 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm | NvidiaGenerate
         reasoning_budget = int(app_config.get("GRAPH_LLM_REASONING_BUDGET", 16384))
         if not 0 <= reasoning_budget <= 16384:
             raise ValueError("Graph reasoning budget must be between 0 and 16384")
+        thinking = str(app_config.get("NVIDIA_GRAPH_LLM_THINKING", "false")).lower() in {
+            "1",
+            "true",
+            "yes",
+        }
         return NvidiaGenerateLlm(
             nvidia_key,
             app_config.get(
@@ -215,8 +224,9 @@ def graph_extraction_llm(app_config: dict) -> OllamaGenerateLlm | NvidiaGenerate
             ),
             model,
             timeout,
-            max(predictions, 4096),
-            reasoning_budget,
+            max(predictions, 16384) if thinking else max(predictions, 4096),
+            reasoning_budget if thinking else 0,
+            thinking,
         )
     return OllamaGenerateLlm(
         app_config["OLLAMA_BASE_URL"],
