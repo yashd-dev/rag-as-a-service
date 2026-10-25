@@ -77,12 +77,10 @@ class ApiKeys:
             if not conn.execute("SELECT 1 FROM platform_api_keys WHERE id=? AND revoked_at IS NULL", (key["id"],)).fetchone():
                 raise ApiError("invalid_api_key", 401)
             conn.execute("UPDATE platform_api_usage SET finished_at=?,status_code=504 WHERE finished_at IS NULL AND lease_until<=?", (timestamp, timestamp))
-            for field, value, rate, concurrent in (("key_id", key["id"], 20, 2), ("organization_id", key["organization_id"], 60, 4)):
+            for field, value, rate in (("key_id", key["id"], 20), ("organization_id", key["organization_id"], 60)):
                 # Field names are fixed above, never supplied by callers.
                 if conn.execute(f"SELECT count(*) FROM platform_api_usage WHERE {field}=? AND requested_at>?", (value, timestamp - 60_000)).fetchone()[0] >= rate:
                     raise ApiError("rate_limit_exceeded", 429)
-                if conn.execute(f"SELECT count(*) FROM platform_api_usage WHERE {field}=? AND finished_at IS NULL AND lease_until>?", (value, timestamp)).fetchone()[0] >= concurrent:
-                    raise ApiError("concurrency_limit_exceeded", 429)
             conn.execute("INSERT INTO platform_api_usage(id,key_id,organization_id,project_id,generation_config,requested_at,lease_until) VALUES(?,?,?,?,?,?,?)", (request_id, key["id"], key["organization_id"], corpus_id, model, timestamp, timestamp + 900_000))
         return request_id
 

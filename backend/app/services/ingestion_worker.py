@@ -1,11 +1,14 @@
 """Restart-safe worker reusing canonical staging and the verified vector pipeline."""
 
 import hashlib
+import logging
 import threading
 from pathlib import Path
 
 from backend.app.db.repository import ProjectRepository, now_ms
 from backend.app.services.embedding_service import embedding_provider_for_project
+from backend.app.services.evidence_graph import EvidenceGraph
+from backend.app.services.graph_extraction import graph_extractor_for_project
 from backend.app.services.ingestion_service import IngestionError, IngestionService
 from backend.app.services.jobs import MAX_ATTEMPTS, Jobs, LeaseLost
 from backend.app.services.neo4j_vectors import Neo4jVectorStore, canonical_snapshot
@@ -101,6 +104,20 @@ def run_once(config):
             if canonical_snapshot(config, project)["manifest"] != snapshot["manifest"]:
                 raise ValueError("corpus_changed")
             vectors.publish()
+            for job in active:
+                queue.update(claim, job["document_id"], stage="graph")
+            try:
+                extractor = graph_extractor_for_project(config, vectors.key)
+                graph = EvidenceGraph(vectors, extractor.profile)
+                graph.build(
+                    extractor,
+                    max_chunks=int(config.get("GRAPH_EXTRACTION_MAX_CHUNKS", 0)),
+                )
+                if canonical_snapshot(config, project)["manifest"] != snapshot["manifest"]:
+                    raise ValueError("corpus_changed")
+                graph.publish()
+            except Exception:
+                logging.getLogger(__name__).exception("Graph indexing unavailable")
             for job in active:
                 queue.update(claim, job["document_id"], state="completed", stage="completed")
         finally:

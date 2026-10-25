@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { ArrowLeft, Check, ChevronDown, Code2, Database, Plus, X } from "lucide-react";
@@ -68,7 +68,6 @@ function Field({ label, helper, children }: { label: string; helper?: string; ch
 type DocumentClientProps = {
   projects: Project[];
   dataSources: DataSource[];
-  documentsByProject: Record<string, Document[] | null>;
   createProjectAction: (_state: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
   deleteProjectAction: (formData: FormData) => void;
   deleteDocumentAction: (formData: FormData) => void;
@@ -83,7 +82,7 @@ function CreateCorpusButton() {
   );
 }
 
-export function DocumentClient({ projects, dataSources, documentsByProject, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
+export function DocumentClient({ projects, dataSources, createProjectAction, deleteProjectAction, deleteDocumentAction }: DocumentClientProps) {
   const [mode, setMode] = useState<"empty" | "create">(projects.length ? "empty" : "empty");
   const [jsonOpen, setJsonOpen] = useState(false);
   const [corpusSource, setCorpusSource] = useState<"private" | "legal">("private");
@@ -94,9 +93,27 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadFiles, setUploadFiles] = useState<string[]>([]);
+  const [documentsByProject, setDocumentsByProject] = useState<Record<string, Document[] | null>>({});
   const [createState, formAction, creating] = useActionState(createProjectAction, undefined);
   const router = useRouter();
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
+  const selectedDocuments = selectedProjectId ? documentsByProject[selectedProjectId] : undefined;
+
+  useEffect(() => {
+    if (!selectedProjectId || selectedDocuments !== undefined) return;
+    let active = true;
+    fetch(`/api/projects/${encodeURIComponent(selectedProjectId)}/documents`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Document list and readiness unavailable.");
+        const payload = await response.json();
+        if (!Array.isArray(payload.items)) throw new Error("Invalid document response.");
+        if (active) setDocumentsByProject((current) => ({ ...current, [selectedProjectId]: payload.items }));
+      })
+      .catch(() => {
+        if (active) setDocumentsByProject((current) => ({ ...current, [selectedProjectId]: null }));
+      });
+    return () => { active = false; };
+  }, [selectedProjectId, selectedDocuments]);
 
   async function handleDocumentUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -210,7 +227,7 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
             </section>
           ) : null}
 
-          {documents == null ? <p role="alert" className="rounded-xl border p-4 text-sm">Document list and readiness unavailable. The document count is unknown. Reload to retry.</p> : <section className="overflow-x-auto rounded-xl border bg-background">
+          {documents === undefined ? <p className="rounded-xl border p-4 text-sm text-muted-foreground">Loading documents and index readiness...</p> : documents == null ? <p role="alert" className="rounded-xl border p-4 text-sm">Document list and readiness unavailable. Reload to retry.</p> : <section className="overflow-x-auto rounded-xl border bg-background">
             <div className="grid grid-cols-[1fr_140px_160px_96px] gap-3 border-b bg-secondary px-4 py-3 text-sm font-medium">
               <span>Document</span>
               <span>Status</span>
@@ -307,12 +324,12 @@ export function DocumentClient({ projects, dataSources, documentsByProject, crea
               <div key={project.id} className="grid grid-cols-[1fr_240px_160px_120px_96px] items-center gap-3 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-card">
                 <button type="button" onClick={() => setSelectedProjectId(project.id)} className="min-w-0 text-left">
                   <p className="truncate font-medium tracking-tight text-primary">{project.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{project.slug} · {documentsByProject[project.id] == null ? "Document count unavailable" : `${documentsByProject[project.id]?.length} documents`}</p>
+                  <p className="truncate text-xs text-muted-foreground">{documentsByProject[project.id] == null ? "Select to load documents" : `${documentsByProject[project.id]?.length} documents`}</p>
                   <p className="text-xs text-muted-foreground">{project.read_only ? "Shared legal · Read-only" : "Private corpus"}</p>
                 </button>
                 <span className="truncate text-muted-foreground">{project.embedding_model || "Not configured"}</span>
                 <span className="text-muted-foreground">{project.default_query_mode}</span>
-                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{documentsByProject[project.id] == null ? "Unavailable" : !(documentsByProject[project.id]?.length) ? "No documents" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.graph) ? "Graph available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.vector) ? "Vector available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.text) ? "Text only" : "Partial / pending"}</span>
+                <span className="w-fit rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">{documentsByProject[project.id] == null ? "Not loaded" : !(documentsByProject[project.id]?.length) ? "No documents" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.graph) ? "Graph available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.vector) ? "Vector available" : documentsByProject[project.id]?.every((doc) => doc.readiness?.capabilities.text) ? "Text only" : "Partial / pending"}</span>
                 {!project.read_only || project.is_shared_reference ? <form action={deleteProjectAction}>
                   <input type="hidden" name="project_id" value={project.id} />
                   <button type="submit" className="h-9 rounded-lg border px-3 text-sm text-destructive hover:bg-destructive/10">

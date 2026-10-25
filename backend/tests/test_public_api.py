@@ -81,21 +81,22 @@ def test_public_contract_rejects_unsupported_input_before_model_work(public, cha
     assert state["generation_calls"] == 0
 
 
-def test_admission_enforces_cross_process_limits_and_recovers_expired_requests(public):
+def test_admission_keeps_rate_limits_and_recovers_expired_requests(public):
     (app, _, _, _, path, _, _, _), created, _ = public
     keys = ApiKeys(app.config)
     key, _ = keys.authenticate("Bearer " + created["key"])
     first = keys.begin(key, "p", "platform:default")
     second = ApiKeys(app.config).begin(key, "p", "platform:default")
-    with pytest.raises(ApiError, match="concurrency_limit_exceeded"):
-        keys.begin(key, "p", "platform:default")
+    third = ApiKeys(app.config).begin(key, "p", "platform:default")
     from backend.app.db.connection import db
     with db(keys.url, keys.token) as conn:
         conn.execute("UPDATE platform_api_usage SET lease_until=0 WHERE id=?", (first,))
-    third = keys.begin(key, "p", "platform:default")
+    fourth = keys.begin(key, "p", "platform:default")
     assert query(path, "SELECT status_code FROM platform_api_usage WHERE id=?", (first,)) == [(504,)]
+    keys.finish(first, 200)
     keys.finish(second, 200)
     keys.finish(third, 200)
+    keys.finish(fourth, 200)
 
 
 def test_invalid_citations_never_escape_as_stream_or_success(public, monkeypatch):

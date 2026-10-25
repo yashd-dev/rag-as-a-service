@@ -164,6 +164,19 @@ def test_context_budget_preserves_whole_connected_paths(retrieval):
         select_context(candidates, "graph")
 
 
+def test_hybrid_context_falls_back_to_ranked_candidates_without_graph_paths():
+    candidates = [
+        {
+            "chunk": row("one", "Vector evidence."),
+            "vector_score": 0.9,
+            "fusion_score": 1 / 61,
+            "methods": ["vector"],
+            "path": [],
+        }
+    ]
+    assert select_context(candidates, "hybrid") == candidates
+
+
 def test_freshness_guard_rejects_changed_vector_or_graph_generations(retrieval):
     service, _, vectors, _, calls = retrieval
     with pytest.raises(RetrievalUnavailable, match="index_generation_changed"):

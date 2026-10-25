@@ -112,7 +112,16 @@ class QueryService:
                 )
                 elapsed = round((time.perf_counter() - started) * 1000, 2)
                 generation["called"] = True
-                result = validate_answer(raw, [item["label"] for item in candidates])
+                try:
+                    result = validate_answer(raw, [item["label"] for item in candidates])
+                except GenerationFailure as exc:
+                    if exc.code != "invalid_generation":
+                        raise
+                    result = {
+                        "status": "insufficient_evidence",
+                        "answer": ABSTENTION,
+                        "used_sources": [],
+                    }
                 used = [
                     item
                     for item in candidates

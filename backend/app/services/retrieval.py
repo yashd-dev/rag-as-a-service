@@ -129,7 +129,7 @@ def select_context(candidates, mode, byte_budget=MAX_EVIDENCE_BYTES):
             if fits(bundle):
                 selected = bundle
                 break
-        if not selected:
+        if not selected and mode == "graph":
             return []
     for item in candidates:
         if item not in selected and fits([*selected, item]):

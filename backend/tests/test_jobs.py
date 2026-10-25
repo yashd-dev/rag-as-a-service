@@ -71,13 +71,15 @@ def test_competing_workers_crash_takeover_and_expired_fencing(queued):
 
 def test_worker_stages_embeds_publishes_and_retries_without_duplicate_text(queued, monkeypatch):
     queue, config, path, _, job, _ = queued
-    state = {"fail": True, "published": False}
+    state = {"fail": True, "published": False, "graph_published": False}
 
     class Provider:
         def resolve(self):
             return {"provider": "test-only", "dimensions": 768}
 
     class Vectors:
+        key = "test-graph"
+
         def __init__(self, config, snapshot, provenance, *, write_guard):
             self.snapshot, self.guard = snapshot, write_guard
 
@@ -95,6 +97,19 @@ def test_worker_stages_embeds_publishes_and_retries_without_duplicate_text(queue
         def close(self):
             pass
 
+    class Graph:
+        def __init__(self, vectors, profile):
+            pass
+
+        def build(self, extractor, max_chunks):
+            assert max_chunks == 0
+
+        def publish(self):
+            state["graph_published"] = True
+
+    monkeypatch.setattr(ingestion_worker, "graph_extractor_for_project", lambda *args: type("Extractor", (), {"profile": {}})())
+    monkeypatch.setattr(ingestion_worker, "EvidenceGraph", Graph)
+
     monkeypatch.setattr(ingestion_worker, "embedding_provider_for_project", lambda *args: Provider())
     monkeypatch.setattr(ingestion_worker, "Neo4jVectorStore", Vectors)
     assert ingestion_worker.run_once(config)
@@ -106,7 +121,7 @@ def test_worker_stages_embeds_publishes_and_retries_without_duplicate_text(queue
     state["fail"] = False
     assert ingestion_worker.run_once(config)
     completed = queue.get(job["document_id"], "o")
-    assert completed["state"] == "completed" and state["published"]
+    assert completed["state"] == "completed" and state["published"] and state["graph_published"]
     assert completed["vector_count"] == completed["chunk_count"] == 1
     assert query(path, "SELECT count(*) FROM canonical_chunks") == [(1,)]
     assert query(path, "SELECT count(*) FROM index_generations") == [(1,)]

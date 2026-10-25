@@ -16,7 +16,7 @@ export default async function ApiPage() {
       <section id="usage" className="space-y-3 rounded-xl border p-5"><h2 className="font-medium">OpenAI-compatible RAG API</h2>
         <p className="text-sm">POST /v1/chat/completions · GET /v1/models · GET /v1/corpora/:corpus_id/passages/:chunk_id</p>
         <p className="text-sm text-muted-foreground">Send one user message, an explicit corpus_id and a model configuration ID from the playground. Streaming sends validated answer chunks and final citations, not unverified live provider tokens. Each request is independent.</p>
-        <p className="text-sm text-muted-foreground">Limits: 1,024 UTF-8 question bytes; 16 KiB JSON; 20 requests/minute and 2 concurrent requests per key; 60 requests/minute and 4 concurrent requests per workspace. Temperature is fixed at 0 and output limit at 1,024 tokens. Other generation values, tools and conversation history are rejected.</p>
+        <p className="text-sm text-muted-foreground">Limits: 1,024 UTF-8 question bytes; 16 KiB JSON; 20 requests/minute per key and 60 requests/minute per workspace. Temperature is fixed at 0 and output limit at 1,024 tokens. Other generation values, tools and conversation history are rejected.</p>
         <Link href="/dashboard/playground" className="inline-block text-sm text-primary underline">Open playground for Python, JavaScript and cURL examples</Link>
       </section>
     </div>

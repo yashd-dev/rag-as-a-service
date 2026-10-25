@@ -130,6 +130,19 @@ def test_model_abstention_is_not_persisted_as_a_completed_answer(service, monkey
     assert query(path, "SELECT status FROM query_runs") == [("insufficient_evidence",)]
 
 
+def test_malformed_model_output_abstains_without_failing_the_query(service, monkeypatch):
+    engine, path, _ = service
+    monkeypatch.setattr(
+        "backend.app.services.query_service.generate_grounded",
+        lambda *args: ("I do not have enough information.", {"provider": "fixture", "model": "fixture-only"}),
+    )
+    result = engine.answer("unanswerable question", "vector")
+    assert result["status"] == "insufficient_evidence"
+    assert result["sources"] == []
+    assert result["generation"]["called"]
+    assert query(path, "SELECT status FROM query_runs") == [("insufficient_evidence",)]
+
+
 def test_changed_index_after_generation_invalidates_the_answer(service, monkeypatch):
     engine, path, _ = service
 
